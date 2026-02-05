@@ -145,3 +145,299 @@ CREATE TABLE deliveries (
         ON DELETE RESTRICT
 );
 
+
+
+-- =========================
+-- PATIENT MASTER TABLE
+-- =========================
+CREATE TABLE patients (
+  patient_id INT AUTO_INCREMENT PRIMARY KEY,
+  mrn VARCHAR(30) NOT NULL UNIQUE, -- Medical Record Number (e.g. 2024-001234)
+
+  first_name VARCHAR(100) NOT NULL,
+  last_name VARCHAR(100) NOT NULL,
+  middle_name VARCHAR(100) NULL,
+  preferred_name VARCHAR(100) NULL,
+
+  date_of_birth DATE NOT NULL,
+  gender ENUM('male','female','other') NOT NULL,
+  blood_type ENUM('A+','A-','B+','B-','AB+','AB-','O+','O-') NULL,
+
+  phone VARCHAR(30) NOT NULL,
+  email VARCHAR(150) NULL,
+
+  address_line VARCHAR(255) NOT NULL,
+  city VARCHAR(100) NOT NULL,
+  state VARCHAR(100) NOT NULL,
+  zip_code VARCHAR(20) NOT NULL,
+
+  status ENUM('active','inactive') DEFAULT 'active',
+
+  created_by INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_patients_created_by
+    FOREIGN KEY (created_by) REFERENCES users(user_id)
+    ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- =========================
+-- PATIENT MEDICAL PROFILE (allergies, conditions, meds, immunization status)
+-- (kept separate to keep patients table clean)
+-- =========================
+CREATE TABLE patient_medical_profile (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT NOT NULL,
+
+  allergies TEXT NULL,            -- store as comma-separated or JSON later
+  chronic_conditions TEXT NULL,   -- store as comma-separated or JSON later
+  current_medications TEXT NULL,  -- store as text list
+  immunization_status ENUM('up_to_date','not_up_to_date','unknown') DEFAULT 'unknown',
+
+  updated_by INT NOT NULL,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_profile_patient
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_profile_updated_by
+    FOREIGN KEY (updated_by) REFERENCES users(user_id)
+    ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- =========================
+-- VISITS (for the right-side timeline)
+-- =========================
+CREATE TABLE patient_visits (
+  visit_id INT AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT NOT NULL,
+
+  visit_type VARCHAR(120) NOT NULL, -- Routine Checkup, Follow-up, etc.
+  visit_datetime DATETIME NOT NULL,
+
+  doctor_id INT NULL,   -- users.user_id with role doctor
+  created_by INT NOT NULL,  -- nurse/medical_staff who created
+
+  status ENUM('scheduled','completed','cancelled') DEFAULT 'scheduled',
+  notes TEXT NULL,
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_visits_patient
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_visits_doctor
+    FOREIGN KEY (doctor_id) REFERENCES users(user_id)
+    ON DELETE SET NULL,
+
+  CONSTRAINT fk_visits_created_by
+    FOREIGN KEY (created_by) REFERENCES users(user_id)
+    ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- =========================
+-- VITALS (Vitals tab + history)
+-- One row = one recording time (usually per visit)
+-- =========================
+CREATE TABLE patient_vitals (
+  vitals_id INT AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT NOT NULL,
+  visit_id INT NULL,
+
+  bp_systolic INT NULL,
+  bp_diastolic INT NULL,
+  heart_rate INT NULL,
+  temperature DECIMAL(4,1) NULL,      -- e.g. 36.6
+  spo2 INT NULL,                      -- %
+  respiratory_rate INT NULL,          -- breaths/min
+  blood_glucose INT NULL,             -- mg/dL
+  weight DECIMAL(6,2) NULL,           -- kg
+
+  nurse_notes TEXT NULL,
+  recorded_by INT NOT NULL,
+  recorded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_vitals_patient
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_vitals_visit
+    FOREIGN KEY (visit_id) REFERENCES patient_visits(visit_id)
+    ON DELETE SET NULL,
+
+  CONSTRAINT fk_vitals_recorded_by
+    FOREIGN KEY (recorded_by) REFERENCES users(user_id)
+    ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- =========================
+-- INSURANCE (Insurance tab)
+-- supports primary + secondary by "coverage_type"
+-- =========================
+CREATE TABLE patient_insurance (
+  insurance_id INT AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT NOT NULL,
+
+  coverage_type ENUM('primary','secondary') NOT NULL DEFAULT 'primary',
+
+  provider_name VARCHAR(150) NOT NULL,
+  policy_number VARCHAR(80) NOT NULL,
+  group_number VARCHAR(80) NULL,
+
+  effective_date DATE NULL,
+
+  subscriber_name VARCHAR(150) NULL,
+  relationship ENUM('self','spouse','child','parent','other') DEFAULT 'self',
+
+  verified_status ENUM('verified','unverified') DEFAULT 'unverified',
+  verified_at DATETIME NULL,
+  verified_by INT NULL,
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_insurance_patient
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_insurance_verified_by
+    FOREIGN KEY (verified_by) REFERENCES users(user_id)
+    ON DELETE SET NULL,
+
+  UNIQUE KEY uq_patient_coverage (patient_id, coverage_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- =========================
+-- EMERGENCY CONTACTS (Emergency tab)
+-- multiple contacts per patient
+-- =========================
+CREATE TABLE patient_emergency_contacts (
+  contact_id INT AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT NOT NULL,
+
+  full_name VARCHAR(150) NOT NULL,
+  relationship VARCHAR(60) NOT NULL, -- spouse, mother, etc.
+  phone VARCHAR(30) NOT NULL,
+  email VARCHAR(150) NULL,
+  address VARCHAR(255) NULL,
+
+  is_primary TINYINT(1) DEFAULT 0,
+
+  created_by INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_emergency_patient
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_emergency_created_by
+    FOREIGN KEY (created_by) REFERENCES users(user_id)
+    ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- =========================
+-- DOCUMENTS (Documents tab)
+-- store metadata; actual file path saved in server uploads folder
+-- =========================
+CREATE TABLE patient_documents (
+  document_id INT AUTO_INCREMENT PRIMARY KEY,
+  patient_id INT NOT NULL,
+  visit_id INT NULL,
+
+  document_title VARCHAR(200) NOT NULL,
+  file_type VARCHAR(30) NOT NULL,      -- pdf, jpg, dicom, etc.
+  file_size_kb INT NULL,
+  file_path VARCHAR(255) NOT NULL,     -- e.g. uploads/patient_docs/xxx.pdf
+
+  uploaded_by INT NOT NULL,
+  uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_docs_patient
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_docs_visit
+    FOREIGN KEY (visit_id) REFERENCES patient_visits(visit_id)
+    ON DELETE SET NULL,
+
+  CONSTRAINT fk_docs_uploaded_by
+    FOREIGN KEY (uploaded_by) REFERENCES users(user_id)
+    ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- =========================
+-- FAVORITES (Left sidebar favorites)
+-- user favorites specific patient
+-- =========================
+CREATE TABLE user_patient_favorites (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  patient_id INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_fav_user
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_fav_patient
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
+    ON DELETE CASCADE,
+
+  UNIQUE KEY uq_user_patient_fav (user_id, patient_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- =========================
+-- RECENTLY VIEWED (Left sidebar recent patients)
+-- track last viewed time per user per patient
+-- =========================
+CREATE TABLE user_patient_recent (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  patient_id INT NOT NULL,
+  last_viewed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_recent_user
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_recent_patient
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
+    ON DELETE CASCADE,
+
+  UNIQUE KEY uq_user_patient_recent (user_id, patient_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- =========================
+-- AUDIT LOG (your code already mentions audit)
+-- =========================
+CREATE TABLE audit_logs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  action VARCHAR(120) NOT NULL,       -- e.g. VIEW_PATIENT, CREATE_PATIENT, UPLOAD_DOCUMENT
+  entity_type VARCHAR(60) NOT NULL,   -- patient, visit, vitals, document
+  entity_id INT NULL,
+  ip_address VARCHAR(60) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_audit_user
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+    ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+ALTER TABLE patient_visits
+  ADD COLUMN health_center_id INT NULL AFTER doctor_id,
+  ADD CONSTRAINT fk_visits_health_center
+    FOREIGN KEY (health_center_id) REFERENCES health_centers(id)
+    ON DELETE SET NULL;

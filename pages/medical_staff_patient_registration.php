@@ -1,3 +1,12 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id'])) {
+  header("Location: system_login_portal.html");
+  exit;
+}
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -989,78 +998,92 @@
         </div>
     </footer>
 
-    <!-- Advanced Search Modal -->
+        <!-- Advanced Search Modal -->
     <div id="advancedSearchModal" class="hidden fixed inset-0 bg-secondary-900 bg-opacity-50 z-modal flex items-center justify-center p-4">
-        <div class="card max-w-3xl w-full animate-slide-in max-h-[90vh] overflow-y-auto scrollbar-thin">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-semibold text-text-primary">Advanced Search</h3>
-                <button type="button" id="closeAdvancedSearch" class="text-text-tertiary hover:text-text-primary transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
+    <div class="card max-w-3xl w-full animate-slide-in max-h-[90vh] overflow-y-auto scrollbar-thin">
+        <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xl font-semibold text-text-primary">Advanced Search</h3>
+        <button type="button" id="closeAdvancedSearch" class="text-text-tertiary hover:text-text-primary transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+        </div>
+
+        <form id="advancedSearchForm" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+            <label class="block text-sm font-medium text-text-primary mb-2">Patient Name</label>
+            <input type="text" id="adv_name" name="name" class="input">
             </div>
 
-            <form id="advancedSearchForm" class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-text-primary mb-2">Patient Name</label>
-                        <input type="text" class="input" placeholder="Enter patient name">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-text-primary mb-2">Medical Record Number</label>
-                        <input type="text" class="input" placeholder="Enter MRN">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-text-primary mb-2">Date of Birth</label>
-                        <input type="date" class="input">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-text-primary mb-2">Phone Number</label>
-                        <input type="tel" class="input" placeholder="(+63) 123-4567">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-text-primary mb-2">Diagnosis Code</label>
-                        <input type="text" class="input" placeholder="ICD-10 code">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-text-primary mb-2">Treating Physician</label>
-                        <select class="input">
-                            <option value="">All Physicians</option>
-                            <option value="johnson">Dr. Sarah Johnson</option>
-                            <option value="patel">Dr. Michael Patel</option>
-                            <option value="chen">Dr. Lisa Chen</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-text-primary mb-2">Visit Date Range</label>
-                        <div class="flex gap-2">
-                            <input type="date" class="input flex-1" placeholder="From">
-                            <input type="date" class="input flex-1" placeholder="To">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-text-primary mb-2">Care Location</label>
-                        <select class="input">
-                            <option value="">All Locations</option>
-                            <option value="main">Main Hospital</option>
-                            <option value="north">North Clinic</option>
-                            <option value="south">South Clinic</option>
-                        </select>
-                    </div>
-                </div>
+            <div>
+            <label class="block text-sm font-medium text-text-primary mb-2">Medical Record Number</label>
+            <input type="text" id="adv_mrn" name="mrn" class="input">
+            </div>
 
-                <div class="flex gap-3">
-                    <button type="button" id="resetAdvancedSearch" class="btn btn-outline flex-1">
-                        Reset Filters
-                    </button>
-                    <button type="submit" class="btn btn-primary flex-1">
-                        Search Patients
-                    </button>
-                </div>
-            </form>
+            <div>
+            <label class="block text-sm font-medium text-text-primary mb-2">Date of Birth</label>
+            <input type="date" id="adv_dob" name="dob" class="input">
+            </div>
+
+            <div>
+            <label class="block text-sm font-medium text-text-primary mb-2">Phone Number</label>
+            <input type="tel" id="adv_phone" name="phone" class="input">
+            </div>
+
+            <div>
+            <label class="block text-sm font-medium text-text-primary mb-2">Diagnosis Code</label>
+            <input type="text" id="adv_diagnosis_code" name="diagnosis_code" class="input">
+            </div>
+
+            <div>
+            <label class="block text-sm font-medium text-text-primary mb-2">Treating Physician</label>
+            <select id="adv_doctor_id" name="doctor_id" class="input">
+                <option value="">All Doctors</option>
+            </select>
+            </div>
+
+            <div>
+            <label class="block text-sm font-medium text-text-primary mb-2">Visit Date Range</label>
+            <div class="flex gap-2">
+                <input type="date" id="adv_visit_from" name="visit_from" class="input flex-1">
+                <input type="date" id="adv_visit_to" name="visit_to" class="input flex-1">
+            </div>
+            </div>
+
+            <div>
+            <label class="block text-sm font-medium text-text-primary mb-2">Care Location</label>
+            <select id="adv_health_center_id" name="health_center_id" class="input">
+                <option value="">All Locations</option>
+            </select>
+            </div>
         </div>
+
+        <!-- Results -->
+        <div class="border border-border rounded-base p-3">
+            <div class="flex items-center justify-between mb-2">
+            <div class="text-sm font-semibold text-text-primary">Results</div>
+            <div id="advResultsCount" class="text-xs text-text-secondary">No results</div>
+            </div>
+
+            <div id="advResults" class="space-y-2 max-h-64 overflow-y-auto scrollbar-thin">
+            <div class="text-sm text-text-secondary">Search results will appear here.</div>
+            </div>
+        </div>
+
+        <div class="flex gap-3">
+            <button type="button" id="resetAdvancedSearch" class="btn btn-outline flex-1">
+            Reset Filters
+            </button>
+            <button type="submit" id="submitAdvancedSearch" class="btn btn-primary flex-1">
+            Search Patients
+            </button>
+        </div>
+        </form>
     </div>
+    </div>
+
 
     <!-- New Patient Modal -->
     <div id="newPatientModal" class="hidden fixed inset-0 bg-secondary-900 bg-opacity-50 z-modal flex items-center justify-center p-4">
@@ -1221,98 +1244,9 @@
             });
         });
 
-        // Global Search Autocomplete
-        const globalSearch = document.getElementById('globalSearch');
-        const searchAutocomplete = document.getElementById('searchAutocomplete');
-        const autocompleteResults = document.getElementById('autocompleteResults');
+        
 
-        const mockSearchResults = [
-            { name: 'Emily Rodriguez', mrn: '2024-001234', type: 'patient' },
-            { name: 'Michael Chen', mrn: '2024-001189', type: 'patient' },
-            { name: 'Jennifer Davis', mrn: '2024-002456', type: 'patient' },
-            { name: 'Robert Williams', mrn: '2024-002398', type: 'patient' },
-            { name: 'Lisa Martinez', mrn: '2024-002301', type: 'patient' }
-        ];
-
-        globalSearch.addEventListener('input', function(e) {
-            const query = e.target.value.toLowerCase();
-            
-            if (query.length > 0) {
-                const filtered = mockSearchResults.filter(result => 
-                    result.name.toLowerCase().includes(query) || 
-                    result.mrn.includes(query)
-                );
-                
-                if (filtered.length > 0) {
-                    autocompleteResults.innerHTML = filtered.map(result => `
-                        <div class="px-3 py-2 hover:bg-secondary-50 rounded cursor-pointer transition-colors">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm font-medium text-text-primary">${result.name}</p>
-                                    <p class="text-xs text-text-secondary">MRN: ${result.mrn}</p>
-                                </div>
-                                <svg class="w-4 h-4 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                                </svg>
-                            </div>
-                        </div>
-                    `).join('');
-                    searchAutocomplete.classList.remove('hidden');
-                } else {
-                    searchAutocomplete.classList.add('hidden');
-                }
-            } else {
-                searchAutocomplete.classList.add('hidden');
-            }
-        });
-
-        // Close autocomplete when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!globalSearch.contains(e.target) && !searchAutocomplete.contains(e.target)) {
-                searchAutocomplete.classList.add('hidden');
-            }
-        });
-
-        // Keyboard shortcut for search (Ctrl+K)
-        document.addEventListener('keydown', function(e) {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-                e.preventDefault();
-                globalSearch.focus();
-            }
-        });
-
-        // Advanced Search Modal
-        const advancedSearchBtn = document.getElementById('advancedSearchBtn');
-        const advancedSearchModal = document.getElementById('advancedSearchModal');
-        const closeAdvancedSearch = document.getElementById('closeAdvancedSearch');
-        const resetAdvancedSearch = document.getElementById('resetAdvancedSearch');
-        const advancedSearchForm = document.getElementById('advancedSearchForm');
-
-        advancedSearchBtn.addEventListener('click', () => {
-            advancedSearchModal.classList.remove('hidden');
-        });
-
-        closeAdvancedSearch.addEventListener('click', () => {
-            advancedSearchModal.classList.add('hidden');
-        });
-
-        resetAdvancedSearch.addEventListener('click', () => {
-            advancedSearchForm.reset();
-        });
-
-        advancedSearchForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            alert('Advanced search functionality would be implemented here');
-            advancedSearchModal.classList.add('hidden');
-        });
-
-        // Close modal on outside click
-        advancedSearchModal.addEventListener('click', (e) => {
-            if (e.target === advancedSearchModal) {
-                advancedSearchModal.classList.add('hidden');
-            }
-        });
-
+        
         // New Patient Modal
         const newPatientBtn = document.getElementById('newPatientBtn');
         const newPatientModal = document.getElementById('newPatientModal');
@@ -1355,13 +1289,15 @@
             });
         });
 
-        // Escape key to close modals
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                advancedSearchModal.classList.add('hidden');
-                newPatientModal.classList.add('hidden');
-            }
+        document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            const adv = document.getElementById("advancedSearchModal");
+            const newP = document.getElementById("newPatientModal");
+            if (adv) adv.classList.add("hidden");
+            if (newP) newP.classList.add("hidden");
+        }
         });
+
 
         // Session timeout warning
         let sessionTimeout;
@@ -1401,6 +1337,9 @@
             });
         });
     </script>
+<script src="../js/medical_staff_global_search_autocomplete.js"></script>
+<script src="../js/medical_staff_advanced_search_modal.js"></script>
 <script id="dhws-dataInjector" src="../public/dhws-data-injector.js"></script>
+
 </body>
 </html>
