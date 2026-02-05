@@ -210,6 +210,10 @@ CREATE TABLE patients (
     FOREIGN KEY (created_by) REFERENCES users(user_id)
     ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+ALTER TABLE patients
+  ADD COLUMN marital_status VARCHAR(50) NULL AFTER preferred_name,
+  ADD COLUMN occupation VARCHAR(120) NULL AFTER marital_status,
+  ADD COLUMN preferred_language VARCHAR(120) NULL AFTER occupation;
 
 
 -- =========================
@@ -268,7 +272,11 @@ CREATE TABLE patient_visits (
     FOREIGN KEY (created_by) REFERENCES users(user_id)
     ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
+ALTER TABLE patient_visits
+  ADD COLUMN health_center_id INT NULL AFTER doctor_id,
+  ADD CONSTRAINT fk_visits_health_center
+    FOREIGN KEY (health_center_id) REFERENCES health_centers(id)
+    ON DELETE SET NULL;
 
 -- =========================
 -- VITALS (Vitals tab + history)
@@ -465,8 +473,3 @@ CREATE TABLE audit_logs (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
-ALTER TABLE patient_visits
-  ADD COLUMN health_center_id INT NULL AFTER doctor_id,
-  ADD CONSTRAINT fk_visits_health_center
-    FOREIGN KEY (health_center_id) REFERENCES health_centers(id)
-    ON DELETE SET NULL;

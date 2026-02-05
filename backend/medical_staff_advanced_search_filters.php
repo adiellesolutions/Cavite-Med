@@ -3,37 +3,43 @@ session_start();
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['user_id'])) {
-  echo json_encode(["ok"=>false, "error"=>"Unauthorized"]);
+  echo json_encode(["ok" => false, "error" => "Unauthorized"]);
   exit;
 }
 
-require_once __DIR__ . "/cavitemed_db.php"; // must create this and it must set $pdo (PDO)
+// this file must define $conn = new mysqli(...)
+require_once __DIR__ . "/db/cavitemed_db.php";
 
 try {
-  // Doctors come from users table
-  $stmt = $pdo->prepare("
+  // Doctors: full_name from users where role=doctor
+  $doctors = [];
+  $sqlDoctors = "
     SELECT user_id AS id, full_name AS name
     FROM users
     WHERE role = 'doctor' AND status = 'active'
     ORDER BY full_name
-  ");
-  $stmt->execute();
-  $doctors = $stmt->fetchAll(PDO::FETCH_ASSOC);
+  ";
+  if ($res = $conn->query($sqlDoctors)) {
+    $doctors = $res->fetch_all(MYSQLI_ASSOC);
+  }
 
-  // Locations come from health_centers table
-  $stmt2 = $pdo->prepare("
+  // Locations: center_name from health_centers
+  $locations = [];
+  $sqlLocs = "
     SELECT id, center_name AS name
     FROM health_centers
     ORDER BY center_name
-  ");
-  $stmt2->execute();
-  $locations = $stmt2->fetchAll(PDO::FETCH_ASSOC);
+  ";
+  if ($res2 = $conn->query($sqlLocs)) {
+    $locations = $res2->fetch_all(MYSQLI_ASSOC);
+  }
 
   echo json_encode([
     "ok" => true,
     "doctors" => $doctors,
     "locations" => $locations
   ]);
-} catch (Exception $e) {
-  echo json_encode(["ok"=>false, "error"=>"Server error: ".$e->getMessage()]);
+} catch (Throwable $e) {
+  http_response_code(500);
+  echo json_encode(["ok" => false, "error" => "Server error"]);
 }

@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id'])) {
   exit;
 }
 
-require_once __DIR__ . "/cavitemed_db.php";
+require_once __DIR__ . "/db/cavitemed_db.php"; // provides $conn (mysqli)
 
 $patient_id = isset($_GET['patient_id']) ? trim($_GET['patient_id']) : '';
 if ($patient_id === '' || !ctype_digit($patient_id)) {
@@ -18,7 +18,8 @@ if ($patient_id === '' || !ctype_digit($patient_id)) {
 }
 
 try {
-  $stmt = $pdo->prepare("
+  // NOTE: your table columns are address_line (not address)
+  $sql = "
     SELECT
       patient_id,
       mrn,
@@ -30,17 +31,30 @@ try {
       blood_type,
       phone,
       email,
-      address,
+      address_line,
       city,
       state,
       zip_code,
       created_at
     FROM patients
-    WHERE patient_id = :pid
+    WHERE patient_id = ?
     LIMIT 1
-  ");
-  $stmt->execute([":pid" => $patient_id]);
-  $patient = $stmt->fetch();
+  ";
+
+  $stmt = $conn->prepare($sql);
+  if (!$stmt) {
+    throw new Exception("Prepare failed: " . $conn->error);
+  }
+
+  $pid = (int)$patient_id;
+  $stmt->bind_param("i", $pid);
+
+  if (!$stmt->execute()) {
+    throw new Exception("Execute failed: " . $stmt->error);
+  }
+
+  $result = $stmt->get_result();
+  $patient = $result->fetch_assoc();
 
   if (!$patient) {
     http_response_code(404);
@@ -49,7 +63,7 @@ try {
   }
 
   echo json_encode(["ok" => true, "patient" => $patient]);
-} catch (Exception $e) {
+} catch (Throwable $e) {
   http_response_code(500);
   echo json_encode(["ok" => false, "error" => "Server error"]);
 }

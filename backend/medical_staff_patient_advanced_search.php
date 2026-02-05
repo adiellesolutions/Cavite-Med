@@ -3,95 +3,167 @@ session_start();
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['user_id'])) {
-  echo json_encode(["ok"=>false, "error"=>"Unauthorized"]);
+  echo json_encode(["ok" => false, "error" => "Unauthorized"]);
   exit;
 }
 
-require_once __DIR__ . "/cavitedmed_db.php";
+require_once __DIR__ . "/db/cavitemed_db.php"; // provides $conn (mysqli)
 
-// Inputs (match your form names)
-$name = trim($_POST["name"] ?? "");
-$mrn = trim($_POST["mrn"] ?? "");
-$dob = trim($_POST["dob"] ?? "");
-$phone = trim($_POST["phone"] ?? "");
-$doctor_id = trim($_POST["doctor_id"] ?? "");
-$visit_from = trim($_POST["visit_from"] ?? "");
-$visit_to = trim($_POST["visit_to"] ?? "");
-$health_center_id = trim($_POST["health_center_id"] ?? "");
+function likeParam($v) {
+  $v = trim((string)$v);
+  if ($v === "") return null;
+  return "%" . $v . "%";
+}
 
 try {
-  // Base query: use patients table fields
-  // You don't have full_name column; you have first_name/last_name/etc.
+  // Get filters
+  $name         = isset($_POST['name']) ? trim($_POST['name']) : "";
+  $mrn          = isset($_POST['mrn']) ? trim($_POST['mrn']) : "";
+  $dob          = isset($_POST['dob']) ? trim($_POST['dob']) : "";
+  $phone        = isset($_POST['phone']) ? trim($_POST['phone']) : "";
+  $doctor_id    = isset($_POST['doctor_id']) ? trim($_POST['doctor_id']) : "";
+  $health_center_id = isset($_POST['health_center_id']) ? trim($_POST['health_center_id']) : "";
+  $visit_from   = isset($_POST['visit_from']) ? trim($_POST['visit_from']) : "";
+  $visit_to     = isset($_POST['visit_to']) ? trim($_POST['visit_to']) : "";
+
+  // Base query: patients
   $sql = "
-    SELECT DISTINCT
+    SELECT
       p.patient_id,
+      CONCAT(p.first_name, ' ', p.last_name) AS full_name,
       p.mrn,
-      p.first_name,
-      p.middle_name,
-      p.last_name,
       p.phone,
-      p.date_of_birth
+      p.date_of_birth AS dob
     FROM patients p
-    LEFT JOIN patient_visits v ON v.patient_id = p.patient_id
     WHERE 1=1
   ";
+
+  $types = "";
   $params = [];
 
+  // Name filter (first or last)
   if ($name !== "") {
-    $sql .= " AND CONCAT(p.first_name,' ',IFNULL(p.middle_name,''),' ',p.last_name) LIKE :name ";
-    $params[":name"] = "%$name%";
+    $sql .= " AND (p.first_name LIKE ? OR p.last_name LIKE ? OR CONCAT(p.first_name,' ',p.last_name) LIKE ?) ";
+    $types .= "sss";
+    $lp = likeParam($name);
+    $params[] = $lp;
+    $params[] = $lp;
+    $params[] = $lp;
   }
+
+  // MRN
   if ($mrn !== "") {
-    $sql .= " AND p.mrn LIKE :mrn ";
-    $params[":mrn"] = "%$mrn%";
+    $sql .= " AND p.mrn LIKE ? ";
+    $types .= "s";
+    $params[] = likeParam($mrn);
   }
+
+  // DOB exact
   if ($dob !== "") {
-    $sql .= " AND p.date_of_birth = :dob ";
-    $params[":dob"] = $dob;
+    $sql .= " AND p.date_of_birth = ? ";
+    $types .= "s";
+    $params[] = $dob;
   }
+
+  // Phone
   if ($phone !== "") {
-    $sql .= " AND p.phone LIKE :phone ";
-    $params[":phone"] = "%$phone%";
+    $sql .= " AND p.phone LIKE ? ";
+    $types .= "s";
+    $params[] = likeParam($phone);
   }
 
-  // Visit-based filters use patient_visits table (your schema)
-  if ($doctor_id !== "") {
-    $sql .= " AND v.doctor_id = :doctor_id ";
-    $params[":doctor_id"] = $doctor_id;
-  }
-  if ($health_center_id !== "") {
-    $sql .= " AND v.health_center_id = :hc ";
-    $params[":hc"] = $health_center_id;
-  }
-  if ($visit_from !== "") {
-    $sql .= " AND v.visit_datetime >= :vf ";
-    $params[":vf"] = $visit_from . " 00:00:00";
-  }
-  if ($visit_to !== "") {
-    $sql .= " AND v.visit_datetime <= :vt ";
-    $params[":vt"] = $visit_to . " 23:59:59";
-    $params[":vt"] = $visit_to . " 23:59:59";
+  // Visit-based filters (doctor/location/date range) require joining patient_visits
+  $needVisitsJoin = ($doctor_id !== "" || $health_center_id !== "" || $visit_from !== "" || $visit_to !== "");
+
+  if ($needVisitsJoin) {
+    $sql = "
+      SELECT DISTINCT
+        p.patient_id,
+        CONCAT(p.first_name, ' ', p.last_name) AS full_name,
+        p.mrn,
+        p.phone,
+        p.date_of_birth AS dob
+      FROM patients p
+      INNER JOIN patient_visits v ON v.patient_id = p.patient_id
+      WHERE 1=1
+    ";
+
+    // Re-apply patient filters again when we rebuilt SQL
+    $types = "";
+    $params = [];
+
+    if ($name !== "") {
+      $sql .= " AND (p.first_name LIKE ? OR p.last_name LIKE ? OR CONCAT(p.first_name,' ',p.last_name) LIKE ?) ";
+      $types .= "sss";
+      $lp = likeParam($name);
+      $params[] = $lp;
+      $params[] = $lp;
+      $params[] = $lp;
+    }
+    if ($mrn !== "") {
+      $sql .= " AND p.mrn LIKE ? ";
+      $types .= "s";
+      $params[] = likeParam($mrn);
+    }
+    if ($dob !== "") {
+      $sql .= " AND p.date_of_birth = ? ";
+      $types .= "s";
+      $params[] = $dob;
+    }
+    if ($phone !== "") {
+      $sql .= " AND p.phone LIKE ? ";
+      $types .= "s";
+      $params[] = likeParam($phone);
+    }
+
+    // Doctor filter
+    if ($doctor_id !== "") {
+      $sql .= " AND v.doctor_id = ? ";
+      $types .= "i";
+      $params[] = (int)$doctor_id;
+    }
+
+    // Location filter
+    if ($health_center_id !== "") {
+      $sql .= " AND v.health_center_id = ? ";
+      $types .= "i";
+      $params[] = (int)$health_center_id;
+    }
+
+    // Visit date range
+    if ($visit_from !== "") {
+      $sql .= " AND DATE(v.visit_datetime) >= ? ";
+      $types .= "s";
+      $params[] = $visit_from;
+    }
+    if ($visit_to !== "") {
+      $sql .= " AND DATE(v.visit_datetime) <= ? ";
+      $types .= "s";
+      $params[] = $visit_to;
+    }
   }
 
-  $sql .= " ORDER BY p.last_name, p.first_name LIMIT 50 ";
+  $sql .= " ORDER BY full_name LIMIT 50 ";
 
-  $stmt = $pdo->prepare($sql);
-  $stmt->execute($params);
-  $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+  $stmt = $conn->prepare($sql);
+  if (!$stmt) {
+    echo json_encode(["ok"=>false, "error"=>"Prepare failed: ".$conn->error]);
+    exit;
+  }
 
-  // Build full_name in PHP for the JS to display
-  $results = array_map(function($r){
-    $full = trim($r["first_name"]." ".($r["middle_name"] ?? "")." ".$r["last_name"]);
-    return [
-      "patient_id" => $r["patient_id"],
-      "mrn" => $r["mrn"],
-      "full_name" => $full,
-      "phone" => $r["phone"],
-      "dob" => $r["date_of_birth"],
-    ];
-  }, $rows);
+  if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
+  }
 
-  echo json_encode(["ok"=>true, "results"=>$results]);
-} catch (Exception $e) {
-  echo json_encode(["ok"=>false, "error"=>"Server error: ".$e->getMessage()]);
+  $stmt->execute();
+  $res = $stmt->get_result();
+
+  $results = [];
+  while ($row = $res->fetch_assoc()) {
+    $results[] = $row;
+  }
+
+  echo json_encode(["ok" => true, "results" => $results]);
+} catch (Throwable $e) {
+  echo json_encode(["ok" => false, "error" => "Server error: " . $e->getMessage()]);
 }
