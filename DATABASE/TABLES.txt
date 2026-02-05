@@ -1,0 +1,147 @@
+<> admin_reports.html
+<> doctor_medical_certificate.html
+<> doctor_patient_records.html
+<> doctor_prescription.html
+<> encoder_archive.html
+</> encoder_inventory.html
+<> medical_staff_dashboard.html
+<> medical_staff_inventory.html
+<> medical_staff_patient_registration.html
+<> medical_staff_prescription.html
+<> system_login_portal.html
+<> admin_dashboard.html
+<> admin_analytics_and_reporting.html
+</> admin_user_management.html
+</> force_reset_password.html
+<> admin_audit_log.html
+
+CREATE DATABASE cavitemed;
+
+
+//admin_user_management.php
+
+CREATE TABLE users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    full_name VARCHAR(100) NOT NULL,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL DEFAULT 'cavmed2025',
+    role ENUM('admin', 'doctor', 'medical_staff', 'encoder') NOT NULL,
+    email VARCHAR(100),
+    contact_number VARCHAR(20),
+    position VARCHAR(100),
+    profile_picture VARCHAR(255) NULL,
+    status ENUM('active', 'inactive') DEFAULT 'active',
+    clinic VARCHAR(100),
+    last_login DATETIME NULL,
+    failed_attempts INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at DATETIME NULL,
+    must_change_password TINYINT(1) DEFAULT 1
+);
+
+
+//encoder_inventory.php
+
+CREATE TABLE suppliers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    supplier_name VARCHAR(255) NOT NULL,
+    supplier_type ENUM('private','donation','government') NOT NULL,
+    contact_person VARCHAR(255),
+    contact_number VARCHAR(100),
+    email VARCHAR(255),
+    address TEXT
+);
+
+CREATE TABLE medicine (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    supplier_id INT NOT NULL,
+    barcode VARCHAR(100) UNIQUE NOT NULL,
+    medicine_name VARCHAR(255) NOT NULL,
+    medicine_type ENUM('generic', 'branded') NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    funding_source ENUM('donation','city_health','mixed') NOT NULL,
+    batch_number VARCHAR(100) NOT NULL,
+    expiry_date DATE NOT NULL,
+    unit_of_measure ENUM('bottle','tablet','capsule','other') NOT NULL,
+    manufacturing_date DATE NOT NULL,
+    current_stock INT NOT NULL DEFAULT 0,
+    reorder_point INT NOT NULL DEFAULT 0,
+    unit_price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    notes TEXT,
+    status ENUM(
+        'in_stock',
+        'low_stock',
+        'out_of_stock',
+        'expired'
+    ) DEFAULT 'in_stock',
+    is_archived TINYINT(1) DEFAULT 0,
+    created_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_medicine_supplier
+        FOREIGN KEY (supplier_id)
+        REFERENCES suppliers(id)
+        ON DELETE RESTRICT
+);
+
+CREATE TABLE inventory_transactions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    medicine_id INT NOT NULL,
+    transaction_type ENUM(
+        'add',
+        'deduct',
+        'delivery',
+        'adjustment',
+        'expired'
+    ) NOT NULL,
+    quantity INT NOT NULL,
+    remarks VARCHAR(255),
+    performed_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_transaction_medicine
+        FOREIGN KEY (medicine_id)
+        REFERENCES medicine(id)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE health_centers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    center_name VARCHAR(255) NOT NULL,
+    center_type ENUM(
+        'rhu',
+        'barangay_health_center',
+        'hospital',
+        'clinic',
+        'other'
+    ) NOT NULL,
+    address TEXT,
+    contact_person VARCHAR(255),
+    contact_number VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+CREATE TABLE deliveries (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    health_center_id INT NOT NULL,
+    medicine_id INT NOT NULL,
+    quantity INT NOT NULL,
+    status ENUM('pending','delivered','cancelled') DEFAULT 'pending',
+    remarks TEXT,
+    created_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_delivery_health_center
+        FOREIGN KEY (health_center_id)
+        REFERENCES health_centers(id)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_delivery_medicine
+        FOREIGN KEY (medicine_id)
+        REFERENCES medicine(id)
+        ON DELETE RESTRICT
+);
+
