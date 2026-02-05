@@ -7,7 +7,7 @@ if (!isset($_SESSION['user_id'])) {
   exit;
 }
 
-require_once __DIR__ . "/db.php"; // must create this and it must set $pdo (PDO)
+require_once __DIR__ . "/cavitemed_db.php"; // must create this and it must set $pdo (PDO)
 
 try {
   // Doctors come from users table

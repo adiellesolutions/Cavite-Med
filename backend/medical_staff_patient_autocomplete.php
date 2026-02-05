@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id'])) {
   exit;
 }
 
-require_once __DIR__ . "/db.php";
+require_once __DIR__ . "/cavitemed_db.php";
 
 $q = isset($_GET['q']) ? trim($_GET['q']) : '';
 if ($q === '' || mb_strlen($q) < 2) {

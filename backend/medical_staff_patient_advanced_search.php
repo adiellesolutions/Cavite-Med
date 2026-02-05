@@ -7,7 +7,7 @@ if (!isset($_SESSION['user_id'])) {
   exit;
 }
 
-require_once __DIR__ . "/db.php";
+require_once __DIR__ . "/cavitedmed_db.php";
 
 // Inputs (match your form names)
 $name = trim($_POST["name"] ?? "");

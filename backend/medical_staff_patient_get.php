@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id'])) {
   exit;
 }
 
-require_once __DIR__ . "/db.php";
+require_once __DIR__ . "/cavitemed_db.php";
 
 $patient_id = isset($_GET['patient_id']) ? trim($_GET['patient_id']) : '';
 if ($patient_id === '' || !ctype_digit($patient_id)) {
