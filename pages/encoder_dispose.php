@@ -28,7 +28,12 @@ if (!empty($_SESSION['force_change_password'])) {
     <script defer src="../js/encoder_disposal_modal.js"></script>
     <script defer src="../js/encoder_disposal_medicinedropdown.js"></script>
     <script defer src="../js/encoder_disposal_add.js"></script>
+    <script defer src="../js/barcode_scanstate.js"></script>
+    <script defer src="../js/encoder_disposal_form.js"></script>
+    <script defer src="../js/encoder_disposal_filters.js"></script>
 
+    
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-background min-h-screen flex flex-col">
@@ -184,7 +189,7 @@ if (!empty($_SESSION['force_change_password'])) {
             </div>
 
             <!-- Filters & Search -->
-            <div class="card mb-6 no-print">
+            <div class="card no-print">
                 <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div class="flex-1">
                         <div class="relative">
@@ -273,12 +278,8 @@ if (!empty($_SESSION['force_change_password'])) {
                                 </svg>
                                 Previous
                             </button>
-                            <div class="flex items-center gap-1">
-                                <button type="button" class="btn btn-outline btn-sm w-8 h-8 p-0 active">1</button>
-                                <button type="button" class="btn btn-outline btn-sm w-8 h-8 p-0">2</button>
-                                <button type="button" class="btn btn-outline btn-sm w-8 h-8 p-0">3</button>
-                                <span class="px-2 text-text-secondary">...</span>
-                                <button type="button" class="btn btn-outline btn-sm w-8 h-8 p-0">20</button>
+                            <div class="flex items-center gap-1" id="pageNumbers">
+                                <!-- page buttons generated dynamically -->
                             </div>
                             <button type="button" id="nextPageBtn" class="btn btn-outline btn-sm">
                                 Next
@@ -348,7 +349,10 @@ if (!empty($_SESSION['force_change_password'])) {
             <div id="addDisposalModal" class="hidden fixed inset-0 bg-secondary-900 bg-opacity-50 z-modal flex items-center justify-center p-4">
                 <div class="card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                     <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-xl font-semibold text-text-primary">Add Disposal Record</h3>
+                        <h3 id="disposalModalTitle"
+                            class="text-xl font-semibold text-text-primary">
+                            Add Disposal Record
+                        </h3>
                         <button type="button" id="closeDisposalModal" class="text-text-tertiary hover:text-text-primary transition-colors">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -365,14 +369,18 @@ if (!empty($_SESSION['force_change_password'])) {
                                     <!-- Options will be populated dynamically -->
                                 </select>
                             </div>
+
+                            <input type="hidden" id="editDisposalId">
+                            <input type="hidden" id="batchNumber" class="input w-full" readonly>
+                            <input type="hidden" id="disposalValue" class="input w-full" step="0.01" min="0" readonly>
+                            <input type="text" id="barcodeInput" autocomplete="off" class="absolute opacity-0 pointer-events-none" aria-hidden="true">
+                            <input type="hidden" id="expiryDate" class="input w-full" readonly>
+
                             <div>
                                 <label class="block text-sm font-medium text-text-secondary mb-1">Quantity</label>
                                 <input type="number" id="disposalQuantity" class="input w-full" min="1" required>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-text-secondary mb-1">Value (₱)</label>
-                                <input type="number" id="disposalValue" class="input w-full" step="0.01" min="0" required>
-                            </div>
+
                             <div>
                                 <label class="block text-sm font-medium text-text-secondary mb-1">Disposal Method</label>
                                 <select id="disposalMethod" class="input w-full" required>
@@ -380,7 +388,7 @@ if (!empty($_SESSION['force_change_password'])) {
                                     <option value="incinerated">Incinerated</option>
                                     <option value="returned">Returned to Manufacturer</option>
                                     <option value="destroyed">Chemically Destroyed</option>
-                                    <option value="donated">Donated (if allowed)</option>
+                                    <option value="donated">Donated</option>
                                     <option value="other">Other</option>
                                 </select>
                             </div>
@@ -397,12 +405,49 @@ if (!empty($_SESSION['force_change_password'])) {
                         <div class="flex gap-3 pt-6 border-t border-border">
                             <button type="button" id="cancelDisposal" class="btn btn-outline flex-1">Cancel</button>
                             <button type="submit" class="btn btn-primary flex-1">Save Disposal Record</button>
+                            <button type="button"
+                                id="barcodeModeBtn"
+                                class="btn btn-outline btn-sm"
+                                title="Barcode mode">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 5v14M7 5v14M11 5v14M15 5v14M19 5v14"/>
+                            </svg>
+                        </button>
+
                         </div>
                     </form>
                 </div>
             </div>
         </div>
     </main>
+
+
+        <!-- Scan State UI -->
+    <div id="scanStateUI"
+        class="hidden mt-3 flex items-center gap-3 px-4 py-3 rounded-lg border border-primary bg-primary/5">
+
+        <!-- Pulse Indicator -->
+        <span class="relative flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+        </span>
+
+        <!-- Text -->
+        <div class="flex-1">
+            <p class="text-sm font-medium text-text-primary">
+                Barcode Scan Mode Active
+            </p>
+            <p class="text-xs text-text-secondary">
+                Scan a medicine barcode now
+            </p>
+        </div>
+
+        <!-- Exit hint -->
+        <span class="text-xs text-text-tertiary">
+            Press <kbd class="px-1 border rounded">Esc</kbd> to exit
+        </span>
+    </div>
 
 
     <!-- Footer -->

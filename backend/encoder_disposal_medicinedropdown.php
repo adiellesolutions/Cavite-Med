@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $sql = "
-    SELECT id, medicine_name, batch_number, expiry_date
+    SELECT id, medicine_name, batch_number, expiry_date, unit_price, barcode
     FROM medicine
     WHERE is_archived = 0
     ORDER BY medicine_name ASC

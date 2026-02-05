@@ -167,6 +167,8 @@ CREATE TABLE disposal_records (
     created_by INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    notes TEXT NULL;
+    is_archived TINYINT(1) DEFAULT 0,
 
     CONSTRAINT fk_disposal_medicine
         FOREIGN KEY (medicine_id)
