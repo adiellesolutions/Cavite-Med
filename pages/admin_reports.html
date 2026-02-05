@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Reports & Analytics - CAVMED Portal">
+    <title>Reports & Analytics - CAVMED Portal</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <style>
+        .report-card {
+            transition: all 0.3s ease;
+        }
+        
+        .report-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+        
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 9999px;
+            padding: 0.375rem 0.875rem;
+            font-size: 0.875rem;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .filter-chip-remove {
+            cursor: pointer;
+            color: #64748b;
+        }
+        
+        .filter-chip-remove:hover {
+            color: #475569;
+        }
+        
+        .data-table {
+            width: 100%;
+            font-size: 0.875rem;
+        }
+        
+        .data-table th {
+            font-weight: 600;
+            text-align: left;
+            padding: 0.75rem 1rem;
+            background-color: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .data-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .data-table tr:hover {
+            background-color: #f8fafc;
+        }
+        
+        .trend-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .trend-up {
+            color: #059669;
+        }
+        
+        .trend-down {
+            color: #ef4444;
+        }
+        
+        .trend-neutral {
+            color: #64748b;
+        }
+        
+        .export-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .export-btn:hover {
+            background-color: #f1f5f9;
+        }
+        
+        .date-range-display {
+            background-color: #f1f5f9;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .summary-card {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border: 1px solid #a7f3d0;
+        }
+        
+        .warning-card {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 1px solid #fcd34d;
+        }
+        
+        .insight-card {
+            border-left: 4px solid #059669;
+        }
+        
+        .pagination {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .page-btn {
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .page-btn.active {
+            background-color: #059669;
+            color: white;
+        }
+        
+        .page-btn:not(.active):hover {
+            background-color: #f1f5f9;
+        }
+        
+        .badge-count {
+            background-color: #059669;
+            color: white;
+            border-radius: 9999px;
+            padding: 0.125rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-background min-h-screen flex flex-col">
+    <!-- Header Section -->
+    <header class="bg-surface border-b border-border py-4 px-6 shadow-sm sticky top-0 z-sticky">
+        <div class="max-w-full mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <!-- Logo -->
+                <a href="system_login_portal.html" class="flex items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="40" height="40" rx="8" fill="#2563EB"/>
+                        <path d="M20 10v20M10 20h20" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                        <circle cx="20" cy="20" r="6" stroke="white" stroke-width="2" fill="none"/>
+                    </svg>
+                    <div>
+                        <h1 class="text-xl font-semibold text-text-primary">CAVMED Portal</h1>
+                        <p class="text-xs text-text-secondary">Reports</p>
+                    </div>
+                </a>
+            </div>
+
+            <div class="flex items-center gap-4">   
+                <div class="flex items-center gap-3">
+                    <div class="text-right hidden md:block">
+                        <p class="text-sm font-medium text-text-primary">Admin User</p>
+                        <p class="text-xs text-text-secondary">System Administrator</p>
+                    </div>
+                    <img src="https://img.rocket.new/generatedImages/rocket_gen_img_19c8a8405-1763298405226.png" 
+                            alt="Administrator profile picture"
+                            class="w-10 h-10 rounded-full object-cover border-2 border-primary"
+                            onerror="this.src='https://images.unsplash.com/photo-1584824486509-112e4181ff6b?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'; this.onerror=null;">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="border-t border-border bg-secondary-50">
+        <div class="px-6">
+            <div class="flex items-center gap-1 overflow-x-auto scrollbar-thin">
+                <a href="admin_dashboard.php" class="nav-item whitespace-nowrap">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="admin_analytics_and_reporting.html" class="nav-item whitespace-nowrap">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Analytics
+                </a>
+                <a href="admin_audit_log.html" class="nav-item whitespace-nowrap">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Audit Logs
+                </a>
+                <a href="admin_reports.html" class="nav-item nav-item-active whitespace-nowrap">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Reports
+                </a>
+                <a href="system_login_portal.html" class="nav-item whitespace-nowrap ml-auto">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                    Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 px-6 py-6">
+        <div class="max-w-full mx-auto">
+            <!-- Page Header -->
+            <div class="flex items-center justify-between mb-6 pb-6 border-b border-border">
+                <div>
+                    <h2 class="text-2xl font-semibold text-text-primary"></h2>
+                    <p class="text-text-secondary mt-1"></p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button type="button" id="exportAllBtn" class="btn btn-primary">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span>Export All</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="card mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-text-primary">Filters</h3>
+                    <button type="button" id="clearFiltersBtn" class="btn btn-ghost btn-sm">
+                        Clear All
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                    <!-- Date Range -->
+                    <div>
+                        <label class="block text-sm font-medium text-text-primary mb-2">
+                            Date Range
+                        </label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="date" id="fromDate" class="input" value="2025-01-01">
+                            <input type="date" id="toDate" class="input" value="2025-01-31">
+                        </div>
+                    </div>
+                    
+                    <!-- Report Type -->
+                    <div>
+                        <label for="reportType" class="block text-sm font-medium text-text-primary mb-2">
+                            Report Type
+                        </label>
+                        <select id="reportType" class="input">
+                            <option value="all">All Reports</option>
+                            <option value="medication">Medication Reports</option>
+                            <option value="patient">Patient Reports</option>
+                            <option value="financial">Financial Reports</option>
+                            <option value="clinical">Clinical Reports</option>
+                        </select>
+                    </div>
+                
+                    
+                    <!-- Prescriber -->
+                    <div>
+                        <label for="prescriberFilter" class="block text-sm font-medium text-text-primary mb-2">
+                            Prescriber
+                        </label>
+                        <select id="prescriberFilter" class="input">
+                            <option value="all">All Prescribers</option>
+                            <option value="dr-chen">Dr. Sarah Chen</option>
+                            <option value="dr-johnson">Dr. Michael Johnson</option>
+                            <option value="dr-rodriguez">Dr. Emily Rodriguez</option>
+                            <option value="dr-wilson">Dr. James Wilson</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Active Filters -->
+                <div id="activeFilters" class="flex flex-wrap items-center gap-2 p-3 bg-secondary-50 rounded-base">
+                    <span class="text-sm text-text-secondary">Active filters:</span>
+                    <!-- Filters will be added here dynamically -->
+                </div>
+                
+                <!-- Apply Filters Button -->
+                <button type="button" id="applyFiltersBtn" class="btn btn-primary w-full mt-4">
+                    Apply Filters & Generate Report
+                </button>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="report-card card summary-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-text-secondary">Total Prescriptions</p>
+                            <p class="text-2xl font-semibold text-text-primary mt-1">1,247</p>
+                            <div class="trend-indicator trend-up mt-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                                </svg>
+                                <span>12.5% from last month</span>
+                            </div>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-primary-100 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-primary-600" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            
+                
+                <div class="report-card card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-text-secondary">Total Medications</p>
+                            <p class="text-2xl font-semibold text-text-primary mt-1">58</p>
+                            <div class="trend-indicator trend-neutral mt-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14"/>
+                                </svg>
+                                <span>No change</span>
+                            </div>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-accent-100 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-accent-600" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+
+            <!-- Main Reports Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <!-- Medication Reports -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Top Medications Chart -->
+                    <div class="card">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-text-primary">Top 10 Medications (This Month)</h3>
+                            <div class="flex items-center gap-2">
+                                <button type="button" class="export-btn">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                    </svg>
+                                    Export
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <!-- Chart would be rendered here -->
+                            <div class="h-full flex items-center justify-center bg-secondary-50 rounded-base">
+                                <p class="text-text-secondary">Medication distribution chart visualization</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <div class="data-table">
+                                <table class="w-full">
+                                    <thead>
+                                        <tr>
+                                            <th>Medication</th>
+                                            <th>Prescriptions</th>
+                                            <th>Avg. Cost</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="font-medium">Amoxicillin 500mg</td>
+                                            <td>187</td>
+                                            <td>₱18.50</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="font-medium">Metformin 850mg</td>
+                                            <td>145</td>
+                                            <td>₱12.25</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="font-medium">Lisinopril 10mg</td>
+                                            <td>132</td>
+                                            <td>₱24.80</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="font-medium">Atorvastatin 20mg</td>
+                                            <td>118</td>
+                                            <td>₱45.60</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="font-medium">Omeprazole 20mg</td>
+                                            <td>96</td>
+                                            <td>₱32.15</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Patient Demographics -->
+                    <div class="card">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-text-primary">Patient Demographics Summary</h3>
+                            <button type="button" class="btn btn-outline btn-sm">
+                                View Details
+                            </button>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div class="text-center p-4 bg-secondary-50 rounded-base">
+                                <p class="text-2xl font-bold text-text-primary">45%</p>
+                                <p class="text-sm text-text-secondary mt-1">Female Patients</p>
+                            </div>
+                            <div class="text-center p-4 bg-secondary-50 rounded-base">
+                                <p class="text-2xl font-bold text-text-primary">55%</p>
+                                <p class="text-sm text-text-secondary mt-1">Male Patients</p>
+                            </div>
+                            <div class="text-center p-4 bg-secondary-50 rounded-base">
+                                <p class="text-2xl font-bold text-text-primary">62</p>
+                                <p class="text-sm text-text-secondary mt-1">Avg. Age</p>
+                            </div>
+                            <div class="text-center p-4 bg-secondary-50 rounded-base">
+                                <p class="text-2xl font-bold text-text-primary">2.4</p>
+                                <p class="text-sm text-text-secondary mt-1">Avg. Rx per Patient</p>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+
+                <!-- Right Column - Insights & Quick Reports -->
+                <div class="space-y-6">
+                    <!-- Key Insights -->
+                    <div class="card insight-card">
+                        <h3 class="text-lg font-semibold text-text-primary mb-4">Key Insights</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-4 h-4 text-primary-600" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-text-primary">Antibiotic Usage Spike</p>
+                                    <p class="text-xs text-text-secondary mt-1">Antibiotic prescriptions increased by 15% this month, likely due to seasonal influenza.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-full bg-success-100 flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-4 h-4 text-success-600" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-text-primary">Cost Efficiency</p>
+                                    <p class="text-xs text-text-secondary mt-1">Average prescription cost decreased by 3.2% due to increased generic substitution.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-full bg-warning-100 flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-4 h-4 text-warning-600" fill="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.346 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-text-primary">High-Risk Medication Alert</p>
+                                    <p class="text-xs text-text-secondary mt-1">5 patients were prescribed medications with potential drug interactions. Review recommended.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Report Templates -->
+                    <div class="card">
+                        <h3 class="text-lg font-semibold text-text-primary mb-4">Quick Report Templates</h3>
+                        <div class="space-y-3">
+                            <button type="button" class="w-full text-left p-3 rounded-base hover:bg-secondary-50 transition-colors border border-border">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="font-medium text-text-primary">Monthly Prescription Summary</p>
+                                        <p class="text-sm text-text-secondary">Complete monthly prescription report</p>
+                                    </div>
+                                    <svg class="w-5 h-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </div>
+                            </button>
+                            
+                            <button type="button" class="w-full text-left p-3 rounded-base hover:bg-secondary-50 transition-colors border border-border">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="font-medium text-text-primary">Patient Compliance Report</p>
+                                        <p class="text-sm text-text-secondary">Medication adherence statistics</p>
+                                    </div>
+                                    <svg class="w-5 h-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </div>
+                            </button>
+                            
+                            <button type="button" class="w-full text-left p-3 rounded-base hover:bg-secondary-50 transition-colors border border-border">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="font-medium text-text-primary">Drug Utilization Review</p>
+                                        <p class="text-sm text-text-secondary">Medication usage patterns</p>
+                                    </div>
+                                    <svg class="w-5 h-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </div>
+                            </button>
+                            
+                            <button type="button" class="w-full text-left p-3 rounded-base hover:bg-secondary-50 transition-colors border border-border">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="font-medium text-text-primary">Financial Analysis Report</p>
+                                        <p class="text-sm text-text-secondary">Revenue and cost analysis</p>
+                                    </div>
+                                    <svg class="w-5 h-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Recent Reports -->
+                    <div class="card">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-text-primary">Recent Reports</h3>
+                            <button type="button" class="btn btn-ghost btn-sm">
+                                View All
+                            </button>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 bg-secondary-50 rounded-base">
+                                <div>
+                                    <p class="text-sm font-medium text-text-primary">January 2025 Summary</p>
+                                    <p class="text-xs text-text-secondary">Generated: Jan 31, 09:30 AM</p>
+                                </div>
+                                <button type="button" class="btn btn-ghost btn-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-3 bg-secondary-50 rounded-base">
+                                <div>
+                                    <p class="text-sm font-medium text-text-primary">Antibiotic Usage Report</p>
+                                    <p class="text-xs text-text-secondary">Generated: Jan 28, 14:15 PM</p>
+                                </div>
+                                <button type="button" class="btn btn-ghost btn-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-3 bg-secondary-50 rounded-base">
+                                <div>
+                                    <p class="text-sm font-medium text-text-primary">Patient Demographics</p>
+                                    <p class="text-xs text-text-secondary">Generated: Jan 25, 11:00 AM</p>
+                                </div>
+                                <button type="button" class="btn btn-ghost btn-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Reports Table -->
+            <div class="card mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-text-primary">Detailed Prescription Records</h3>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm text-text-secondary">Showing 1-10 of 1,247 records</span>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Patient</th>
+                                <th>Medication</th>
+                                <th>Dosage</th>
+                                <th>Prescriber</th>
+                                <th>Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Jan 31, 2025</td>
+                                <td class="font-medium">Maria Johnson</td>
+                                <td>Amoxicillin 500mg</td>
+                                <td>TID × 7 days</td>
+                                <td>Dr. Sarah Chen</td>
+                                <td>₱18.50</td>
+                            </tr>
+                            <tr>
+                                <td>Jan 30, 2025</td>
+                                <td class="font-medium">Robert Smith</td>
+                                <td>Lisinopril 10mg</td>
+                                <td>Once daily</td>
+                                <td>Dr. Michael Johnson</td>
+                                <td>₱24.80</td>
+                            </tr>
+                            <tr>
+                                <td>Jan 30, 2025</td>
+                                <td class="font-medium">Emily Chen</td>
+                                <td>Metformin 850mg</td>
+                                <td>BID × 30 days</td>
+                                <td>Dr. Emily Rodriguez</td>
+                                <td>₱12.25</td>
+                            </tr>
+                            <tr>
+                                <td>Jan 29, 2025</td>
+                                <td class="font-medium">John Davis</td>
+                                <td>Atorvastatin 20mg</td>
+                                <td>Once daily</td>
+                                <td>Dr. James Wilson</td>
+                                <td>₱45.60</td>
+                            </tr>
+                            <tr>
+                                <td>Jan 29, 2025</td>
+                                <td class="font-medium">Sarah Thompson</td>
+                                <td>Omeprazole 20mg</td>
+                                <td>Once daily</td>
+                                <td>Dr. Sarah Chen</td>
+                                <td>₱32.15</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="flex items-center justify-between mt-4 pt-4 border-t border-border">
+                    <div class="text-sm text-text-secondary">
+                        Page 1 of 125
+                    </div>
+                    <div class="pagination">
+                        <button type="button" class="page-btn">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                        </button>
+                        <button type="button" class="page-btn active">1</button>
+                        <button type="button" class="page-btn">2</button>
+                        <button type="button" class="page-btn">3</button>
+                        <button type="button" class="page-btn">4</button>
+                        <button type="button" class="page-btn">5</button>
+                        <button type="button" class="page-btn">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-surface border-t border-border py-4 px-6 no-print">
+        <div class="max-w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-4 flex-wrap justify-center">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-success" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    <span class="text-sm text-text-secondary">Data Updated: Jan 31, 2025 09:45 AM</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="status-dot status-online"></span>
+                    <span class="text-sm text-text-secondary">Real-time Analytics</span>
+                </div>
+            </div>
+            <div class="text-sm text-text-secondary text-center md:text-right">
+                <p>Reports & Analytics v3.1 • Last refreshed: <span id="lastRefreshTime">09:45 AM</span></p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateActiveFilters();
+            updateLastRefreshTime();
+            
+            // Set default date range to current month
+            const now = new Date();
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            
+            document.getElementById('fromDate').value = formatDate(firstDay);
+            document.getElementById('toDate').value = formatDate(lastDay);
+            
+            // Update date display
+            updateDateRangeDisplay();
+        });
+
+        // Format date to YYYY-MM-DD
+        function formatDate(date) {
+            const d = new Date(date);
+            let month = '' + (d.getMonth() + 1);
+            let day = '' + d.getDate();
+            const year = d.getFullYear();
+
+            if (month.length < 2) month = '0' + month;
+            if (day.length < 2) day = '0' + day;
+
+            return [year, month, day].join('-');
+        }
+
+        // Update active filters display
+        function updateActiveFilters() {
+            const activeFiltersContainer = document.getElementById('activeFilters');
+            const filters = [];
+            
+            // Check each filter and add if not default
+            const reportType = document.getElementById('reportType').value;
+            if (reportType !== 'all') {
+                filters.push({ name: 'Report Type', value: getSelectText('reportType') });
+            }
+            
+            const department = document.getElementById('departmentFilter').value;
+            if (department !== 'all') {
+                filters.push({ name: 'Department', value: getSelectText('departmentFilter') });
+            }
+            
+            const prescriber = document.getElementById('prescriberFilter').value;
+            if (prescriber !== 'all') {
+                filters.push({ name: 'Prescriber', value: getSelectText('prescriberFilter') });
+            }
+            
+            // Date range filter
+            const fromDate = document.getElementById('fromDate').value;
+            const toDate = document.getElementById('toDate').value;
+            if (fromDate || toDate) {
+                filters.push({ name: 'Date Range', value: `${formatDisplayDate(fromDate)} to ${formatDisplayDate(toDate)}` });
+            }
+            
+            // Clear existing filter chips
+            activeFiltersContainer.innerHTML = '<span class="text-sm text-text-secondary">Active filters:</span>';
+            
+            // Add filter chips
+            filters.forEach(filter => {
+                const chip = document.createElement('div');
+                chip.className = 'filter-chip';
+                chip.innerHTML = `
+                    <span>${filter.name}: ${filter.value}</span>
+                    <button type="button" class="filter-chip-remove" data-filter="${filter.name.toLowerCase().replace(' ', '-')}">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                `;
+                activeFiltersContainer.appendChild(chip);
+            });
+            
+            // Add event listeners to remove buttons
+            document.querySelectorAll('.filter-chip-remove').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const filterType = this.dataset.filter;
+                    removeFilter(filterType);
+                });
+            });
+        }
+
+        // Get select option text
+        function getSelectText(selectId) {
+            const select = document.getElementById(selectId);
+            return select.options[select.selectedIndex].text;
+        }
+
+        // Format date for display
+        function formatDisplayDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+
+        // Update date range display
+        function updateDateRangeDisplay() {
+            const fromDate = document.getElementById('fromDate').value;
+            const toDate = document.getElementById('toDate').value;
+            
+            // Calculate duration
+            if (fromDate && toDate) {
+                const from = new Date(fromDate);
+                const to = new Date(toDate);
+                const diffTime = Math.abs(to - from);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                
+                // You could display this somewhere if needed
+                console.log(`Date range: ${diffDays} days`);
+            }
+        }
+
+        // Remove filter
+        function removeFilter(filterType) {
+            switch(filterType) {
+                case 'report-type':
+                    document.getElementById('reportType').value = 'all';
+                    break;
+                case 'department':
+                    document.getElementById('departmentFilter').value = 'all';
+                    break;
+                case 'prescriber':
+                    document.getElementById('prescriberFilter').value = 'all';
+                    break;
+                case 'date-range':
+                    // Reset to current month
+                    const now = new Date();
+                    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+                    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                    
+                    document.getElementById('fromDate').value = formatDate(firstDay);
+                    document.getElementById('toDate').value = formatDate(lastDay);
+                    break;
+            }
+            
+            updateActiveFilters();
+        }
+
+        // Apply filters
+        document.getElementById('applyFiltersBtn').addEventListener('click', function() {
+            // Show loading state
+            this.innerHTML = `
+                <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                <span>Generating Report...</span>
+            `;
+            this.disabled = true;
+            
+            // Simulate API call
+            setTimeout(() => {
+                updateActiveFilters();
+                updateLastRefreshTime();
+                
+                // Show success message
+                alert('Report generated successfully with applied filters!');
+                
+                // Reset button
+                this.innerHTML = 'Apply Filters & Generate Report';
+                this.disabled = false;
+            }, 1500);
+        });
+
+        // Clear all filters
+        document.getElementById('clearFiltersBtn').addEventListener('click', function() {
+            // Reset all filters to default
+            document.getElementById('reportType').value = 'all';
+            document.getElementById('departmentFilter').value = 'all';
+            document.getElementById('prescriberFilter').value = 'all';
+            
+            // Reset date range to current month
+            const now = new Date();
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            
+            document.getElementById('fromDate').value = formatDate(firstDay);
+            document.getElementById('toDate').value = formatDate(lastDay);
+            
+            // Reset advanced filters
+            if (document.getElementById('medicationClassFilter')) {
+                document.getElementById('medicationClassFilter').value = 'all';
+            }
+            if (document.getElementById('ageGroupFilter')) {
+                document.getElementById('ageGroupFilter').value = 'all';
+            }
+            if (document.getElementById('insuranceFilter')) {
+                document.getElementById('insuranceFilter').value = 'all';
+            }
+            
+            updateActiveFilters();
+        });
+
+        // Toggle advanced filters
+        document.getElementById('toggleAdvancedFilters').addEventListener('click', function() {
+            const advancedFilters = document.getElementById('advancedFilters');
+            const icon = this.querySelector('svg');
+            
+            if (advancedFilters.classList.contains('hidden')) {
+                advancedFilters.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                advancedFilters.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        });
+
+        // Export all reports
+        document.getElementById('exportAllBtn').addEventListener('click', function() {
+            const exportOptions = `
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-text-primary mb-2">
+                            Export Format
+                        </label>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2">
+                                <input type="radio" name="exportFormat" value="pdf" checked class="w-4 h-4 text-primary">
+                                <span>PDF Document</span>
+                            </label>
+                            <label class="flex items-center gap-2">
+                                <input type="radio" name="exportFormat" value="excel" class="w-4 h-4 text-primary">
+                                <span>Excel Spreadsheet</span>
+                            </label>
+                            <label class="flex items-center gap-2">
+                                <input type="radio" name="exportFormat" value="csv" class="w-4 h-4 text-primary">
+                                <span>CSV File</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-text-primary mb-2">
+                            Include Data
+                        </label>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" checked class="w-4 h-4 text-primary border-border rounded">
+                                <span>Summary Statistics</span>
+                            </label>
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" checked class="w-4 h-4 text-primary border-border rounded">
+                                <span>Detailed Reports</span>
+                            </label>
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" checked class="w-4 h-4 text-primary border-border rounded">
+                                <span>Charts & Visualizations</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            if (confirm('Export all reports with current filters?')) {
+                alert('Export started! Your file will download shortly.');
+                
+                // Simulate export process
+                setTimeout(() => {
+                    alert('Export completed successfully! Check your downloads folder.');
+                }, 2000);
+            }
+        });
+
+        // Schedule report
+        document.getElementById('scheduleReportBtn').addEventListener('click', function() {
+            alert('Schedule report feature would open a scheduling dialog');
+        });
+
+        // Update last refresh time
+        function updateLastRefreshTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            document.getElementById('lastRefreshTime').textContent = timeString;
+        }
+
+        // Quick report template clicks
+        document.querySelectorAll('.w-full.text-left.p-3').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const reportName = this.querySelector('.font-medium').textContent;
+                alert(`Generating "${reportName}" report...`);
+            });
+        });
+
+        // Pagination
+        document.querySelectorAll('.page-btn:not(:first-child):not(:last-child)').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Remove active class from all buttons
+                document.querySelectorAll('.page-btn').forEach(b => b.classList.remove('active'));
+                // Add active class to clicked button
+                this.classList.add('active');
+                
+                // Update page display
+                document.querySelector('.text-sm.text-text-secondary').textContent = 
+                    `Page ${this.textContent} of 125`;
+                
+                // In a real app, this would fetch new page data
+                console.log(`Loading page ${this.textContent}...`);
+            });
+        });
+
+        // Auto-refresh data every 5 minutes
+        setInterval(() => {
+            console.log('Auto-refreshing report data...');
+            updateLastRefreshTime();
+        }, 300000); // 5 minutes
+    </script>
+</body>
+</html>

@@ -1,0 +1,1993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Expired Medicine Archive - CAVMED Pharmacy Management">
+    <title>Expired Medicine Archive - CAVMED Portal</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <style>
+        .expired-badge {
+            background-color: #fee2e2;
+            color: #dc2626;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .expiring-soon-badge {
+            background-color: #fef3c7;
+            color: #d97706;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .safe-badge {
+            background-color: #dcfce7;
+            color: #166534;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .medicine-card {
+            transition: all 0.2s ease;
+            border-left: 4px solid transparent;
+        }
+        
+        .medicine-card.expired {
+            border-left-color: #ef4444;
+            background-color: #fef2f2;
+        }
+        
+        .medicine-card.expiring-soon {
+            border-left-color: #f59e0b;
+            background-color: #fffbeb;
+        }
+        
+        .medicine-card.safe {
+            border-left-color: #10b981;
+        }
+        
+        .medicine-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .quantity-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        .status-expired { background-color: #ef4444; }
+        .status-expiring { background-color: #f59e0b; animation: pulse 2s infinite; }
+        .status-safe { background-color: #10b981; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .batch-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            background-color: #f1f5f9;
+            border-radius: 12px;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        .disposal-method-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .disposal-incinerated { background-color: #fef3c7; color: #92400e; }
+        .disposal-returned { background-color: #dbeafe; color: #1e40af; }
+        .disposal-destroyed { background-color: #fee2e2; color: #991b1b; }
+        .disposal-donated { background-color: #dcfce7; color: #166534; }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 20px;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid;
+        }
+        
+        .timeline-item.expired::before { border-color: #ef4444; }
+        .timeline-item.disposed::before { border-color: #8b5cf6; }
+        .timeline-item.returned::before { border-color: #0ea5e9; }
+        
+        .risk-level {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .risk-high { background-color: #fee2e2; color: #dc2626; }
+        .risk-medium { background-color: #fef3c7; color: #d97706; }
+        .risk-low { background-color: #dbeafe; color: #1e40af; }
+        
+        .action-required {
+            animation: bounce 1s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-2px); }
+        }
+        
+        .hover-card {
+            transition: all 0.2s ease;
+        }
+        
+        .hover-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .search-highlight {
+            background-color: #fef3c7;
+            padding: 1px 0;
+            border-radius: 2px;
+        }
+        
+        .print-only {
+            display: none;
+        }
+        
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            .card {
+                border: 1px solid #e5e7eb !important;
+                box-shadow: none !important;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-background min-h-screen flex flex-col">
+    <!-- Header Section -->
+    <header class="bg-surface border-b border-border shadow-sm sticky top-0 z-fixed">
+        <div class="flex items-center justify-between px-6 py-4">
+            <!-- Logo & Title -->
+            <div class="flex items-center gap-4">
+                <svg class="w-10 h-10" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="40" height="40" rx="8" fill="#2563EB"/>
+                    <path d="M20 10v20M10 20h20" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                    <circle cx="20" cy="20" r="6" stroke="white" stroke-width="2" fill="none"/>
+                </svg>
+                <div>
+                    <h1 class="text-xl font-semibold text-text-primary">CAVMED Portal</h1>
+                    <p class="text-xs text-text-secondary">Medicine Encoder Dashboard</p>
+                </div>
+            </div>
+
+            <!-- Quick Actions & User Profile -->
+            <div class="flex items-center gap-4">
+
+                <!-- User Profile -->
+                <div class="flex items-center gap-3 pl-4 border-l border-border">
+                    <div class="text-right">
+                        <p class="text-sm font-medium text-text-primary">Maria Santos</p>
+                        <p class="text-xs text-text-secondary">Medicine Encoder</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
+                        <span class="text-primary-700 font-semibold">MS</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </header>
+    
+        <!-- Navigation Tabs -->
+    <nav class="bg-surface border-b border-border px-6 no-print">        
+        <div class="px-6">
+            <div class="flex items-center gap-1 overflow-x-auto scrollbar-thin">
+
+                <a href="encoder_inventory.php" class="nav-item">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    <span>Inventory List</span>
+                </a>
+
+                <a href="encoder_archive.html" class="nav-item nav-item-active whitespace-nowrap">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span>Inventory Archive</span>
+                </a>
+
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 px-6 py-6">
+        <div class="max-w-full mx-auto">
+            <!-- Page Header -->
+            <div class="flex items-center justify-between mb-6 pb-6 border-b border-border">
+                <div>
+                    <h2 class="text-2xl font-semibold text-text-primary"></h2>
+                    <p class="text-text-secondary mt-1"></p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button type="button" id="printReportBtn" class="btn btn-outline no-print">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                        </svg>
+                        <span>Print Report</span>
+                    </button>
+                    <button type="button" id="exportArchiveBtn" class="btn btn-primary no-print">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span>Export Archive</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <!-- Total Expired -->
+                <div class="card stats-card hover-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-text-secondary">Total Expired</p>
+                            <p class="text-2xl font-semibold text-text-primary mt-1" id="totalExpiredCount">156</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-error-100 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-error-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.346 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <p class="text-xs text-text-secondary">Across all categories</p>
+                    </div>
+                </div>
+                
+                <!-- Expiring Soon -->
+                <div class="card stats-card hover-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-text-secondary">Expiring Soon</p>
+                            <p class="text-2xl font-semibold text-warning-600 mt-1" id="expiringSoonCount">42</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-warning-100 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-warning-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <p class="text-xs text-text-secondary">Within 30 days</p>
+                    </div>
+                </div>
+                
+                <!-- Action Required -->
+                <div class="card stats-card hover-card action-required">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-text-secondary">Action Required</p>
+                            <p class="text-2xl font-semibold text-error-600 mt-1" id="actionRequiredCount">23</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-error-100 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-error-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <p class="text-xs text-error-600 font-medium">Pending disposal</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters & Search -->
+            <div class="card mb-6 no-print">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div class="flex-1">
+                        <div class="relative">
+                            <input type="text" id="medicineSearch" 
+                                   placeholder="Search by medicine name, batch number, manufacturer..."
+                                   class="input pl-10 pr-10 w-full">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <svg class="w-5 h-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                            </div>
+                            <button type="button" id="clearSearch" class="hidden absolute inset-y-0 right-0 flex items-center pr-3 text-text-tertiary hover:text-text-primary">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-3">
+                        <select id="statusFilter" class="input w-40">
+                            <option value="">All Status</option>
+                            <option value="expired">Expired</option>
+                            <option value="expiring-soon">Expiring Soon</option>
+                            <option value="disposed">Disposed</option>
+                            <option value="returned">Returned</option>
+                        </select>
+                        
+                        <select id="categoryFilter" class="input w-40">
+                            <option value="">All Categories</option>
+                            <option value="antibiotics">Antibiotics</option>
+                            <option value="analgesics">Analgesics</option>
+                            <option value="cardiovascular">Cardiovascular</option>
+                            <option value="diabetes">Diabetes</option>
+                            <option value="respiratory">Respiratory</option>
+                            <option value="other">Other</option>
+                        </select>
+                        
+                        <select id="disposalFilter" class="input w-40">
+                            <option value="">Disposal Method</option>
+                            <option value="incinerated">Incinerated</option>
+                            <option value="returned">Returned</option>
+                            <option value="destroyed">Destroyed</option>
+                            <option value="donated">Donated</option>
+                            <option value="pending">Pending</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Active Filters -->
+                <div id="activeFilters" class="flex flex-wrap gap-2 mt-4">
+                    <!-- Filters will be added here dynamically -->
+                </div>
+            </div>
+
+            <!-- Print Header -->
+            <div class="print-only mb-6">
+                <div class="text-center">
+                    <h1 class="text-2xl font-bold text-gray-900">CAVMED Pharmacy - Expired Medicine Report</h1>
+                    <p class="text-gray-600">Generated on: <span id="reportDate"></span></p>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Left Column - Expired Medicine List -->
+                <div class="lg:col-span-2">
+                    <!-- Tabs for different views -->
+                    <div class="flex border-b border-border mb-6 no-print">
+                        <button type="button" id="tabExpired" class="tab-button active">Expired (<span id="expiredTabCount">45</span>)</button>
+                        <button type="button" id="tabExpiringSoon" class="tab-button">Expiring Soon (<span id="expiringSoonTabCount">42</span>)</button>
+                        <button type="button" id="tabDisposed" class="tab-button">Disposed (<span id="disposedTabCount">67</span>)</button>
+                        <button type="button" id="tabAll" class="tab-button">All Archive</button>
+                    </div>
+
+                    <!-- Medicine Cards Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="medicineCardsContainer">
+                        <!-- Medicine cards will be populated here -->
+                    </div>
+
+                    <!-- No Results Message -->
+                    <div id="noResultsMessage" class="hidden text-center py-12">
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-secondary-100 flex items-center justify-center">
+                            <svg class="w-8 h-8 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-text-primary mb-2">No expired medicines found</h3>
+                        <p class="text-text-secondary">Try adjusting your search or filters</p>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="flex items-center justify-between mt-6 pt-6 border-t border-border no-print">
+                        <div class="text-sm text-text-secondary">
+                            Showing <span id="startIndex">1</span> to <span id="endIndex">8</span> of <span id="totalItems">156</span> entries
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" id="prevPageBtn" class="btn btn-outline btn-sm" disabled>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                                </svg>
+                                Previous
+                            </button>
+                            <div class="flex items-center gap-1">
+                                <button type="button" class="btn btn-outline btn-sm w-8 h-8 p-0 active">1</button>
+                                <button type="button" class="btn btn-outline btn-sm w-8 h-8 p-0">2</button>
+                                <button type="button" class="btn btn-outline btn-sm w-8 h-8 p-0">3</button>
+                                <span class="px-2 text-text-secondary">...</span>
+                                <button type="button" class="btn btn-outline btn-sm w-8 h-8 p-0">20</button>
+                            </div>
+                            <button type="button" id="nextPageBtn" class="btn btn-outline btn-sm">
+                                Next
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Disposal Records Table -->
+            <div class="card mt-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-semibold text-text-primary">Disposal Records</h3>
+                    <button type="button" id="addNewRecordBtn" class="btn btn-primary btn-sm">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Add Record
+                    </button>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left text-sm text-text-secondary border-b border-border">
+                                <th class="pb-3 font-medium">Medicine</th>
+                                <th class="pb-3 font-medium">Batch No.</th>
+                                <th class="pb-3 font-medium">Expiry Date</th>
+                                <th class="pb-3 font-medium">Quantity</th>
+                                <th class="pb-3 font-medium">Value</th>
+                                <th class="pb-3 font-medium">Disposal Method</th>
+                                <th class="pb-3 font-medium">Disposal Date</th>
+                                <th class="pb-3 font-medium">Disposed By</th>
+                                <th class="pb-3 font-medium">Witness</th>
+                                <th class="pb-3 font-medium">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="disposalRecordsTable">
+                            <!-- Disposal records will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Modal for Medicine Details -->
+            <div id="medicineDetailsModal" class="hidden fixed inset-0 bg-secondary-900 bg-opacity-50 z-modal flex items-center justify-center p-4">
+                <div class="card max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-semibold text-text-primary">Medicine Details</h3>
+                        <button type="button" id="closeMedicineModal" class="text-text-tertiary hover:text-text-primary transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div id="medicineDetailsContent">
+                        <!-- Medicine details will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal for Add Disposal -->
+            <div id="addDisposalModal" class="hidden fixed inset-0 bg-secondary-900 bg-opacity-50 z-modal flex items-center justify-center p-4">
+                <div class="card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-semibold text-text-primary">Add Disposal Record</h3>
+                        <button type="button" id="closeDisposalModal" class="text-text-tertiary hover:text-text-primary transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <form id="disposalForm" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-text-secondary mb-1">Medicine</label>
+                                <select id="medicineSelect" class="input w-full" required>
+                                    <option value="">Select Medicine</option>
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-text-secondary mb-1">Batch Number</label>
+                                <input type="text" id="batchNumber" class="input w-full" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-text-secondary mb-1">Quantity</label>
+                                <input type="number" id="disposalQuantity" class="input w-full" min="1" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-text-secondary mb-1">Value (₱)</label>
+                                <input type="number" id="disposalValue" class="input w-full" step="0.01" min="0" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-text-secondary mb-1">Disposal Method</label>
+                                <select id="disposalMethod" class="input w-full" required>
+                                    <option value="">Select Method</option>
+                                    <option value="incinerated">Incinerated</option>
+                                    <option value="returned">Returned to Manufacturer</option>
+                                    <option value="destroyed">Chemically Destroyed</option>
+                                    <option value="donated">Donated (if allowed)</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-text-secondary mb-1">Disposal Date</label>
+                                <input type="date" id="disposalDate" class="input w-full" required>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-text-secondary mb-1">Disposed By</label>
+                                <input type="text" id="disposedBy" class="input w-full" required>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-text-secondary mb-1">Witness</label>
+                                <input type="text" id="witness" class="input w-full" required>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-text-secondary mb-1">Notes</label>
+                                <textarea id="disposalNotes" class="input w-full h-24" placeholder="Additional notes about the disposal process..."></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-3 pt-6 border-t border-border">
+                            <button type="button" id="cancelDisposal" class="btn btn-outline flex-1">Cancel</button>
+                            <button type="submit" class="btn btn-primary flex-1">Save Disposal Record</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-surface border-t border-border py-4 px-6">
+        <div class="max-w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-4 flex-wrap justify-center">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-success" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    <span class="text-sm text-text-secondary">FDA Compliance Active</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-success" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    <span class="text-sm text-text-secondary">HIPAA Compliant</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-success" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    <span class="text-sm text-text-secondary">Inventory Updated: Today</span>
+                </div>
+            </div>
+            <div class="text-sm text-text-secondary text-center md:text-right">
+                <p>Pharmacy System v3.2 • Last audit: <span id="lastAuditTime">Today, 09:00 AM</span></p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Sample Data for Expired Medicine Archive
+        const expiredMedicines = [
+            {
+                id: "MED-001",
+                name: "Amoxicillin 500mg Capsules",
+                genericName: "Amoxicillin",
+                batchNumber: "AMX-2023-045",
+                manufacturer: "PharmaCorp Inc.",
+                category: "antibiotics",
+                expiryDate: "2023-12-15",
+                quantity: 125,
+                originalQuantity: 500,
+                unit: "capsules",
+                unitPrice: 0.85,
+                status: "expired",
+                riskLevel: "medium",
+                disposalMethod: "incinerated",
+                disposalDate: "2024-01-10",
+                disposedBy: "Dr. Johnson",
+                witness: "Nurse Sarah",
+                notes: "Properly incinerated as per FDA guidelines",
+                lastUpdated: "2024-01-10"
+            },
+            {
+                id: "MED-002",
+                name: "Metformin HCl 850mg Tablets",
+                genericName: "Metformin",
+                batchNumber: "MET-2023-128",
+                manufacturer: "MediHealth Ltd.",
+                category: "diabetes",
+                expiryDate: "2024-01-30",
+                quantity: 89,
+                originalQuantity: 300,
+                unit: "tablets",
+                unitPrice: 0.42,
+                status: "expiring-soon",
+                riskLevel: "low",
+                disposalMethod: "",
+                disposalDate: "",
+                disposedBy: "",
+                witness: "",
+                notes: "",
+                lastUpdated: "2024-01-14"
+            },
+            {
+                id: "MED-003",
+                name: "Lisinopril 10mg Tablets",
+                genericName: "Lisinopril",
+                batchNumber: "LIS-2023-087",
+                manufacturer: "CardioCare Pharmaceuticals",
+                category: "cardiovascular",
+                expiryDate: "2023-11-30",
+                quantity: 45,
+                originalQuantity: 200,
+                unit: "tablets",
+                unitPrice: 1.20,
+                status: "expired",
+                riskLevel: "high",
+                disposalMethod: "destroyed",
+                disposalDate: "2024-01-05",
+                disposedBy: "Pharmacy Tech Mike",
+                witness: "Dr. Chen",
+                notes: "Chemically neutralized before disposal",
+                lastUpdated: "2024-01-05"
+            },
+            {
+                id: "MED-004",
+                name: "Paracetamol 500mg Tablets",
+                genericName: "Acetaminophen",
+                batchNumber: "PAR-2023-256",
+                manufacturer: "Relief Pharmaceuticals",
+                category: "analgesics",
+                expiryDate: "2024-02-15",
+                quantity: 320,
+                originalQuantity: 1000,
+                unit: "tablets",
+                unitPrice: 0.15,
+                status: "expiring-soon",
+                riskLevel: "low",
+                disposalMethod: "",
+                disposalDate: "",
+                disposedBy: "",
+                witness: "",
+                notes: "",
+                lastUpdated: "2024-01-14"
+            },
+            {
+                id: "MED-005",
+                name: "Insulin Glargine 100IU/mL",
+                genericName: "Insulin Glargine",
+                batchNumber: "INS-2023-056",
+                manufacturer: "DiabetoMed Inc.",
+                category: "diabetes",
+                expiryDate: "2024-01-13",
+                quantity: 12,
+                originalQuantity: 50,
+                unit: "vials",
+                unitPrice: 45.00,
+                status: "expired",
+                riskLevel: "high",
+                disposalMethod: "incinerated",
+                disposalDate: "2024-01-14",
+                disposedBy: "Pharmacy Admin",
+                witness: "Safety Officer",
+                notes: "Special handling required for biological waste",
+                lastUpdated: "2024-01-14"
+            },
+            {
+                id: "MED-006",
+                name: "Atorvastatin 20mg Tablets",
+                genericName: "Atorvastatin Calcium",
+                batchNumber: "ATO-2023-092",
+                manufacturer: "Cholesterol Care",
+                category: "cardiovascular",
+                expiryDate: "2023-10-25",
+                quantity: 78,
+                originalQuantity: 250,
+                unit: "tablets",
+                unitPrice: 2.10,
+                status: "expired",
+                riskLevel: "medium",
+                disposalMethod: "returned",
+                disposalDate: "2023-11-10",
+                disposedBy: "Supplier Rep",
+                witness: "Inventory Manager",
+                notes: "Returned to manufacturer for credit",
+                lastUpdated: "2023-11-10"
+            },
+            {
+                id: "MED-007",
+                name: "Salbutamol Inhaler 100mcg",
+                genericName: "Albuterol",
+                batchNumber: "SAL-2023-034",
+                manufacturer: "BreathEasy Pharma",
+                category: "respiratory",
+                expiryDate: "2024-03-10",
+                quantity: 23,
+                originalQuantity: 100,
+                unit: "inhalers",
+                unitPrice: 8.75,
+                status: "safe",
+                riskLevel: "low",
+                disposalMethod: "",
+                disposalDate: "",
+                disposedBy: "",
+                witness: "",
+                notes: "",
+                lastUpdated: "2024-01-14"
+            },
+            {
+                id: "MED-008",
+                name: "Cephalexin 500mg Capsules",
+                genericName: "Cephalexin",
+                batchNumber: "CEPH-2023-071",
+                manufacturer: "InfectoCare Ltd.",
+                category: "antibiotics",
+                expiryDate: "2023-09-30",
+                quantity: 15,
+                originalQuantity: 150,
+                unit: "capsules",
+                unitPrice: 1.05,
+                status: "expired",
+                riskLevel: "medium",
+                disposalMethod: "pending",
+                disposalDate: "",
+                disposedBy: "",
+                witness: "",
+                notes: "Awaiting disposal authorization",
+                lastUpdated: "2024-01-14"
+            }
+        ];
+
+        // Disposal Records Data
+        const disposalRecords = [
+            {
+                id: "DISP-001",
+                medicineId: "MED-001",
+                medicineName: "Amoxicillin 500mg Capsules",
+                batchNumber: "AMX-2023-045",
+                expiryDate: "2023-12-15",
+                quantity: 125,
+                value: 106.25,
+                disposalMethod: "incinerated",
+                disposalDate: "2024-01-10",
+                disposedBy: "Dr. Johnson",
+                witness: "Nurse Sarah",
+                notes: "Properly incinerated as per FDA guidelines"
+            },
+            {
+                id: "DISP-002",
+                medicineId: "MED-003",
+                medicineName: "Lisinopril 10mg Tablets",
+                batchNumber: "LIS-2023-087",
+                expiryDate: "2023-11-30",
+                quantity: 45,
+                value: 54.00,
+                disposalMethod: "destroyed",
+                disposalDate: "2024-01-05",
+                disposedBy: "Pharmacy Tech Mike",
+                witness: "Dr. Chen",
+                notes: "Chemically neutralized before disposal"
+            },
+            {
+                id: "DISP-003",
+                medicineId: "MED-005",
+                medicineName: "Insulin Glargine 100IU/mL",
+                batchNumber: "INS-2023-056",
+                expiryDate: "2024-01-13",
+                quantity: 12,
+                value: 540.00,
+                disposalMethod: "incinerated",
+                disposalDate: "2024-01-14",
+                disposedBy: "Pharmacy Admin",
+                witness: "Safety Officer",
+                notes: "Special handling required for biological waste"
+            },
+            {
+                id: "DISP-004",
+                medicineId: "MED-006",
+                medicineName: "Atorvastatin 20mg Tablets",
+                batchNumber: "ATO-2023-092",
+                expiryDate: "2023-10-25",
+                quantity: 78,
+                value: 163.80,
+                disposalMethod: "returned",
+                disposalDate: "2023-11-10",
+                disposedBy: "Supplier Rep",
+                witness: "Inventory Manager",
+                notes: "Returned to manufacturer for credit"
+            },
+            {
+                id: "DISP-005",
+                medicineId: "MED-009",
+                medicineName: "Ibuprofen 400mg Tablets",
+                batchNumber: "IBU-2023-112",
+                expiryDate: "2023-08-15",
+                quantity: 200,
+                value: 60.00,
+                disposalMethod: "incinerated",
+                disposalDate: "2023-09-01",
+                disposedBy: "Pharmacy Staff",
+                witness: "Manager",
+                notes: "Routine disposal"
+            }
+        ];
+
+        // Chart.js configuration for disposal statistics
+        let disposalChart;
+
+        // Initialize variables
+        let currentPage = 1;
+        let itemsPerPage = 8;
+        let filteredMedicines = [...expiredMedicines];
+        let activeFilters = {};
+        let currentTab = 'expired';
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            updateReportDate();
+            updateMedicineCards();
+            updateDisposalRecordsTable();
+            updateStatistics();
+            initializeChart();
+            
+            // Populate medicine select in modal
+            populateMedicineSelect();
+            
+            // Set current time for audit
+            updateAuditTime();
+            setInterval(updateAuditTime, 60000);
+        });
+
+        // Update report date for printing
+        function updateReportDate() {
+            const now = new Date();
+            const dateString = now.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                weekday: 'long'
+            });
+            document.getElementById('reportDate').textContent = dateString;
+        }
+
+        // Update audit time
+        function updateAuditTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+            });
+            document.getElementById('lastAuditTime').textContent = `Today, ${timeString}`;
+        }
+
+        // Update medicine cards display
+        function updateMedicineCards() {
+            const container = document.getElementById('medicineCardsContainer');
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const currentMedicines = filteredMedicines.slice(startIndex, endIndex);
+            
+            // Update pagination info
+            document.getElementById('startIndex').textContent = startIndex + 1;
+            document.getElementById('endIndex').textContent = Math.min(endIndex, filteredMedicines.length);
+            document.getElementById('totalItems').textContent = filteredMedicines.length;
+            
+            // Update pagination buttons
+            document.getElementById('prevPageBtn').disabled = currentPage === 1;
+            document.getElementById('nextPageBtn').disabled = endIndex >= filteredMedicines.length;
+            
+            // Clear container
+            container.innerHTML = '';
+            
+            // Show/hide no results message
+            const noResultsMessage = document.getElementById('noResultsMessage');
+            if (currentMedicines.length === 0) {
+                noResultsMessage.classList.remove('hidden');
+                return;
+            } else {
+                noResultsMessage.classList.add('hidden');
+            }
+            
+            // Populate medicine cards
+            currentMedicines.forEach(medicine => {
+                const card = document.createElement('div');
+                card.className = `medicine-card card ${medicine.status}`;
+                card.dataset.medicineId = medicine.id;
+                
+                // Calculate days until/since expiry
+                const expiryDate = new Date(medicine.expiryDate);
+                const today = new Date();
+                const timeDiff = expiryDate.getTime() - today.getTime();
+                const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                
+                // Status badge
+                let statusBadge = '';
+                let statusText = '';
+                if (medicine.status === 'expired') {
+                    statusBadge = '<span class="expired-badge"><span class="status-dot status-expired"></span>Expired</span>';
+                    statusText = `${Math.abs(daysDiff)} days ago`;
+                } else if (medicine.status === 'expiring-soon') {
+                    statusBadge = '<span class="expiring-soon-badge"><span class="status-dot status-expiring"></span>Expiring Soon</span>';
+                    statusText = `in ${daysDiff} days`;
+                } else {
+                    statusBadge = '<span class="safe-badge"><span class="status-dot status-safe"></span>Safe</span>';
+                    statusText = `${daysDiff} days remaining`;
+                }
+                
+                // Risk level badge
+                const riskLevelMap = {
+                    'high': { class: 'risk-high', text: 'High Risk' },
+                    'medium': { class: 'risk-medium', text: 'Medium Risk' },
+                    'low': { class: 'risk-low', text: 'Low Risk' }
+                };
+                const riskInfo = riskLevelMap[medicine.riskLevel] || riskLevelMap.low;
+                
+                // Calculate total value
+                const totalValue = (medicine.quantity * medicine.unitPrice).toFixed(2);
+                
+                // Quantity percentage for indicator
+                const quantityPercentage = (medicine.quantity / medicine.originalQuantity) * 100;
+                
+                card.innerHTML = `
+                    <div class="flex items-start gap-3 mb-4">
+                        <div class="medicine-icon ${medicine.category === 'antibiotics' ? 'bg-blue-100' : 
+                            medicine.category === 'diabetes' ? 'bg-green-100' : 
+                            medicine.category === 'cardiovascular' ? 'bg-red-100' : 
+                            medicine.category === 'analgesics' ? 'bg-yellow-100' : 
+                            medicine.category === 'respiratory' ? 'bg-purple-100' : 'bg-gray-100'}">
+                            <svg class="w-6 h-6 ${medicine.category === 'antibiotics' ? 'text-blue-600' : 
+                                medicine.category === 'diabetes' ? 'text-green-600' : 
+                                medicine.category === 'cardiovascular' ? 'text-red-600' : 
+                                medicine.category === 'analgesics' ? 'text-yellow-600' : 
+                                medicine.category === 'respiratory' ? 'text-purple-600' : 'text-gray-600'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <h4 class="font-semibold text-text-primary">${medicine.name}</h4>
+                                    <p class="text-sm text-text-secondary">${medicine.genericName}</p>
+                                </div>
+                                <div class="text-right">
+                                    ${statusBadge}
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 mt-2">
+                                <span class="batch-tag">${medicine.batchNumber}</span>
+                                <span class="${riskInfo.class} risk-level">${riskInfo.text}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-text-secondary">Expiry Date:</span>
+                            <span class="text-sm font-medium ${medicine.status === 'expired' ? 'text-error-600' : 
+                                medicine.status === 'expiring-soon' ? 'text-warning-600' : 'text-success-600'}">
+                                ${new Date(medicine.expiryDate).toLocaleDateString()} (${statusText})
+                            </span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-text-secondary">Quantity:</span>
+                            <span class="text-sm font-medium">${medicine.quantity} ${medicine.unit}</span>
+                        </div>
+                        
+                        
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-text-secondary">Total Value:</span>
+                            <span class="text-sm font-semibold">₱${totalValue}</span>
+                        </div>
+                        
+                        
+                        ${medicine.disposalMethod ? `
+                        <div class="mt-4 pt-3 border-t border-border">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-text-secondary">Disposal:</span>
+                                <span class="disposal-method-tag disposal-${medicine.disposalMethod}">
+                                    ${medicine.disposalMethod.charAt(0).toUpperCase() + medicine.disposalMethod.slice(1)}
+                                </span>
+                            </div>
+                            ${medicine.disposalDate ? `
+                            <div class="flex items-center justify-between mt-1">
+                                <span class="text-sm text-text-secondary">Date:</span>
+                                <span class="text-sm">${new Date(medicine.disposalDate).toLocaleDateString()}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="mt-4 pt-4 border-t border-border flex justify-end">
+                        <button type="button" class="view-details-btn btn btn-ghost btn-sm">
+                            View Details
+                        </button>
+                        ${medicine.status === 'expired' && !medicine.disposalMethod ? `
+                        <button type="button" class="mark-disposed-btn btn btn-error btn-sm ml-2" data-medicine-id="${medicine.id}">
+                            Mark Disposed
+                        </button>
+                        ` : ''}
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+            
+            // Add event listeners to view buttons
+            document.querySelectorAll('.view-details-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const medicineId = this.closest('.medicine-card').dataset.medicineId;
+                    showMedicineDetails(medicineId);
+                });
+            });
+            
+            // Add event listeners to mark disposed buttons
+            document.querySelectorAll('.mark-disposed-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const medicineId = this.dataset.medicineId;
+                    showDisposalModal(medicineId);
+                });
+            });
+            
+            // Add click event to cards
+            document.querySelectorAll('.medicine-card').forEach(card => {
+                card.addEventListener('click', function(e) {
+                    if (!e.target.closest('button')) {
+                        const medicineId = this.dataset.medicineId;
+                        showMedicineDetails(medicineId);
+                    }
+                });
+            });
+        }
+
+        // Update disposal records table
+        function updateDisposalRecordsTable() {
+            const tableBody = document.getElementById('disposalRecordsTable');
+            tableBody.innerHTML = '';
+            
+            disposalRecords.forEach(record => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-border hover:bg-secondary-50';
+                
+                // Get medicine details
+                const medicine = expiredMedicines.find(m => m.id === record.medicineId);
+                const expiryDate = new Date(record.expiryDate);
+                
+                row.innerHTML = `
+                    <td class="py-3">
+                        <p class="text-sm font-medium">${record.medicineName}</p>
+                        <p class="text-xs text-text-secondary">${medicine ? medicine.genericName : ''}</p>
+                    </td>
+                    <td class="py-3">
+                        <span class="batch-tag">${record.batchNumber}</span>
+                    </td>
+                    <td class="py-3">
+                        <span class="text-sm">${expiryDate.toLocaleDateString()}</span>
+                    </td>
+                    <td class="py-3">
+                        <span class="text-sm font-medium">${record.quantity}</span>
+                    </td>
+                    <td class="py-3">
+                        <span class="text-sm font-semibold">₱${record.value.toFixed(2)}</span>
+                    </td>
+                    <td class="py-3">
+                        <span class="disposal-method-tag disposal-${record.disposalMethod}">
+                            ${record.disposalMethod.charAt(0).toUpperCase() + record.disposalMethod.slice(1)}
+                        </span>
+                    </td>
+                    <td class="py-3">
+                        <span class="text-sm">${new Date(record.disposalDate).toLocaleDateString()}</span>
+                    </td>
+                    <td class="py-3">
+                        <span class="text-sm">${record.disposedBy}</span>
+                    </td>
+                    <td class="py-3">
+                        <span class="text-sm">${record.witness}</span>
+                    </td>
+                    <td class="py-3">
+                        <button type="button" class="view-disposal-btn btn btn-ghost btn-sm" data-record-id="${record.id}">
+                            View
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Add event listeners to view disposal buttons
+            document.querySelectorAll('.view-disposal-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const recordId = this.dataset.recordId;
+                    showDisposalRecordDetails(recordId);
+                });
+            });
+        }
+
+        // Update statistics
+        function updateStatistics() {
+            // Calculate statistics
+            const totalExpired = expiredMedicines.filter(m => m.status === 'expired').length;
+            const expiringSoon = expiredMedicines.filter(m => m.status === 'expiring-soon').length;
+            const disposedCount = disposalRecords.length;
+            const actionRequired = expiredMedicines.filter(m => 
+                m.status === 'expired' && !m.disposalMethod
+            ).length;
+            
+            // Calculate total value of expired medicines
+            let totalValue = 0;
+            expiredMedicines.forEach(medicine => {
+                if (medicine.status === 'expired') {
+                    totalValue += medicine.quantity * medicine.unitPrice;
+                }
+            });
+            
+            // Update display
+            document.getElementById('totalExpiredCount').textContent = totalExpired;
+            document.getElementById('expiringSoonCount').textContent = expiringSoon;
+            document.getElementById('actionRequiredCount').textContent = actionRequired;
+            document.getElementById('totalValue').textContent = `₱${totalValue.toFixed(2)}`;
+            
+            // Update tab counts
+            document.getElementById('expiredTabCount').textContent = totalExpired;
+            document.getElementById('expiringSoonTabCount').textContent = expiringSoon;
+            document.getElementById('disposedTabCount').textContent = disposedCount;
+            
+            // Update chart data
+            updateChartData();
+        }
+
+        // Initialize chart
+        function initializeChart() {
+            const ctx = document.getElementById('disposalChart').getContext('2d');
+            
+            disposalChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Incinerated', 'Returned', 'Destroyed', 'Donated', 'Other'],
+                    datasets: [{
+                        data: [45, 25, 15, 10, 5],
+                        backgroundColor: [
+                            '#f59e0b', // Amber
+                            '#3b82f6', // Blue
+                            '#ef4444', // Red
+                            '#10b981', // Green
+                            '#8b5cf6'  // Purple
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update chart data
+        function updateChartData() {
+            if (!disposalChart) return;
+            
+            // Count disposal methods
+            const counts = {
+                incinerated: 0,
+                returned: 0,
+                destroyed: 0,
+                donated: 0,
+                other: 0
+            };
+            
+            disposalRecords.forEach(record => {
+                if (counts[record.disposalMethod] !== undefined) {
+                    counts[record.disposalMethod]++;
+                } else {
+                    counts.other++;
+                }
+            });
+            
+            // Update chart data
+            disposalChart.data.datasets[0].data = [
+                counts.incinerated,
+                counts.returned,
+                counts.destroyed,
+                counts.donated,
+                counts.other
+            ];
+            
+            disposalChart.update();
+        }
+
+        // Filter medicines based on active filters
+        function filterMedicines() {
+            filteredMedicines = expiredMedicines.filter(medicine => {
+                // Status filter
+                if (activeFilters.status && medicine.status !== activeFilters.status) {
+                    return false;
+                }
+                
+                // Category filter
+                if (activeFilters.category && medicine.category !== activeFilters.category) {
+                    return false;
+                }
+                
+                // Disposal method filter
+                if (activeFilters.disposal && medicine.disposalMethod !== activeFilters.disposal) {
+                    return false;
+                }
+                
+                // Search filter
+                if (activeFilters.search) {
+                    const searchLower = activeFilters.search.toLowerCase();
+                    const searchFields = [
+                        medicine.name,
+                        medicine.genericName,
+                        medicine.batchNumber,
+                        medicine.manufacturer,
+                        medicine.category
+                    ];
+                    
+                    if (!searchFields.some(field => field.toLowerCase().includes(searchLower))) {
+                        return false;
+                    }
+                }
+                
+                // Tab filter
+                if (currentTab === 'expired') {
+                    return medicine.status === 'expired';
+                } else if (currentTab === 'expiring-soon') {
+                    return medicine.status === 'expiring-soon';
+                } else if (currentTab === 'disposed') {
+                    return medicine.disposalMethod && medicine.disposalMethod !== '';
+                } else if (currentTab === 'all') {
+                    return true;
+                }
+                
+                return true;
+            });
+            
+            currentPage = 1;
+            updateMedicineCards();
+            updateStatistics();
+            updateActiveFiltersDisplay();
+        }
+
+        // Update active filters display
+        function updateActiveFiltersDisplay() {
+            const container = document.getElementById('activeFilters');
+            container.innerHTML = '';
+            
+            Object.entries(activeFilters).forEach(([key, value]) => {
+                if (value) {
+                    const tag = document.createElement('div');
+                    tag.className = 'filter-tag';
+                    tag.innerHTML = `
+                        <span>${key}: ${value}</span>
+                        <button type="button" class="remove-filter" data-filter="${key}">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    `;
+                    container.appendChild(tag);
+                }
+            });
+            
+            // Add event listeners to remove buttons
+            document.querySelectorAll('.remove-filter').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const filterKey = this.dataset.filter;
+                    delete activeFilters[filterKey];
+                    
+                    // Reset corresponding select if it exists
+                    const selectElement = document.getElementById(`${filterKey}Filter`);
+                    if (selectElement) {
+                        selectElement.value = '';
+                    }
+                    
+                    filterMedicines();
+                });
+            });
+        }
+
+        // Show medicine details modal
+        function showMedicineDetails(medicineId) {
+            const medicine = expiredMedicines.find(m => m.id === medicineId);
+            if (!medicine) return;
+            
+            const modal = document.getElementById('medicineDetailsModal');
+            const content = document.getElementById('medicineDetailsContent');
+            
+            // Calculate values
+            const totalValue = (medicine.quantity * medicine.unitPrice).toFixed(2);
+            const expiryDate = new Date(medicine.expiryDate);
+            const today = new Date();
+            const timeDiff = expiryDate.getTime() - today.getTime();
+            const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+            
+            // Status display
+            let statusDisplay = '';
+            if (medicine.status === 'expired') {
+                statusDisplay = '<span class="expired-badge text-sm"><span class="status-dot status-expired"></span>Expired - ' + Math.abs(daysDiff) + ' days ago</span>';
+            } else if (medicine.status === 'expiring-soon') {
+                statusDisplay = '<span class="expiring-soon-badge text-sm"><span class="status-dot status-expiring"></span>Expiring in ' + daysDiff + ' days</span>';
+            } else {
+                statusDisplay = '<span class="safe-badge text-sm"><span class="status-dot status-safe"></span>Safe - ' + daysDiff + ' days remaining</span>';
+            }
+            
+            // Risk level display
+            const riskLevelMap = {
+                'high': { class: 'risk-high', text: 'High Risk' },
+                'medium': { class: 'risk-medium', text: 'Medium Risk' },
+                'low': { class: 'risk-low', text: 'Low Risk' }
+            };
+            const riskInfo = riskLevelMap[medicine.riskLevel] || riskLevelMap.low;
+            
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <!-- Header -->
+                    <div class="flex items-start gap-4">
+                        <div class="medicine-icon ${medicine.category === 'antibiotics' ? 'bg-blue-100' : 
+                            medicine.category === 'diabetes' ? 'bg-green-100' : 
+                            medicine.category === 'cardiovascular' ? 'bg-red-100' : 
+                            medicine.category === 'analgesics' ? 'bg-yellow-100' : 
+                            medicine.category === 'respiratory' ? 'bg-purple-100' : 'bg-gray-100'}">
+                            <svg class="w-8 h-8 ${medicine.category === 'antibiotics' ? 'text-blue-600' : 
+                                medicine.category === 'diabetes' ? 'text-green-600' : 
+                                medicine.category === 'cardiovascular' ? 'text-red-600' : 
+                                medicine.category === 'analgesics' ? 'text-yellow-600' : 
+                                medicine.category === 'respiratory' ? 'text-purple-600' : 'text-gray-600'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-xl font-semibold text-text-primary">${medicine.name}</h4>
+                            <p class="text-text-secondary">${medicine.genericName}</p>
+                        </div>
+                        <div>
+                            ${statusDisplay}
+                        </div>
+                    </div>
+                    
+                    <!-- Basic Information -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-text-secondary mb-1">Batch Number</p>
+                            <p class="font-medium text-text-primary">${medicine.batchNumber}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-text-secondary mb-1">Manufacturer</p>
+                            <p class="font-medium text-text-primary">${medicine.manufacturer}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-text-secondary mb-1">Category</p>
+                            <p class="font-medium text-text-primary">${medicine.category.charAt(0).toUpperCase() + medicine.category.slice(1)}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-text-secondary mb-1">Risk Level</p>
+                            <p class="${riskInfo.class} risk-level inline-block">${riskInfo.text}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-text-secondary mb-1">Expiry Date</p>
+                            <p class="font-medium ${medicine.status === 'expired' ? 'text-error-600' : 
+                                medicine.status === 'expiring-soon' ? 'text-warning-600' : 'text-success-600'}">
+                                ${expiryDate.toLocaleDateString()}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Quantity & Value -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-text-secondary mb-1">Quantity</p>
+                            <p class="font-medium text-text-primary">${medicine.quantity} ${medicine.unit} (of ${medicine.originalQuantity})</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-text-secondary mb-1">Unit Price</p>
+                            <p class="font-medium text-text-primary">₱${medicine.unitPrice.toFixed(2)} per ${medicine.unit}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-text-secondary mb-1">Total Value</p>
+                            <p class="text-xl font-semibold text-text-primary">₱${totalValue}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-text-secondary mb-1">Last Updated</p>
+                            <p class="font-medium text-text-primary">${new Date(medicine.lastUpdated).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Disposal Information -->
+                    ${medicine.disposalMethod ? `
+                    <div class="pt-4 border-t border-border">
+                        <h5 class="text-lg font-semibold text-text-primary mb-3">Disposal Information</h5>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm text-text-secondary mb-1">Disposal Method</p>
+                                <span class="disposal-method-tag disposal-${medicine.disposalMethod}">
+                                    ${medicine.disposalMethod.charAt(0).toUpperCase() + medicine.disposalMethod.slice(1)}
+                                </span>
+                            </div>
+                            <div>
+                                <p class="text-sm text-text-secondary mb-1">Disposal Date</p>
+                                <p class="font-medium text-text-primary">${new Date(medicine.disposalDate).toLocaleDateString()}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-text-secondary mb-1">Disposed By</p>
+                                <p class="font-medium text-text-primary">${medicine.disposedBy}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-text-secondary mb-1">Witness</p>
+                                <p class="font-medium text-text-primary">${medicine.witness}</p>
+                            </div>
+                            ${medicine.notes ? `
+                            <div class="col-span-2">
+                                <p class="text-sm text-text-secondary mb-1">Notes</p>
+                                <div class="bg-secondary-50 p-3 rounded-base">
+                                    <p class="text-text-primary">${medicine.notes}</p>
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <!-- Actions -->
+                    <div class="flex gap-3 pt-6 border-t border-border">
+                        ${medicine.status === 'expired' && !medicine.disposalMethod ? `
+                        <button type="button" class="mark-disposed-modal-btn btn btn-error flex-1" data-medicine-id="${medicine.id}">
+                            Mark as Disposed
+                        </button>
+                        ` : ''}
+                        <button type="button" class="btn btn-outline flex-1">
+                            Print Details
+                        </button>
+                        <button type="button" class="btn btn-primary flex-1">
+                            Update Record
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+            
+            // Add event listener to mark disposed button in modal
+            const markDisposedBtn = content.querySelector('.mark-disposed-modal-btn');
+            if (markDisposedBtn) {
+                markDisposedBtn.addEventListener('click', function() {
+                    const medicineId = this.dataset.medicineId;
+                    modal.classList.add('hidden');
+                    showDisposalModal(medicineId);
+                });
+            }
+        }
+
+        // Show disposal record details
+        function showDisposalRecordDetails(recordId) {
+            const record = disposalRecords.find(r => r.id === recordId);
+            if (!record) return;
+            
+            const medicine = expiredMedicines.find(m => m.id === record.medicineId);
+            const expiryDate = new Date(record.expiryDate);
+            const disposalDate = new Date(record.disposalDate);
+            
+            // For now, we'll reuse the medicine details modal
+            const modal = document.getElementById('medicineDetailsModal');
+            const content = document.getElementById('medicineDetailsContent');
+            
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <!-- Header -->
+                    <div class="flex items-start gap-4">
+                        <div class="medicine-icon bg-secondary-100">
+                            <svg class="w-8 h-8 text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-xl font-semibold text-text-primary">Disposal Record: ${record.medicineName}</h4>
+                            <p class="text-text-secondary">Record ID: ${record.id}</p>
+                        </div>
+                        <div>
+                            <span class="disposal-method-tag disposal-${record.disposalMethod}">
+                                ${record.disposalMethod.charAt(0).toUpperCase() + record.disposalMethod.slice(1)}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Disposal Information -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-text-secondary mb-1">Medicine</p>
+                            <p class="font-medium text-text-primary">${record.medicineName}</p>
+                            ${medicine ? `<p class="text-sm text-text-secondary">${medicine.genericName}</p>` : ''}
+                        </div>
+                        <div>
+                            <p class="text-sm text-text-secondary mb-1">Batch Number</p>
+                            <p class="font-medium text-text-primary">${record.batchNumber}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-text-secondary mb-1">Expiry Date</p>
+                            <p class="font-medium text-text-primary">${expiryDate.toLocaleDateString()}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-text-secondary mb-1">Disposal Date</p>
+                            <p class="font-medium text-text-primary">${disposalDate.toLocaleDateString()}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-text-secondary mb-1">Quantity Disposed</p>
+                            <p class="font-medium text-text-primary">${record.quantity} ${medicine ? medicine.unit : 'units'}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-text-secondary mb-1">Total Value</p>
+                            <p class="font-medium text-text-primary">₱${record.value.toFixed(2)}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-text-secondary mb-1">Disposed By</p>
+                            <p class="font-medium text-text-primary">${record.disposedBy}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-text-secondary mb-1">Witness</p>
+                            <p class="font-medium text-text-primary">${record.witness}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Notes -->
+                    ${record.notes ? `
+                    <div>
+                        <p class="text-sm text-text-secondary mb-1">Disposal Notes</p>
+                        <div class="bg-secondary-50 p-4 rounded-base">
+                            <p class="text-text-primary">${record.notes}</p>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <!-- Actions -->
+                    <div class="flex gap-3 pt-6 border-t border-border">
+                        <button type="button" class="btn btn-outline flex-1">
+                            Print Record
+                        </button>
+                        <button type="button" class="btn btn-primary flex-1">
+                            Update Record
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+
+        // Show disposal modal
+        function showDisposalModal(medicineId = null) {
+            const modal = document.getElementById('addDisposalModal');
+            
+            if (medicineId) {
+                // Pre-fill form with medicine details
+                const medicine = expiredMedicines.find(m => m.id === medicineId);
+                if (medicine) {
+                    // Populate medicine select
+                    const select = document.getElementById('medicineSelect');
+                    select.innerHTML = `<option value="${medicine.id}" selected>${medicine.name} (${medicine.batchNumber})</option>`;
+                    
+                    // Set other fields
+                    document.getElementById('batchNumber').value = medicine.batchNumber;
+                    document.getElementById('disposalQuantity').value = medicine.quantity;
+                    document.getElementById('disposalValue').value = (medicine.quantity * medicine.unitPrice).toFixed(2);
+                    
+                    // Set default disposal date to today
+                    const today = new Date().toISOString().split('T')[0];
+                    document.getElementById('disposalDate').value = today;
+                }
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        // Populate medicine select in modal
+        function populateMedicineSelect() {
+            const select = document.getElementById('medicineSelect');
+            select.innerHTML = '<option value="">Select Medicine</option>';
+            
+            expiredMedicines.forEach(medicine => {
+                if (medicine.status === 'expired' && !medicine.disposalMethod) {
+                    const option = document.createElement('option');
+                    option.value = medicine.id;
+                    option.textContent = `${medicine.name} (${medicine.batchNumber}) - ${medicine.quantity} ${medicine.unit}`;
+                    select.appendChild(option);
+                }
+            });
+        }
+
+        // Close medicine details modal
+        document.getElementById('closeMedicineModal').addEventListener('click', function() {
+            document.getElementById('medicineDetailsModal').classList.add('hidden');
+        });
+
+        document.getElementById('medicineDetailsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+            }
+        });
+
+        // Close disposal modal
+        document.getElementById('closeDisposalModal').addEventListener('click', function() {
+            document.getElementById('addDisposalModal').classList.add('hidden');
+        });
+
+        document.getElementById('cancelDisposal').addEventListener('click', function() {
+            document.getElementById('addDisposalModal').classList.add('hidden');
+        });
+
+        document.getElementById('addDisposalModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+            }
+        });
+
+        // Handle disposal form submission
+        document.getElementById('disposalForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form values
+            const medicineId = document.getElementById('medicineSelect').value;
+            const batchNumber = document.getElementById('batchNumber').value;
+            const quantity = parseInt(document.getElementById('disposalQuantity').value);
+            const value = parseFloat(document.getElementById('disposalValue').value);
+            const disposalMethod = document.getElementById('disposalMethod').value;
+            const disposalDate = document.getElementById('disposalDate').value;
+            const disposedBy = document.getElementById('disposedBy').value;
+            const witness = document.getElementById('witness').value;
+            const notes = document.getElementById('disposalNotes').value;
+            
+            // Find medicine
+            const medicineIndex = expiredMedicines.findIndex(m => m.id === medicineId);
+            if (medicineIndex === -1) {
+                alert('Please select a valid medicine.');
+                return;
+            }
+            
+            // Update medicine record
+            expiredMedicines[medicineIndex].disposalMethod = disposalMethod;
+            expiredMedicines[medicineIndex].disposalDate = disposalDate;
+            expiredMedicines[medicineIndex].disposedBy = disposedBy;
+            expiredMedicines[medicineIndex].witness = witness;
+            expiredMedicines[medicineIndex].notes = notes;
+            expiredMedicines[medicineIndex].lastUpdated = new Date().toISOString().split('T')[0];
+            
+            // Add disposal record
+            const disposalRecord = {
+                id: `DISP-${(disposalRecords.length + 1).toString().padStart(3, '0')}`,
+                medicineId: medicineId,
+                medicineName: expiredMedicines[medicineIndex].name,
+                batchNumber: batchNumber,
+                expiryDate: expiredMedicines[medicineIndex].expiryDate,
+                quantity: quantity,
+                value: value,
+                disposalMethod: disposalMethod,
+                disposalDate: disposalDate,
+                disposedBy: disposedBy,
+                witness: witness,
+                notes: notes
+            };
+            
+            disposalRecords.unshift(disposalRecord);
+            
+            // Update displays
+            updateMedicineCards();
+            updateDisposalRecordsTable();
+            updateStatistics();
+            
+            // Close modal and reset form
+            document.getElementById('addDisposalModal').classList.add('hidden');
+            this.reset();
+            populateMedicineSelect();
+            
+            alert('Disposal record added successfully!');
+        });
+
+        // Tab switching
+        document.getElementById('tabExpired').addEventListener('click', function() {
+            setActiveTab('expired');
+        });
+        
+        document.getElementById('tabExpiringSoon').addEventListener('click', function() {
+            setActiveTab('expiring-soon');
+        });
+        
+        document.getElementById('tabDisposed').addEventListener('click', function() {
+            setActiveTab('disposed');
+        });
+        
+        document.getElementById('tabAll').addEventListener('click', function() {
+            setActiveTab('all');
+        });
+
+        function setActiveTab(tab) {
+            currentTab = tab;
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.add('active');
+            
+            // Filter medicines
+            filterMedicines();
+        }
+
+        // Search functionality
+        const medicineSearch = document.getElementById('medicineSearch');
+        const clearSearch = document.getElementById('clearSearch');
+        
+        let searchTimeout;
+        medicineSearch.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                if (this.value.trim()) {
+                    activeFilters.search = this.value.trim();
+                    clearSearch.classList.remove('hidden');
+                } else {
+                    delete activeFilters.search;
+                    clearSearch.classList.add('hidden');
+                }
+                filterMedicines();
+            }, 300);
+        });
+        
+        clearSearch.addEventListener('click', function() {
+            medicineSearch.value = '';
+            delete activeFilters.search;
+            this.classList.add('hidden');
+            filterMedicines();
+        });
+
+        // Filter select changes
+        document.getElementById('statusFilter').addEventListener('change', function() {
+            if (this.value) {
+                activeFilters.status = this.value;
+            } else {
+                delete activeFilters.status;
+            }
+            filterMedicines();
+        });
+        
+        document.getElementById('categoryFilter').addEventListener('change', function() {
+            if (this.value) {
+                activeFilters.category = this.value;
+            } else {
+                delete activeFilters.category;
+            }
+            filterMedicines();
+        });
+        
+        document.getElementById('disposalFilter').addEventListener('change', function() {
+            if (this.value) {
+                activeFilters.disposal = this.value;
+            } else {
+                delete activeFilters.disposal;
+            }
+            filterMedicines();
+        });
+
+        // Clear all filters
+        document.querySelectorAll('#clearFiltersBtn, .clear-filters-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                activeFilters = {};
+                medicineSearch.value = '';
+                clearSearch.classList.add('hidden');
+                document.getElementById('statusFilter').value = '';
+                document.getElementById('categoryFilter').value = '';
+                document.getElementById('disposalFilter').value = '';
+                filterMedicines();
+            });
+        });
+
+        // Pagination
+        document.getElementById('prevPageBtn').addEventListener('click', function() {
+            if (currentPage > 1) {
+                currentPage--;
+                updateMedicineCards();
+            }
+        });
+        
+        document.getElementById('nextPageBtn').addEventListener('click', function() {
+            const totalPages = Math.ceil(filteredMedicines.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                updateMedicineCards();
+            }
+        });
+
+        // Page number buttons
+        document.querySelectorAll('.pagination-number').forEach(btn => {
+            btn.addEventListener('click', function() {
+                currentPage = parseInt(this.textContent);
+                updateMedicineCards();
+            });
+        });
+
+        // Quick Actions
+        document.getElementById('markDisposedBtn').addEventListener('click', function() {
+            showDisposalModal();
+        });
+        
+        document.getElementById('generateReportBtn').addEventListener('click', function() {
+            // Generate and download report
+            const reportData = {
+                timestamp: new Date().toISOString(),
+                totalExpired: expiredMedicines.filter(m => m.status === 'expired').length,
+                totalExpiringSoon: expiredMedicines.filter(m => m.status === 'expiring-soon').length,
+                totalDisposed: disposalRecords.length,
+                totalValue: expiredMedicines.reduce((sum, m) => sum + (m.quantity * m.unitPrice), 0),
+                medicines: expiredMedicines,
+                disposalRecords: disposalRecords
+            };
+            
+            const dataStr = JSON.stringify(reportData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `expired-medicine-report-${new Date().toISOString().split('T')[0]}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            alert('Monthly report generated and downloaded successfully!');
+        });
+        
+        document.getElementById('addDisposalRecordBtn').addEventListener('click', function() {
+            showDisposalModal();
+        });
+        
+        document.getElementById('addNewRecordBtn').addEventListener('click', function() {
+            showDisposalModal();
+        });
+
+        // Print report
+        document.getElementById('printReportBtn').addEventListener('click', function() {
+            window.print();
+        });
+
+        // Export archive
+        document.getElementById('exportArchiveBtn').addEventListener('click', function() {
+            this.classList.add('loading');
+            
+            // Simulate export process
+            setTimeout(() => {
+                this.classList.remove('loading');
+                
+                // Create export data
+                const exportData = {
+                    timestamp: new Date().toISOString(),
+                    filters: activeFilters,
+                    medicines: expiredMedicines,
+                    disposalRecords: disposalRecords,
+                    statistics: {
+                        totalExpired: expiredMedicines.filter(m => m.status === 'expired').length,
+                        totalExpiringSoon: expiredMedicines.filter(m => m.status === 'expiring-soon').length,
+                        totalDisposed: disposalRecords.length,
+                        totalValue: expiredMedicines.reduce((sum, m) => sum + (m.quantity * m.unitPrice), 0)
+                    }
+                };
+                
+                // Create download link
+                const dataStr = JSON.stringify(exportData, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                
+                const exportFileDefaultName = `expired-medicine-archive-${new Date().toISOString().split('T')[0]}.json`;
+                
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+                
+                alert(`Exported ${expiredMedicines.length} medicines and ${disposalRecords.length} disposal records successfully!`);
+            }, 1500);
+        });
+
+        // Simulate real-time updates (for demo purposes)
+        setInterval(() => {
+            // Randomly update a medicine's status (for demo)
+            if (Math.random() > 0.7) {
+                const randomIndex = Math.floor(Math.random() * expiredMedicines.length);
+                const medicine = expiredMedicines[randomIndex];
+                
+                // Check if medicine should change status based on expiry date
+                const expiryDate = new Date(medicine.expiryDate);
+                const today = new Date();
+                const daysDiff = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+                
+                if (daysDiff <= 0 && medicine.status !== 'expired') {
+                    medicine.status = 'expired';
+                    medicine.lastUpdated = new Date().toISOString().split('T')[0];
+                    updateMedicineCards();
+                    updateStatistics();
+                } else if (daysDiff <= 30 && daysDiff > 0 && medicine.status !== 'expiring-soon') {
+                    medicine.status = 'expiring-soon';
+                    medicine.lastUpdated = new Date().toISOString().split('T')[0];
+                    updateMedicineCards();
+                    updateStatistics();
+                }
+            }
+        }, 30000); // Check every 30 seconds
+    </script>
+</body>
+</html>

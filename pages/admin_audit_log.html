@@ -1,0 +1,1737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Audit Logs - System Monitoring and Security">
+    <title>Audit Logs - CAVMED Portal</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <style>
+        .audit-log-item {
+            border-left: 4px solid transparent;
+            transition: all 0.2s ease;
+        }
+        
+        .audit-log-item.success {
+            border-left-color: #10b981;
+        }
+        
+        .audit-log-item.warning {
+            border-left-color: #f59e0b;
+        }
+        
+        .audit-log-item.error {
+            border-left-color: #ef4444;
+        }
+        
+        .audit-log-item.info {
+            border-left-color: #3b82f6;
+        }
+        
+        .severity-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .severity-critical { background-color: #ef4444; animation: pulse 2s infinite; }
+        .severity-high { background-color: #f97316; }
+        .severity-medium { background-color: #f59e0b; }
+        .severity-low { background-color: #3b82f6; }
+        .severity-info { background-color: #6b7280; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .audit-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        
+        .timestamp {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }
+        
+        .export-btn {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .export-btn.loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .filter-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background-color: #f1f5f9;
+            border-radius: 16px;
+            font-size: 12px;
+        }
+        
+        .log-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        
+        .log-details.expanded {
+            max-height: 500px;
+        }
+        
+        .log-data {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .stats-card {
+            transition: all 0.2s ease;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .login-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .login-status-login { background-color: #dcfce7; color: #166534; }
+        .login-status-logout { background-color: #fee2e2; color: #991b1b; }
+        .login-status-failed { background-color: #fef3c7; color: #92400e; }
+        
+        .session-duration {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            background-color: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-background min-h-screen flex flex-col">
+    <!-- Header Section -->
+    <header class="bg-surface border-b border-border py-4 px-6 shadow-sm sticky top-0 z-sticky">
+        <div class="max-w-full mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <!-- Logo -->
+                <a href="system_login_portal.html" class="flex items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="40" height="40" rx="8" fill="#2563EB"/>
+                        <path d="M20 10v20M10 20h20" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                        <circle cx="20" cy="20" r="6" stroke="white" stroke-width="2" fill="none"/>
+                    </svg>
+                    <div>
+                        <h1 class="text-xl font-semibold text-text-primary">CAVMED Portal</h1>
+                        <p class="text-xs text-text-secondary">Audit Logs & Security Monitoring</p>
+                    </div>
+                </a>
+            </div>
+
+                <div class="flex items-center gap-4">   
+                    <div class="flex items-center gap-3">
+                        <div class="text-right hidden md:block">
+                            <p class="text-sm font-medium text-text-primary">Admin User</p>
+                            <p class="text-xs text-text-secondary">System Administrator</p>
+                        </div>
+                        <img src="https://img.rocket.new/generatedImages/rocket_gen_img_19c8a8405-1763298405226.png" 
+                             alt="Administrator profile picture"
+                             class="w-10 h-10 rounded-full object-cover border-2 border-primary"
+                             onerror="this.src='https://images.unsplash.com/photo-1584824486509-112e4181ff6b?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'; this.onerror=null;">
+                    </div>
+                </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="border-t border-border bg-secondary-50">
+        <div class="px-6">
+            <div class="flex items-center gap-1 overflow-x-auto scrollbar-thin">
+                <a href="admin_dashboard.php" class="nav-item whitespace-nowrap">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="admin_analytics_and_reporting.html" class="nav-item whitespace-nowrap">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Analytics
+                </a>
+                <a href="admin_audit_log.html" class="nav-item nav-item-active whitespace-nowrap">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Audit Logs
+                </a>
+                <a href="admin_reports.html" class="nav-item whitespace-nowrap">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Reports
+                </a>
+                <a href="system_login_portal.html" class="nav-item whitespace-nowrap ml-auto">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                    Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 px-6 py-6">
+        <div class="max-w-full mx-auto">
+            <!-- Page Header -->
+            <div class="flex items-center justify-between mb-6 pb-6 border-b border-border">
+                <div>
+                    <h2 class="text-2xl font-semibold text-text-primary">Audit Logs</h2>
+                    <p class="text-text-secondary mt-1">System activity monitoring and security event tracking</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button type="button" id="refreshLogsBtn" class="btn btn-outline">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        <span>Refresh</span>
+                    </button>
+                    <button type="button" id="exportLogsBtn" class="btn btn-primary">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span>Export Logs</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <!-- Total Logs -->
+                <div class="card stats-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-text-secondary">Total Logs</p>
+                            <p class="text-2xl font-semibold text-text-primary mt-1" id="totalLogsCount">2,847</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-primary-100 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <p class="text-xs text-text-secondary">Last 30 days</p>
+                    </div>
+                </div>
+                
+                <!-- Critical Events -->
+                <div class="card stats-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-text-secondary">Critical Events</p>
+                            <p class="text-2xl font-semibold text-error-600 mt-1" id="criticalEventsCount">12</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-error-100 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-error-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.346 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <p class="text-xs text-text-secondary">Requires attention</p>
+                    </div>
+                </div>
+                
+                <!-- Active Users -->
+                <div class="card stats-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-text-secondary">Active Users</p>
+                            <p class="text-2xl font-semibold text-success-600 mt-1" id="activeUsersCount">48</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-success-100 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <p class="text-xs text-text-secondary">Currently online</p>
+                    </div>
+                </div>
+                
+                <!-- Failed Logins -->
+                <div class="card stats-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-text-secondary">Failed Logins</p>
+                            <p class="text-2xl font-semibold text-warning-600 mt-1" id="failedLoginsCount">23</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-warning-100 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-warning-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <p class="text-xs text-text-secondary">Last 24 hours</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters & Search -->
+            <div class="card mb-6">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div class="flex-1">
+                        <div class="relative">
+                            <input type="text" id="logSearch" 
+                                   placeholder="Search logs by user, action, IP address, or description..."
+                                   class="input pl-10 pr-10 w-full">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <svg class="w-5 h-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                            </div>
+                            <button type="button" id="clearSearch" class="hidden absolute inset-y-0 right-0 flex items-center pr-3 text-text-tertiary hover:text-text-primary">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-3">
+                        <select id="severityFilter" class="input w-40">
+                            <option value="">All Severity</option>
+                            <option value="critical">Critical</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                            <option value="info">Info</option>
+                        </select>
+                        
+                        <select id="categoryFilter" class="input w-40">
+                            <option value="">All Categories</option>
+                            <option value="authentication">Authentication</option>
+                            <option value="user-management">User Management</option>
+                            <option value="data-access">Data Access</option>
+                            <option value="system">System Events</option>
+                            <option value="security">Security</option>
+                        </select>
+                        
+                        <select id="actionFilter" class="input w-40">
+                            <option value="">All Actions</option>
+                            <option value="login">Login</option>
+                            <option value="logout">Logout</option>
+                            <option value="failed-login">Failed Login</option>
+                            <option value="access">Access</option>
+                            <option value="modify">Modify</option>
+                        </select>
+                        
+                        <select id="timeFilter" class="input w-40">
+                            <option value="24h">Last 24 hours</option>
+                            <option value="7d">Last 7 days</option>
+                            <option value="30d" selected>Last 30 days</option>
+                            <option value="90d">Last 90 days</option>
+                            <option value="all">All time</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Active Filters -->
+                <div id="activeFilters" class="flex flex-wrap gap-2 mt-4">
+                    <!-- Filters will be added here dynamically -->
+                </div>
+            </div>
+
+            <!-- Audit Logs Table -->
+            <div class="card">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-semibold text-text-primary">System Audit Logs</h3>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm text-text-secondary" id="showingLogsText">Showing 50 of 2,847 logs</span>
+                        <button type="button" id="clearFiltersBtn" class="btn btn-ghost btn-sm">
+                            Clear Filters
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Logs Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left text-sm text-text-secondary border-b border-border">
+                                <th class="pb-3 font-medium w-40">Timestamp</th>
+                                <th class="pb-3 font-medium w-32">Severity</th>
+                                <th class="pb-3 font-medium w-40">User</th>
+                                <th class="pb-3 font-medium w-48">Action</th>
+                                <th class="pb-3 font-medium w-32">Category</th>
+                                <th class="pb-3 font-medium w-20"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditLogsTable">
+                            <!-- Logs will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="flex items-center justify-between mt-6 pt-6 border-t border-border">
+                    <div class="text-sm text-text-secondary">
+                        Showing <span id="startIndex">1</span> to <span id="endIndex">50</span> of <span id="totalItems">2,847</span> entries
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" id="prevPageBtn" class="btn btn-outline btn-sm" disabled>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                            Previous
+                        </button>
+                        <div class="flex items-center gap-1">
+                            <button type="button" class="btn btn-outline btn-sm w-8 h-8 p-0 active">1</button>
+                            <button type="button" class="btn btn-outline btn-sm w-8 h-8 p-0">2</button>
+                            <button type="button" class="btn btn-outline btn-sm w-8 h-8 p-0">3</button>
+                            <span class="px-2 text-text-secondary">...</span>
+                            <button type="button" class="btn btn-outline btn-sm w-8 h-8 p-0">57</button>
+                        </div>
+                        <button type="button" id="nextPageBtn" class="btn btn-outline btn-sm">
+                            Next
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Log Details Modal -->
+            <div id="logDetailsModal" class="hidden fixed inset-0 bg-secondary-900 bg-opacity-50 z-modal flex items-center justify-center p-4">
+                <div class="card max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-semibold text-text-primary">Log Details</h3>
+                        <button type="button" id="closeLogModal" class="text-text-tertiary hover:text-text-primary transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div id="logDetailsContent">
+                        <!-- Log details will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Login Sessions Tracking -->
+            <div class="card mt-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-text-primary">Active Login Sessions</h3>
+                    <button type="button" id="refreshSessionsBtn" class="btn btn-ghost btn-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left text-sm text-text-secondary border-b border-border">
+                                <th class="pb-3 font-medium">User</th>
+                                <th class="pb-3 font-medium">Login Time</th>
+                                <th class="pb-3 font-medium">Last Activity</th>
+                                <th class="pb-3 font-medium">Session Duration</th>
+                                <th class="pb-3 font-medium">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activeSessionsTable">
+                            <!-- Active sessions will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- System Statistics -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                <!-- Activity by Category -->
+                <div class="card">
+                    <h3 class="text-lg font-semibold text-text-primary mb-4">Activity by Category</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-sm text-text-primary">Authentication</span>
+                                <span class="text-sm text-text-primary">42%</span>
+                            </div>
+                            <div class="w-full bg-secondary-200 rounded-full h-2">
+                                <div class="bg-primary-600 h-2 rounded-full" style="width: 42%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-sm text-text-primary">Data Access</span>
+                                <span class="text-sm text-text-primary">28%</span>
+                            </div>
+                            <div class="w-full bg-secondary-200 rounded-full h-2">
+                                <div class="bg-success-600 h-2 rounded-full" style="width: 28%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-sm text-text-primary">User Management</span>
+                                <span class="text-sm text-text-primary">18%</span>
+                            </div>
+                            <div class="w-full bg-secondary-200 rounded-full h-2">
+                                <div class="bg-warning-600 h-2 rounded-full" style="width: 18%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-sm text-text-primary">System Events</span>
+                                <span class="text-sm text-text-primary">12%</span>
+                            </div>
+                            <div class="w-full bg-secondary-200 rounded-full h-2">
+                                <div class="bg-accent-600 h-2 rounded-full" style="width: 12%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Critical Events -->
+                <div class="card lg:col-span-2">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-text-primary">Recent Authentication Events</h3>
+                        <button type="button" class="btn btn-ghost btn-sm">
+                            View All
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="audit-log-item success p-4 rounded-base border border-border">
+                            <div class="flex items-start gap-3">
+                                <div class="audit-icon bg-success-100">
+                                    <svg class="w-5 h-5 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <span class="login-status-badge login-status-login">Login</span>
+                                            <span class="text-sm font-medium text-text-primary">Successful Login</span>
+                                        </div>
+                                        <span class="timestamp text-text-secondary">Just now</span>
+                                    </div>
+                                    <p class="text-sm text-text-secondary mt-1">Admin User logged in</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="audit-log-item error p-4 rounded-base border border-border">
+                            <div class="flex items-start gap-3">
+                                <div class="audit-icon bg-error-100">
+                                    <svg class="w-5 h-5 text-error-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.346 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                                    </svg>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <span class="login-status-badge login-status-failed">Failed Login</span>
+                                            <span class="text-sm font-medium text-text-primary">Multiple Failed Login Attempts</span>
+                                        </div>
+                                        <span class="timestamp text-text-secondary">10:23 AM</span>
+                                    </div>
+                                    <p class="text-sm text-text-secondary mt-1">User: admin@example.com</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="audit-log-item warning p-4 rounded-base border border-border">
+                            <div class="flex items-start gap-3">
+                                <div class="audit-icon bg-warning-100">
+                                    <svg class="w-5 h-5 text-warning-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <span class="login-status-badge login-status-logout">Logout</span>
+                                            <span class="text-sm font-medium text-text-primary">User Logged Out</span>
+                                        </div>
+                                        <span class="timestamp text-text-secondary">09:15 AM</span>
+                                    </div>
+                                    <p class="text-sm text-text-secondary mt-1">nurse.sarah@cavmed.org logged out after 2h 15m session</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-surface border-t border-border py-6 px-6 mt-auto">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <!-- Compliance Certifications -->
+                <div class="flex items-center gap-4 flex-wrap justify-center">
+                </div>
+
+                <!-- Copyright -->
+                <div class="text-sm text-text-secondary text-center md:text-right">
+                    <p>© 2025 CAVMED Portal. All Rights Reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Enhanced Audit Logs Data with Login/Logout Tracking
+        const auditLogs = [
+            {
+                id: "LOG-2025-001",
+                timestamp: new Date().toISOString().replace('T', ' ').substr(0, 19),
+                severity: "info",
+                user: "admin@example.com",
+                userAvatar: "A",
+                action: "Login",
+                actionType: "login",
+                category: "authentication",
+                ipAddress: "192.168.1.100",
+                description: "Successful login to admin dashboard",
+                details: {
+                    status: "success",
+                    userAgent: "Chrome/120.0.0.0",
+                    location: "Internal Network",
+                    sessionId: "SESS-2025-001",
+                    loginMethod: "Password"
+                }
+            },
+            {
+                id: "LOG-2025-002",
+                timestamp: "2025-01-15 10:23:45",
+                severity: "critical",
+                user: "admin@example.com",
+                userAvatar: "A",
+                action: "Failed Login Attempt",
+                actionType: "failed-login",
+                category: "authentication",
+                ipAddress: "192.168.1.100",
+                description: "Multiple failed login attempts detected",
+                details: {
+                    attempts: 5,
+                    lockout: true,
+                    userAgent: "Chrome/120.0.0.0",
+                    location: "Internal Network",
+                    reason: "Invalid credentials"
+                }
+            },
+            {
+                id: "LOG-2025-003",
+                timestamp: "2025-01-15 09:15:30",
+                severity: "info",
+                user: "nurse.sarah@cavmed.org",
+                userAvatar: "NS",
+                action: "Logout",
+                actionType: "logout",
+                category: "authentication",
+                ipAddress: "10.0.1.25",
+                description: "User logged out after 2h 15m session",
+                details: {
+                    sessionDuration: "2h 15m",
+                    lastActivity: "2025-01-15 09:14:22",
+                    logoutMethod: "Manual",
+                    sessionId: "SESS-2024-154"
+                }
+            },
+            {
+                id: "LOG-2025-004",
+                timestamp: "2025-01-15 09:15:30",
+                severity: "high",
+                user: "nurse.sarah@cavmed.org",
+                userAvatar: "NS",
+                action: "Patient Record Access",
+                actionType: "access",
+                category: "data-access",
+                ipAddress: "10.0.1.25",
+                description: "Accessed patient records for Maria Johnson",
+                details: {
+                    patientId: "P-2024-1547",
+                    recordsAccessed: ["Medical History", "Vital Signs", "Prescriptions"],
+                    duration: "2 minutes"
+                }
+            },
+            {
+                id: "LOG-2025-005",
+                timestamp: "2025-01-15 08:45:12",
+                severity: "medium",
+                user: "dr.chen@cavmed.org",
+                userAvatar: "DC",
+                action: "Prescription Created",
+                actionType: "modify",
+                category: "user-management",
+                ipAddress: "10.0.1.42",
+                description: "Created new prescription for Robert Smith",
+                details: {
+                    prescriptionId: "RX-2025-0015",
+                    medication: "Amoxicillin 500mg",
+                    duration: "7 days",
+                    patient: "Robert Smith"
+                }
+            },
+            {
+                id: "LOG-2025-006",
+                timestamp: "2025-01-14 16:30:18",
+                severity: "info",
+                user: "dr.johnson@cavmed.org",
+                userAvatar: "DJ",
+                action: "Login",
+                actionType: "login",
+                category: "authentication",
+                ipAddress: "10.0.2.18",
+                description: "Successful login from mobile device",
+                details: {
+                    status: "success",
+                    userAgent: "Mobile Safari/16.0",
+                    location: "Hospital WiFi",
+                    sessionId: "SESS-2024-153",
+                    loginMethod: "Password"
+                }
+            },
+            {
+                id: "LOG-2025-008",
+                timestamp: "2025-01-14 14:20:55",
+                severity: "info",
+                user: "pharmacist.john@cavmed.org",
+                userAvatar: "PJ",
+                action: "Login",
+                actionType: "login",
+                category: "authentication",
+                ipAddress: "10.0.2.15",
+                description: "Successful login from pharmacy terminal",
+                details: {
+                    status: "success",
+                    userAgent: "Chrome/119.0.6045.160",
+                    location: "Pharmacy Network",
+                    sessionId: "SESS-2024-152",
+                    loginMethod: "Password"
+                }
+            },
+            {
+                id: "LOG-2025-009",
+                timestamp: "2025-01-14 14:20:55",
+                severity: "info",
+                user: "pharmacist.john@cavmed.org",
+                userAvatar: "PJ",
+                action: "Medication Dispensed",
+                actionType: "modify",
+                category: "data-access",
+                ipAddress: "10.0.2.15",
+                description: "Dispensed medication to patient Emily Chen",
+                details: {
+                    medication: "Metformin 850mg",
+                    quantity: "30 tablets",
+                    patient: "Emily Chen",
+                    prescriptionId: "RX-2024-1234"
+                }
+            },
+            {
+                id: "LOG-2025-010",
+                timestamp: "2025-01-14 11:05:33",
+                severity: "critical",
+                user: "Unknown",
+                userAvatar: "?",
+                action: "Unauthorized Access Attempt",
+                actionType: "failed-login",
+                category: "security",
+                ipAddress: "203.0.113.45",
+                description: "Attempt to access restricted admin panel",
+                details: {
+                    blocked: true,
+                    reason: "IP not whitelisted",
+                    userAgent: "Firefox/121.0",
+                    country: "Unknown",
+                    loginMethod: "Brute Force"
+                }
+            },
+            {
+                id: "LOG-2025-011",
+                timestamp: "2025-01-14 09:30:22",
+                severity: "medium",
+                user: "admin@example.com",
+                userAvatar: "A",
+                action: "User Role Changed",
+                actionType: "modify",
+                category: "user-management",
+                ipAddress: "192.168.1.100",
+                description: "Changed role for user nurse.emily@cavmed.org",
+                details: {
+                    from: "Nurse",
+                    to: "Senior Nurse",
+                    changedBy: "admin@example.com",
+                    timestamp: "2025-01-14 09:30:22"
+                }
+            },
+            {
+                id: "LOG-2025-012",
+                timestamp: "2025-01-13 18:15:44",
+                severity: "info",
+                user: "nurse.emily@cavmed.org",
+                userAvatar: "NE",
+                action: "Logout",
+                actionType: "logout",
+                category: "authentication",
+                ipAddress: "10.0.1.33",
+                description: "User logged out after 8h 30m session",
+                details: {
+                    sessionDuration: "8h 30m",
+                    lastActivity: "2025-01-13 18:14:55",
+                    logoutMethod: "Automatic (inactivity)",
+                    sessionId: "SESS-2024-151"
+                }
+            },
+            {
+                id: "LOG-2025-013",
+                timestamp: "2025-01-13 18:15:44",
+                severity: "low",
+                user: "system@cavmed.org",
+                userAvatar: "S",
+                action: "System Update",
+                actionType: "system",
+                category: "system",
+                ipAddress: "127.0.0.1",
+                description: "Security patches applied successfully",
+                details: {
+                    patches: 3,
+                    version: "v2.1.5",
+                    rebootRequired: false,
+                    status: "Completed"
+                }
+            }
+        ];
+
+        // Active Sessions Data
+        const activeSessions = [
+            {
+                id: "SESS-2025-001",
+                user: "admin@example.com",
+                userRole: "Administrator",
+                loginTime: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
+                lastActivity: new Date().toISOString(),
+                ipAddress: "192.168.1.100",
+                location: "Internal Network",
+                device: "Chrome/120.0.0.0 on Windows 11",
+                userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                sessionId: "SESS-2025-001"
+            },
+            {
+                id: "SESS-2025-002",
+                user: "dr.chen@cavmed.org",
+                userRole: "Doctor",
+                loginTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+                lastActivity: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5 minutes ago
+                ipAddress: "10.0.1.42",
+                location: "Doctor's Office",
+                device: "Firefox/121.0 on macOS",
+                userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+                sessionId: "SESS-2025-002"
+            },
+            {
+                id: "SESS-2025-003",
+                user: "nurse.sarah@cavmed.org",
+                userRole: "Nurse",
+                loginTime: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
+                lastActivity: new Date(Date.now() - 15 * 60 * 1000).toISOString(), // 15 minutes ago
+                ipAddress: "10.0.1.25",
+                location: "Nurse Station A",
+                device: "Chrome/120.0.0.0 on iPad",
+                userAgent: "Mozilla/5.0 (iPad; CPU OS 17_2 like Mac OS X)",
+                sessionId: "SESS-2025-003"
+            },
+            {
+                id: "SESS-2025-004",
+                user: "pharmacist.john@cavmed.org",
+                userRole: "Pharmacist",
+                loginTime: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6 hours ago
+                lastActivity: new Date(Date.now() - 2 * 60 * 1000).toISOString(), // 2 minutes ago
+                ipAddress: "10.0.2.15",
+                location: "Pharmacy",
+                device: "Edge/120.0.0.0 on Windows 10",
+                userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+                sessionId: "SESS-2025-004"
+            }
+        ];
+
+        // Login/Logout tracking functions
+        function trackLogin(username, ipAddress, userAgent, loginMethod = "Password") {
+            const timestamp = new Date().toISOString().replace('T', ' ').substr(0, 19);
+            const userInitials = getInitials(username);
+            const sessionId = `SESS-${new Date().getFullYear()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+            
+            // Add login log
+            const loginLog = {
+                id: `LOG-${new Date().getFullYear()}-${auditLogs.length + 1}`,
+                timestamp: timestamp,
+                severity: "info",
+                user: username,
+                userAvatar: userInitials,
+                action: "Login",
+                actionType: "login",
+                category: "authentication",
+                ipAddress: ipAddress,
+                description: `Successful login to system`,
+                details: {
+                    status: "success",
+                    userAgent: userAgent,
+                    location: "System Access",
+                    sessionId: sessionId,
+                    loginMethod: loginMethod,
+                    timestamp: timestamp
+                }
+            };
+            
+            auditLogs.unshift(loginLog); // Add to beginning for recent first
+            
+            // Add active session
+            const newSession = {
+                id: sessionId,
+                user: username,
+                userRole: getUserRole(username),
+                loginTime: new Date().toISOString(),
+                lastActivity: new Date().toISOString(),
+                ipAddress: ipAddress,
+                location: getLocationFromIP(ipAddress),
+                device: getDeviceInfo(userAgent),
+                userAgent: userAgent,
+                sessionId: sessionId
+            };
+            
+            activeSessions.unshift(newSession);
+            
+            // Update displays
+            updateLogsTable();
+            updateActiveSessions();
+            updateStatistics();
+            
+            return sessionId;
+        }
+
+        function trackLogout(username, sessionId, logoutMethod = "Manual") {
+            const timestamp = new Date().toISOString().replace('T', ' ').substr(0, 19);
+            const userInitials = getInitials(username);
+            
+            // Find the session to calculate duration
+            const sessionIndex = activeSessions.findIndex(s => s.sessionId === sessionId);
+            let sessionDuration = "Unknown";
+            
+            if (sessionIndex !== -1) {
+                const session = activeSessions[sessionIndex];
+                const loginTime = new Date(session.loginTime);
+                const logoutTime = new Date();
+                const durationMs = logoutTime - loginTime;
+                sessionDuration = formatDuration(durationMs);
+                
+                // Remove from active sessions
+                activeSessions.splice(sessionIndex, 1);
+            }
+            
+            // Add logout log
+            const logoutLog = {
+                id: `LOG-${new Date().getFullYear()}-${auditLogs.length + 1}`,
+                timestamp: timestamp,
+                severity: "info",
+                user: username,
+                userAvatar: userInitials,
+                action: "Logout",
+                actionType: "logout",
+                category: "authentication",
+                ipAddress: "System",
+                description: `User logged out after ${sessionDuration} session`,
+                details: {
+                    sessionDuration: sessionDuration,
+                    lastActivity: timestamp,
+                    logoutMethod: logoutMethod,
+                    sessionId: sessionId,
+                    timestamp: timestamp
+                }
+            };
+            
+            auditLogs.unshift(logoutLog); // Add to beginning for recent first
+            
+            // Update displays
+            updateLogsTable();
+            updateActiveSessions();
+            updateStatistics();
+        }
+
+        function trackFailedLogin(username, ipAddress, userAgent, reason = "Invalid credentials") {
+            const timestamp = new Date().toISOString().replace('T', ' ').substr(0, 19);
+            const userInitials = getInitials(username);
+            
+            // Count recent failed attempts for this IP/user
+            const recentFailedAttempts = auditLogs.filter(log => 
+                log.actionType === "failed-login" && 
+                log.ipAddress === ipAddress &&
+                new Date(log.timestamp) > new Date(Date.now() - 30 * 60 * 1000) // Last 30 minutes
+            ).length + 1;
+            
+            const severity = recentFailedAttempts >= 5 ? "critical" : 
+                            recentFailedAttempts >= 3 ? "high" : "medium";
+            
+            // Add failed login log
+            const failedLoginLog = {
+                id: `LOG-${new Date().getFullYear()}-${auditLogs.length + 1}`,
+                timestamp: timestamp,
+                severity: severity,
+                user: username,
+                userAvatar: userInitials,
+                action: "Failed Login Attempt",
+                actionType: "failed-login",
+                category: "authentication",
+                ipAddress: ipAddress,
+                description: `Failed login attempt ${recentFailedAttempts > 1 ? `(${recentFailedAttempts} attempts)` : ''}`,
+                details: {
+                    attempts: recentFailedAttempts,
+                    lockout: recentFailedAttempts >= 5,
+                    userAgent: userAgent,
+                    location: getLocationFromIP(ipAddress),
+                    reason: reason,
+                    timestamp: timestamp
+                }
+            };
+            
+            auditLogs.unshift(failedLoginLog); // Add to beginning for recent first
+            
+            // Update displays
+            updateLogsTable();
+            updateStatistics();
+            
+            return recentFailedAttempts;
+        }
+
+        // Helper functions
+        function getInitials(username) {
+            return username.split('@')[0].split('.').map(n => n[0]).join('').toUpperCase().substr(0, 2);
+        }
+
+        function getUserRole(username) {
+            const roles = {
+                'admin': 'Administrator',
+                'dr.': 'Doctor',
+                'nurse.': 'Nurse',
+                'pharmacist.': 'Pharmacist'
+            };
+            
+            for (const [prefix, role] of Object.entries(roles)) {
+                if (username.toLowerCase().includes(prefix)) {
+                    return role;
+                }
+            }
+            return 'User';
+        }
+
+        function getLocationFromIP(ip) {
+            const locations = {
+                '192.168.1.': 'Internal Network',
+                '10.0.1.': 'Hospital Network',
+                '10.0.2.': 'Pharmacy Network',
+                '127.0.0.1': 'Localhost'
+            };
+            
+            for (const [prefix, location] of Object.entries(locations)) {
+                if (ip.startsWith(prefix)) {
+                    return location;
+                }
+            }
+            return 'External Network';
+        }
+
+        function getDeviceInfo(userAgent) {
+            if (userAgent.includes('Mobile')) return 'Mobile Device';
+            if (userAgent.includes('Tablet')) return 'Tablet';
+            if (userAgent.includes('Windows')) return 'Windows PC';
+            if (userAgent.includes('Mac')) return 'Mac';
+            return 'Unknown Device';
+        }
+
+        function formatDuration(ms) {
+            const seconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            
+            if (hours > 0) {
+                const remainingMinutes = minutes % 60;
+                return `${hours}h ${remainingMinutes}m`;
+            } else if (minutes > 0) {
+                return `${minutes}m`;
+            } else {
+                return `${seconds}s`;
+            }
+        }
+
+        function calculateSessionDuration(loginTime) {
+            const now = new Date();
+            const login = new Date(loginTime);
+            return formatDuration(now - login);
+        }
+
+        // Initialize variables
+        let currentPage = 1;
+        let itemsPerPage = 10;
+        let filteredLogs = [...auditLogs];
+        let activeFilters = {};
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            updateLogsTable();
+            updateActiveSessions();
+            updateStatistics();
+            
+            // Set current time
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 60000);
+            
+            // Add demo login/logout buttons for testing
+            addDemoControls();
+        });
+
+        // Update current time
+        function updateCurrentTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true 
+            });
+            document.getElementById('lastUpdateTime').textContent = timeString;
+        }
+
+        // Update active sessions display
+        function updateActiveSessions() {
+            const tableBody = document.getElementById('activeSessionsTable');
+            tableBody.innerHTML = '';
+            
+            activeSessions.forEach(session => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-border hover:bg-secondary-50';
+                
+                const loginTime = new Date(session.loginTime);
+                const lastActivity = new Date(session.lastActivity);
+                const sessionDuration = calculateSessionDuration(session.loginTime);
+                
+                row.innerHTML = `
+                    <td class="py-3">
+                        <div class="flex items-center gap-2">
+                            <div class="user-avatar" style="background-color: ${getAvatarColor(getInitials(session.user))}">
+                                ${getInitials(session.user)}
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium">${session.user}</p>
+                                <p class="text-xs text-text-secondary">${session.userRole}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-3">
+                        <span class="timestamp">${loginTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        <p class="text-xs text-text-secondary">${loginTime.toLocaleDateString()}</p>
+                    </td>
+                    <td class="py-3">
+                        <span class="timestamp">${lastActivity.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        <p class="text-xs text-text-secondary">${lastActivity.toLocaleDateString()}</p>
+                    </td>
+                    <td class="py-3">
+                        <span class="session-duration">${sessionDuration}</span>
+                    </td>
+                    <td class="py-3">
+                        <button type="button" class="force-logout-btn btn btn-error btn-sm" data-session-id="${session.sessionId}" data-username="${session.user}">
+                            Force Logout
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Add event listeners to force logout buttons
+            document.querySelectorAll('.force-logout-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const sessionId = this.dataset.sessionId;
+                    const username = this.dataset.username;
+                    if (confirm(`Force logout ${username}?`)) {
+                        trackLogout(username, sessionId, "Admin Forced");
+                    }
+                });
+            });
+        }
+
+        // Update logs table
+        function updateLogsTable() {
+            const tableBody = document.getElementById('auditLogsTable');
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const currentLogs = filteredLogs.slice(startIndex, endIndex);
+            
+            // Update pagination info
+            document.getElementById('startIndex').textContent = startIndex + 1;
+            document.getElementById('endIndex').textContent = Math.min(endIndex, filteredLogs.length);
+            document.getElementById('totalItems').textContent = filteredLogs.length;
+            document.getElementById('showingLogsText').textContent = `Showing ${startIndex + 1}-${Math.min(endIndex, filteredLogs.length)} of ${filteredLogs.length} logs`;
+            
+            // Update pagination buttons
+            document.getElementById('prevPageBtn').disabled = currentPage === 1;
+            document.getElementById('nextPageBtn').disabled = endIndex >= filteredLogs.length;
+            
+            // Clear table
+            tableBody.innerHTML = '';
+            
+            // Populate table
+            currentLogs.forEach(log => {
+                const row = document.createElement('tr');
+                row.className = 'audit-log-item hover:bg-secondary-50 cursor-pointer';
+                row.dataset.logId = log.id;
+                
+                // Format timestamp
+                const timestamp = new Date(log.timestamp);
+                const formattedTime = timestamp.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                // Severity display
+                const severityMap = {
+                    'critical': { class: 'severity-critical', text: 'Critical' },
+                    'high': { class: 'severity-high', text: 'High' },
+                    'medium': { class: 'severity-medium', text: 'Medium' },
+                    'low': { class: 'severity-low', text: 'Low' },
+                    'info': { class: 'severity-info', text: 'Info' }
+                };
+                
+                const severityInfo = severityMap[log.severity] || severityMap.info;
+                
+                // User avatar
+                const userAvatar = document.createElement('div');
+                userAvatar.className = 'user-avatar';
+                userAvatar.style.backgroundColor = getAvatarColor(log.userAvatar);
+                userAvatar.textContent = log.userAvatar;
+                
+                // Add login/logout status badge
+                let statusBadge = '';
+                if (log.actionType === 'login') {
+                    statusBadge = '<span class="login-status-badge login-status-login ml-2">Login</span>';
+                } else if (log.actionType === 'logout') {
+                    statusBadge = '<span class="login-status-badge login-status-logout ml-2">Logout</span>';
+                } else if (log.actionType === 'failed-login') {
+                    statusBadge = '<span class="login-status-badge login-status-failed ml-2">Failed</span>';
+                }
+                
+                row.innerHTML = `
+                    <td class="py-3">
+                        <span class="timestamp">${formattedTime}</span>
+                    </td>
+                    <td class="py-3">
+                        <div class="flex items-center">
+                            <span class="severity-indicator ${severityInfo.class}"></span>
+                            <span>${severityInfo.text}</span>
+                        </div>
+                    </td>
+                    <td class="py-3">
+                        <div class="flex items-center gap-2">
+                            ${userAvatar.outerHTML}
+                            <span class="text-sm">${log.user}</span>
+                        </div>
+                    </td>
+                    <td class="py-3">
+                        <div class="flex items-center">
+                            <span class="font-medium">${log.action}</span>
+                        </div>
+                    </td>
+                    <td class="py-3">
+                        <span class="badge ${getCategoryBadgeClass(log.category)}">${formatCategory(log.category)}</span>
+                    </td>
+                    <td class="py-3">
+                        <button type="button" class="view-details-btn btn btn-ghost btn-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Add event listeners to view buttons
+            document.querySelectorAll('.view-details-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const logId = this.closest('tr').dataset.logId;
+                    showLogDetails(logId);
+                });
+            });
+            
+            // Add click event to rows
+            document.querySelectorAll('#auditLogsTable tr').forEach(row => {
+                row.addEventListener('click', function() {
+                    const logId = this.dataset.logId;
+                    showLogDetails(logId);
+                });
+            });
+        }
+
+        // Get avatar color based on initials
+        function getAvatarColor(initials) {
+            const colors = [
+                '#059669', '#10b981', '#0ea5e9', '#8b5cf6', '#ec4899',
+                '#f97316', '#eab308', '#84cc16', '#06b6d4', '#8b5cf6'
+            ];
+            const charCode = initials.charCodeAt(0) + (initials.charCodeAt(1) || 0);
+            return colors[charCode % colors.length];
+        }
+
+        // Get category badge class
+        function getCategoryBadgeClass(category) {
+            const classes = {
+                'authentication': 'badge-primary',
+                'user-management': 'badge-warning',
+                'data-access': 'badge-success',
+                'system': 'badge-secondary',
+                'security': 'badge-error'
+            };
+            return classes[category] || 'badge-secondary';
+        }
+
+        // Format category for display
+        function formatCategory(category) {
+            return category.split('-').map(word => 
+                word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' ');
+        }
+
+        // Show log details modal
+        function showLogDetails(logId) {
+            const log = auditLogs.find(l => l.id === logId);
+            if (!log) return;
+            
+            const modal = document.getElementById('logDetailsModal');
+            const content = document.getElementById('logDetailsContent');
+            
+            // Format details as JSON
+            const detailsJson = JSON.stringify(log.details, null, 2);
+            
+            // Severity display
+            const severityMap = {
+                'critical': { class: 'badge-error', text: 'Critical' },
+                'high': { class: 'badge-warning', text: 'High' },
+                'medium': { class: 'badge-warning', text: 'Medium' },
+                'low': { class: 'badge-primary', text: 'Low' },
+                'info': { class: 'badge-secondary', text: 'Info' }
+            };
+            
+            const severityInfo = severityMap[log.severity] || severityMap.info;
+            
+            // Action type badge
+            let actionBadge = '';
+            if (log.actionType === 'login') {
+                actionBadge = '<span class="login-status-badge login-status-login ml-2">Login</span>';
+            } else if (log.actionType === 'logout') {
+                actionBadge = '<span class="login-status-badge login-status-logout ml-2">Logout</span>';
+            } else if (log.actionType === 'failed-login') {
+                actionBadge = '<span class="login-status-badge login-status-failed ml-2">Failed Login</span>';
+            }
+            
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <!-- Header -->
+                    <div class="flex items-start gap-4">
+                        <div class="audit-icon ${log.severity === 'critical' || log.severity === 'high' ? 'bg-error-100' : 
+                            log.severity === 'medium' ? 'bg-warning-100' : 
+                            log.severity === 'low' ? 'bg-primary-100' : 'bg-secondary-100'}">
+                            <svg class="w-6 h-6 ${log.severity === 'critical' || log.severity === 'high' ? 'text-error-600' : 
+                                log.severity === 'medium' ? 'text-warning-600' : 
+                                log.severity === 'low' ? 'text-primary-600' : 'text-secondary-600'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-lg font-semibold text-text-primary">${log.action} ${actionBadge}</h4>
+                            <p class="text-text-secondary mt-1">Log ID: ${log.id}</p>
+                        </div>
+                        <div>
+                            <span class="${severityInfo.class}">${severityInfo.text}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Basic Information -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-text-secondary mb-1">Timestamp</p>
+                            <p class="font-medium text-text-primary">${new Date(log.timestamp).toLocaleString()}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-text-secondary mb-1">Category</p>
+                            <p class="font-medium text-text-primary">${formatCategory(log.category)}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-text-secondary mb-1">User</p>
+                            <p class="font-medium text-text-primary">${log.user}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Description -->
+                    <div>
+                        <p class="text-sm text-text-secondary mb-1">Description</p>
+                        <div class="bg-secondary-50 p-4 rounded-base">
+                            <p class="text-text-primary">${log.description}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Details -->
+                    <div>
+                        <p class="text-sm text-text-secondary mb-1">Additional Details</p>
+                        <div class="bg-secondary-900 p-4 rounded-base">
+                            <pre class="log-data text-white">${detailsJson}</pre>
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="flex gap-3 pt-6 border-t border-border">
+                        <button type="button" class="btn btn-outline flex-1">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                            Add Note
+                        </button>
+                        <button type="button" class="btn btn-primary flex-1">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Mark as Reviewed
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+
+        // Close log details modal
+        document.getElementById('closeLogModal').addEventListener('click', function() {
+            document.getElementById('logDetailsModal').classList.add('hidden');
+        });
+
+        document.getElementById('logDetailsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+            }
+        });
+
+        // Update statistics
+        function updateStatistics() {
+            // Calculate statistics from filtered logs
+            const criticalCount = filteredLogs.filter(log => log.severity === 'critical').length;
+            const totalCount = filteredLogs.length;
+            const failedLoginCount = filteredLogs.filter(log => log.actionType === 'failed-login').length;
+            const activeUsersCount = activeSessions.length;
+            
+            // Update display
+            document.getElementById('criticalEventsCount').textContent = criticalCount;
+            document.getElementById('totalLogsCount').textContent = totalCount;
+            document.getElementById('failedLoginsCount').textContent = failedLoginCount;
+            document.getElementById('activeUsersCount').textContent = activeUsersCount;
+        }
+
+        // Filter logs based on active filters
+        function filterLogs() {
+            filteredLogs = auditLogs.filter(log => {
+                // Severity filter
+                if (activeFilters.severity && log.severity !== activeFilters.severity) {
+                    return false;
+                }
+                
+                // Category filter
+                if (activeFilters.category && log.category !== activeFilters.category) {
+                    return false;
+                }
+                
+                // Action type filter
+                if (activeFilters.action && log.actionType !== activeFilters.action) {
+                    return false;
+                }
+                
+                // Search filter
+                if (activeFilters.search) {
+                    const searchLower = activeFilters.search.toLowerCase();
+                    const searchFields = [
+                        log.user,
+                        log.action,
+                        log.description,
+                        log.ipAddress,
+                        log.category
+                    ];
+                    
+                    if (!searchFields.some(field => field.toLowerCase().includes(searchLower))) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+            
+            currentPage = 1;
+            updateLogsTable();
+            updateStatistics();
+            updateActiveFiltersDisplay();
+        }
+
+        // Update active filters display
+        function updateActiveFiltersDisplay() {
+            const container = document.getElementById('activeFilters');
+            container.innerHTML = '';
+            
+            Object.entries(activeFilters).forEach(([key, value]) => {
+                if (value) {
+                    const tag = document.createElement('div');
+                    tag.className = 'filter-tag';
+                    tag.innerHTML = `
+                        <span>${key}: ${value}</span>
+                        <button type="button" class="remove-filter" data-filter="${key}">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    `;
+                    container.appendChild(tag);
+                }
+            });
+            
+            // Add event listeners to remove buttons
+            document.querySelectorAll('.remove-filter').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const filterKey = this.dataset.filter;
+                    delete activeFilters[filterKey];
+                    
+                    // Reset corresponding select if it exists
+                    const selectElement = document.getElementById(`${filterKey}Filter`);
+                    if (selectElement) {
+                        selectElement.value = '';
+                    }
+                    
+                    filterLogs();
+                });
+            });
+        }
+
+        // Search functionality
+        const logSearch = document.getElementById('logSearch');
+        const clearSearch = document.getElementById('clearSearch');
+        
+        let searchTimeout;
+        logSearch.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                if (this.value.trim()) {
+                    activeFilters.search = this.value.trim();
+                    clearSearch.classList.remove('hidden');
+                } else {
+                    delete activeFilters.search;
+                    clearSearch.classList.add('hidden');
+                }
+                filterLogs();
+            }, 300);
+        });
+        
+        clearSearch.addEventListener('click', function() {
+            logSearch.value = '';
+            delete activeFilters.search;
+            this.classList.add('hidden');
+            filterLogs();
+        });
+
+        // Filter select changes
+        document.getElementById('severityFilter').addEventListener('change', function() {
+            if (this.value) {
+                activeFilters.severity = this.value;
+            } else {
+                delete activeFilters.severity;
+            }
+            filterLogs();
+        });
+        
+        document.getElementById('categoryFilter').addEventListener('change', function() {
+            if (this.value) {
+                activeFilters.category = this.value;
+            } else {
+                delete activeFilters.category;
+            }
+            filterLogs();
+        });
+        
+        document.getElementById('actionFilter').addEventListener('change', function() {
+            if (this.value) {
+                activeFilters.action = this.value;
+            } else {
+                delete activeFilters.action;
+            }
+            filterLogs();
+        });
+        
+        document.getElementById('timeFilter').addEventListener('change', function() {
+            // This would filter by time range in a real implementation
+            console.log('Time filter changed to:', this.value);
+        });
+
+        // Clear all filters
+        document.getElementById('clearFiltersBtn').addEventListener('click', function() {
+            activeFilters = {};
+            logSearch.value = '';
+            clearSearch.classList.add('hidden');
+            document.getElementById('severityFilter').value = '';
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('actionFilter').value = '';
+            document.getElementById('timeFilter').value = '30d';
+            filterLogs();
+        });
+
+        // Pagination
+        document.getElementById('prevPageBtn').addEventListener('click', function() {
+            if (currentPage > 1) {
+                currentPage--;
+                updateLogsTable();
+            }
+        });
+        
+        document.getElementById('nextPageBtn').addEventListener('click', function() {
+            const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                updateLogsTable();
+            }
+        });
+
+        // Page number buttons
+        document.querySelectorAll('.pagination-number').forEach(btn => {
+            btn.addEventListener('click', function() {
+                currentPage = parseInt(this.textContent);
+                updateLogsTable();
+            });
+        });
+
+        // Refresh logs
+        document.getElementById('refreshLogsBtn').addEventListener('click', function() {
+            updateLogsTable();
+            updateActiveSessions();
+            updateStatistics();
+            
+            // Show loading state briefly
+            const icon = this.querySelector('svg');
+            const originalHTML = icon.outerHTML;
+            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>';
+            
+            setTimeout(() => {
+                icon.innerHTML = originalHTML;
+            }, 1000);
+        });
+
+        // Refresh sessions
+        document.getElementById('refreshSessionsBtn').addEventListener('click', function() {
+            updateActiveSessions();
+            
+            // Show loading state briefly
+            const icon = this.querySelector('svg');
+            const originalHTML = icon.outerHTML;
+            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>';
+            
+            setTimeout(() => {
+                icon.innerHTML = originalHTML;
+            }, 1000);
+        });
+
+        // Export logs
+        document.getElementById('exportLogsBtn').addEventListener('click', function() {
+            this.classList.add('loading');
+            
+            // Simulate export process
+            setTimeout(() => {
+                this.classList.remove('loading');
+                
+                // Create export data
+                const exportData = {
+                    timestamp: new Date().toISOString(),
+                    filters: activeFilters,
+                    logs: filteredLogs,
+                    activeSessions: activeSessions,
+                    total: filteredLogs.length,
+                    activeUsers: activeSessions.length
+                };
+                
+                // Create download link
+                const dataStr = JSON.stringify(exportData, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                
+                const exportFileDefaultName = `audit-logs-${new Date().toISOString().split('T')[0]}.json`;
+                
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+                
+                alert(`Exported ${filteredLogs.length} logs and ${activeSessions.length} active sessions successfully!`);
+            }, 1500);
+        });
+
+    </script>
+</body>
+</html>

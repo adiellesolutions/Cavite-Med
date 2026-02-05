@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAVMED Portal - Healthcare Information Management System</title>
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%); /* Green gradient */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .redirect-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #2f855a; /* Dark healthcare green */
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #4a5568;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #c6f6d5; /* Light green */
+            border-top: 4px solid #2f855a; /* Darker green */
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .redirect-message {
+            color: #2f855a;
+            font-size: 1rem;
+            margin-top: 20px;
+        }
+        
+        .manual-link {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: #38a169; /* Green button */
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+        
+        .manual-link:hover {
+            background: #2f855a;
+        }
+    </style>
+
+    <script type="module" async src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Fcavmedporta6876back.builtwithrocket.new&_be=https%3A%2F%2Fapplication.rocket.new&_v=0.1.10"></script>
+    <script type="module" defer src="https://static.rocket.new/rocket-shot.js?v=0.0.1"></script>
+</head>
+
+<body>
+    <div class="redirect-container">
+        <div class="logo">🏥 CAVMED Portal</div>
+        <div class="subtitle">Healthcare Information Management System</div>
+
+        <div class="loading-spinner"></div>
+
+        <div class="redirect-message">
+            Redirecting to System Login Portal...
+        </div>
+
+        <a href="pages/system_login_portal.html" class="manual-link">
+            Continue to Login Portal
+        </a>
+    </div>
+
+    <script>
+        // Auto-redirect to the system login portal after 3 seconds
+        setTimeout(function() {
+            window.location.href = 'pages/system_login_portal.html';
+        }, 3000);
+
+        // Show redirect message
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('CAVMED Portal - Redirecting to System Login Portal');
+        });
+    </script>
+
+    <script id="dhws-dataInjector" src="/public/dhws-data-injector.js"></script>
+</body>
+</html>

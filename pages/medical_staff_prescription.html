@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Nurse Prescription Management - View and manage medication dispensing">
+    <title>Nurse Prescription Management - CAVMED Portal</title>
+    <link rel="stylesheet" href="../css/main.css">
+  <script type="module" async src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Fcavmedporta6876back.builtwithrocket.new&_be=https%3A%2F%2Fapplication.rocket.new&_v=0.1.10"></script>
+  <script type="module" defer src="https://static.rocket.new/rocket-shot.js?v=0.0.1"></script>
+</head>
+<body class="bg-background min-h-screen flex flex-col">
+    <!-- Header Section -->
+    <header class="bg-surface border-b border-border py-4 px-6 shadow-sm sticky top-0 z-sticky">
+        <div class="max-w-full mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <!-- Logo -->
+                <a href="system_login_portal.html" class="flex items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="40" height="40" rx="8" fill="#2563EB"/>
+                        <path d="M20 10v20M10 20h20" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                        <circle cx="20" cy="20" r="6" stroke="white" stroke-width="2" fill="none"/>
+                    </svg>
+                    <div>
+                        <h1 class="text-xl font-semibold text-text-primary">CAVMED Portal</h1>
+                        <p class="text-xs text-text-secondary">Nurse e-Prescription Records</p>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Search Bar - Persistent -->
+            <div class="flex-1 max-w-2xl mx-8">
+                <div class="relative">
+                    <input type="text" id="globalPatientSearch" 
+                           placeholder="Search patients by name or prescription ID..."
+                           class="input pl-10 pr-10 w-full"
+                           autocomplete="off">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <svg class="w-5 h-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    <button type="button" id="clearGlobalSearch" class="hidden absolute inset-y-0 right-0 flex items-center pr-3 text-text-tertiary hover:text-text-primary">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- User Info & Actions -->
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="text-right hidden md:block">
+                        <p class="text-sm font-medium text-text-primary">Nurse Emily Davis</p>
+                        <p class="text-xs text-text-secondary">RN • License: RN-789012</p>
+                    </div>
+                    <button type="button" class="w-10 h-10 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-semibold">
+                        ED
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+
+    <nav class="bg-surface border-b border-border px-6 no-print">        
+        <div class="px-6">
+            <div class="flex items-center gap-1 overflow-x-auto scrollbar-thin">
+                
+                <a href="medical_staff_dashboard.html" class="nav-item">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    Dashboard
+                </a>
+
+                <a href="medical_staff_prescription.html" class="nav-item nav-item-active whitespace-nowrap">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    <span>Dispensation</span>
+                </a>
+
+                <a href="medical_staff_patient_registration.html" class="nav-item">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    <span>Patient</span>
+                </a>
+
+                <a href="medical_staff_inventory.html" class="nav-item">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    <span>Inventory List</span>
+                </a>
+
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 px-6 py-6">
+        <div class="max-w-full mx-auto">
+
+
+            <!-- Dual Panel Layout -->
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                <!-- Left Panel - Active Prescriptions (40%) -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Active Prescriptions List -->
+                    <div class="card ">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-text-primary">Active Prescriptions</h3>
+
+                            <div class="flex items-center gap-3">
+
+                                <select id="filterStatus" class="input input-sm pl-9 pr-4">
+                                    <option value="all">All Status</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="dispensed">Dispensed</option>
+                                </select>
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                    <svg class="w-4 h-4 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                                    </svg>
+                                </div>
+
+                                <button type="button" id="refreshBtn" class="btn btn-outline">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                    </svg>
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                        <div class="space-y-3 max-h-[500px] overflow-y-auto">
+                            <!-- Prescription Item 1 -->
+                            <button type="button" class="prescription-select-btn w-full text-left p-4 rounded-base border transition-colors prescription-pending hover:bg-secondary-50" data-id="RX-2024-001">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <p class="font-medium text-text-primary">Maria Johnson</p>
+                                            <span class="badge badge-warning text-xs">Penicillin Allergy</span>
+                                        </div>
+                                        <p class="text-sm text-text-secondary mb-2">ID: P-2024-1547 • Room: 302</p>
+                                        <div class="bg-secondary-50 rounded-base p-3">
+                                            <div class="flex justify-between items-center">
+                                                <div>
+                                                    <p class="font-medium text-text-primary">Amoxicillin 500mg</p>
+                                                    <p class="text-xs text-text-secondary">TID × 7 days • Oral</p>
+                                                </div>
+                                                <div class="text-right">
+                                                    <p class="text-sm text-text-secondary">Qty: <span class="font-semibold text-text-primary">21</span> tabs</p>
+                                                    <p class="text-xs text-text-secondary">Dispensed: <span class="font-medium">0</span>/21</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center justify-between mt-2">
+                                            <span class="text-xs text-text-secondary">Prescribed: Today 09:30 AM</span>
+                                            <span class="badge badge-warning">Pending</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </button>
+
+                            <!-- Prescription Item 2 -->
+                            <button type="button" class="prescription-select-btn w-full text-left p-4 rounded-base border transition-colors prescription-partial hover:bg-secondary-50" data-id="RX-2024-002">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <p class="font-medium text-text-primary">Robert Smith</p>
+                                            <span class="badge badge-error text-xs">Hypertension</span>
+                                        </div>
+                                        <p class="text-sm text-text-secondary mb-2">ID: P-2024-1892 • Room: 415</p>
+                                        <div class="bg-secondary-50 rounded-base p-3">
+                                            <div class="flex justify-between items-center">
+                                                <div>
+                                                    <p class="font-medium text-text-primary">Lisinopril 10mg</p>
+                                                    <p class="text-xs text-text-secondary">Once daily × 30 days • Oral</p>
+                                                </div>
+                                                <div class="text-right">
+                                                    <p class="text-sm text-text-secondary">Qty: <span class="font-semibold text-text-primary">30</span> tabs</p>
+                                                    <p class="text-xs text-text-secondary">Dispensed: <span class="font-medium">15</span>/30</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center justify-between mt-2">
+                                            <span class="text-xs text-text-secondary">Prescribed: Yesterday 02:15 PM</span>
+                                            <span class="badge badge-primary">Partial</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </button>
+
+                            <!-- Prescription Item 3 -->
+                            <button type="button" class="prescription-select-btn w-full text-left p-4 rounded-base border transition-colors prescription-dispensed hover:bg-secondary-50" data-id="RX-2024-003">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <p class="font-medium text-text-primary">Emily Chen</p>
+                                            <span class="badge badge-success text-xs">No Allergies</span>
+                                        </div>
+                                        <p class="text-sm text-text-secondary mb-2">ID: P-2024-2103 • Room: 208</p>
+                                        <div class="bg-secondary-50 rounded-base p-3">
+                                            <div class="flex justify-between items-center">
+                                                <div>
+                                                    <p class="font-medium text-text-primary">Metformin 850mg</p>
+                                                    <p class="text-xs text-text-secondary">BID × 30 days • Oral</p>
+                                                </div>
+                                                <div class="text-right">
+                                                    <p class="text-sm text-text-secondary">Qty: <span class="font-semibold text-text-primary">60</span> tabs</p>
+                                                    <p class="text-xs text-text-secondary">Dispensed: <span class="font-medium">60</span>/60</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center justify-between mt-2">
+                                            <span class="text-xs text-text-secondary">Prescribed: 2 days ago 10:45 AM</span>
+                                            <span class="badge badge-success">Completed</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Right Panel - Prescription Details & Dispensing (60%) -->
+                <div class="lg:col-span-3">
+                    <!-- Selected Prescription Details -->
+                    <div class="card">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold text-text-primary">Prescription Details</h3>
+                            <button type="button" id="printPrescriptionBtn" class="btn btn-ghost btn-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                                </svg>
+                                <span>Print</span>
+                            </button>
+                        </div>
+
+                        <div id="prescriptionDetails" class="space-y-6">
+                            <!-- Prescription Header -->
+                            <div class="bg-secondary-50 rounded-base p-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="text-xl font-semibold text-text-primary">CAVMED Pharmacy</h4>
+                                        <p class="text-text-secondary">Electronic Prescription</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm text-text-secondary">RX #: <span class="font-semibold">RX-2024-001</span></p>
+                                        <p class="text-sm text-text-secondary">Date: <span class="font-medium">Today, 09:30 AM</span></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Patient & Prescriber Info -->
+                            <div class="grid grid-cols-2 gap-6">
+                                <div>
+                                    <h5 class="font-semibold text-text-primary mb-2">Patient Information</h5>
+                                    <div class="space-y-1 text-sm">
+                                        <p><span class="text-text-secondary">Name:</span> <span class="font-medium text-text-primary">Maria Johnson</span></p>
+                                        <p><span class="text-text-secondary">ID:</span> <span class="font-medium text-text-primary">P-2024-1547</span></p>
+                                        <p><span class="text-text-secondary">Age:</span> <span class="font-medium text-text-primary">45 years</span></p>
+                                        <p><span class="text-text-secondary">Gender:</span> <span class="font-medium text-text-primary">Female</span></p>
+                                        <p><span class="text-text-secondary">Room:</span> <span class="font-medium text-text-primary">302</span></p>
+                                    </div>
+                                    <div class="mt-3">
+                                        <span class="badge badge-warning">Penicillin Allergy</span>
+                                        <span class="badge badge-error ml-2">Diabetes Type 2</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h5 class="font-semibold text-text-primary mb-2">Prescriber Information</h5>
+                                    <div class="space-y-1 text-sm">
+                                        <p><span class="text-text-secondary">Prescriber:</span> <span class="font-medium text-text-primary">Dr. Sarah Johnson</span></p>
+                                        <p><span class="text-text-secondary">License:</span> <span class="font-medium text-text-primary">MD-123456</span></p>
+                                        <p><span class="text-text-secondary">DEA:</span> <span class="font-medium text-text-primary">AJ1234567</span></p>
+                                        <p><span class="text-text-secondary">Clinic:</span> <span class="font-medium text-text-primary">CAVMED Main Clinic</span></p>
+                                        <p><span class="text-text-secondary">Contact:</span> <span class="font-medium text-text-primary">(555) 123-4567</span></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Medication Details -->
+                            <div class="border-t border-border pt-6">
+                                <h5 class="font-semibold text-text-primary mb-4">Medication Information</h5>
+                                <div class="bg-white rounded-base border border-border p-4">
+                                    <div class="flex items-start justify-between mb-4">
+                                        <div>
+                                            <p class="text-lg font-semibold text-text-primary">Amoxicillin 500mg</p>
+                                            <p class="text-text-secondary">Antibiotic • Generic: Amoxicillin Trihydrate</p>
+                                        </div>
+                                        <span class="badge badge-success">In Stock</span>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p class="text-sm text-text-secondary">Dosage</p>
+                                            <p class="font-medium text-text-primary">500mg per dose</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-text-secondary">Frequency</p>
+                                            <p class="font-medium text-text-primary">Three times daily (TID)</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-text-secondary">Route</p>
+                                            <p class="font-medium text-text-primary">Oral (PO)</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm text-text-secondary">Duration</p>
+                                            <p class="font-medium text-text-primary">7 days</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4 pt-4 border-t border-border">
+                                        <p class="text-sm text-text-secondary mb-1">Special Instructions</p>
+                                        <p class="font-medium text-text-primary">Take with food. Complete entire course even if feeling better.</p>
+                                    </div>
+
+                                    <!-- Nurse Editable Quantity Section -->
+                                    <div class="mt-6 pt-6 border-t border-border">
+                                        <h5 class="font-semibold text-text-primary mb-4">Medication Dispensing</h5>
+                                        <div class="bg-secondary-50 rounded-base p-4">
+                                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                                <div>
+                                                    <p class="text-sm text-text-secondary mb-1">Total Quantity Prescribed</p>
+                                                    <p class="text-lg font-semibold text-text-primary">21 tablets</p>
+                                                </div>
+                                                <div>
+                                                    <p class="text-sm text-text-secondary mb-1">Previously Dispensed</p>
+                                                    <p class="text-lg font-semibold text-primary">0 tablets</p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Nurse Editable Field -->
+                                            <div>
+                                                <label for="dispenseQuantity" class="block text-sm font-medium text-text-primary mb-2">
+                                                    Quantity to Dispense Now *
+                                                </label>
+                                                <div class="flex items-center gap-4">
+                                                    <input type="number" 
+                                                           id="dispenseQuantity" 
+                                                           name="dispenseQuantity"
+                                                           min="0"
+                                                           max="21"
+                                                           value="0"
+                                                           class="input w-32 text-center"
+                                                           required
+                                                           onchange="updateDispensingSummary()">
+                                                    <span class="text-text-secondary">of 21 tablets maximum</span>
+                                                </div>
+                                                <p class="text-xs text-text-tertiary mt-2">
+                                                    Enter the quantity of medication you are dispensing to the patient now.
+                                                </p>
+                                            </div>
+
+                                            <!-- Dispensing Summary -->
+                                            <div id="dispensingSummary" class="mt-4 pt-4 border-t border-border hidden">
+                                                <div class="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <p class="text-sm text-text-secondary">New Total Dispensed</p>
+                                                        <p id="newTotalDispensed" class="text-lg font-semibold text-text-primary">0 tablets</p>
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-sm text-text-secondary">Remaining Balance</p>
+                                                        <p id="remainingBalance" class="text-lg font-semibold text-text-primary">21 tablets</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Dispensing Actions -->
+                                    <div class="mt-6 flex gap-3">
+                                        <button type="button" id="recordDispensingBtn" class="btn btn-primary flex-1">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                            </svg>
+                                            <span>Record Dispensing</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Clinical Notes -->
+                            <div class="border-t border-border pt-6">
+                                <h5 class="font-semibold text-text-primary mb-2">Clinical Notes</h5>
+                                <div class="bg-secondary-50 rounded-base p-4">
+                                    <div class="flex items-start gap-3 mb-3">
+                                        <svg class="w-5 h-5 text-warning-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <div>
+                                            <p class="font-medium text-text-primary">Allergy Alert</p>
+                                            <p class="text-sm text-text-secondary mt-1">Patient has documented allergy to Penicillin. Monitor for any signs of allergic reaction.</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-3">
+                                        <svg class="w-5 h-5 text-primary-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <div>
+                                            <p class="font-medium text-text-primary">Patient Education</p>
+                                            <p class="text-sm text-text-secondary mt-1">Educate patient on importance of completing full antibiotic course. Advise to take with food to minimize GI upset.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- No Prescription Selected State -->
+                        <div id="noPrescriptionSelected" class="text-center py-12">
+                            <svg class="w-20 h-20 mx-auto text-text-tertiary mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <p class="text-text-secondary text-lg">No prescription selected</p>
+                            <p class="text-sm text-text-tertiary mt-2">Select a prescription from the list to view details and record dispensing</p>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="card mt-6">
+                        <h3 class="text-lg font-semibold text-text-primary mb-4">Recent Dispensing Activity</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 rounded-base bg-success-50">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-success-100 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-text-primary">Metformin 850mg dispensed</p>
+                                        <p class="text-xs text-text-secondary">Emily Chen • 30 tablets • 10:15 AM</p>
+                                    </div>
+                                </div>
+                                <span class="badge badge-success">Completed</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 rounded-base bg-warning-50">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-warning-100 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-warning-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-text-primary">Partial dispensing recorded</p>
+                                        <p class="text-xs text-text-secondary">Robert Smith • 15 of 30 tablets • 09:45 AM</p>
+                                    </div>
+                                </div>
+                                <span class="badge badge-warning">Partial</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 rounded-base bg-primary-50">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-text-primary">New prescription received</p>
+                                        <p class="text-xs text-text-secondary">Maria Johnson • Amoxicillin • 09:30 AM</p>
+                                    </div>
+                                </div>
+                                <span class="badge badge-primary">New</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-surface border-t border-border py-4 px-6 no-print">
+        <div class="max-w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-4 flex-wrap justify-center">
+
+            </div>
+            <div class="text-sm text-text-secondary text-center md:text-right">
+                <p>© 2025 CAVMED Portal. Nurse Dispensing Module v2.1</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Dispensing Confirmation Modal -->
+    <div id="dispensingModal" class="hidden fixed inset-0 bg-secondary-900 bg-opacity-50 z-modal flex items-center justify-center p-4">
+        <div class="card max-w-md w-full animate-slide-in">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-semibold text-text-primary">Confirm Medication Dispensing</h3>
+                <button type="button" id="closeDispensingModal" class="text-text-tertiary hover:text-text-primary transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div class="bg-secondary-50 rounded-base p-4">
+                    <div class="text-center mb-4">
+                        <div class="w-16 h-16 mx-auto rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-semibold text-2xl mb-3">
+                            MJ
+                        </div>
+                        <p class="font-semibold text-text-primary">Maria Johnson</p>
+                        <p class="text-sm text-text-secondary">Room 302 • ID: P-2024-1547</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-text-secondary">Medication:</span>
+                            <span class="font-medium text-text-primary">Amoxicillin 500mg</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-text-secondary">Quantity Dispensing:</span>
+                            <span id="confirmQuantity" class="font-semibold text-primary">0 tablets</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-text-secondary">Total Dispensed:</span>
+                            <span id="confirmTotal" class="font-medium text-text-primary">0/21 tablets</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-text-secondary">Administered By:</span>
+                            <span class="font-medium text-text-primary">Nurse Emily Davis</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="adminNotes" class="block text-sm font-medium text-text-primary mb-2">
+                        Administration Notes (Optional)
+                    </label>
+                    <textarea id="adminNotes" rows="2" class="input" placeholder="Add any notes about this administration..."></textarea>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="confirmVerification" class="w-4 h-4 text-primary border-border rounded focus:ring-2 focus:ring-primary-500">
+                    <label for="confirmVerification" class="text-sm text-text-primary">
+                        I have verified the 5 Rights of Medication Administration
+                    </label>
+                </div>
+
+                <div class="flex gap-3 pt-4 border-t border-border">
+                    <button type="button" id="cancelDispensingBtn" class="btn btn-outline flex-1">Cancel</button>
+                    <button type="button" id="confirmDispensingBtn" class="btn btn-primary flex-1">Confirm Dispensing</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global Patient Search
+        const globalSearchInput = document.getElementById('globalPatientSearch');
+        const clearGlobalSearch = document.getElementById('clearGlobalSearch');
+
+        globalSearchInput.addEventListener('input', function() {
+            if (this.value.length > 0) {
+                clearGlobalSearch.classList.remove('hidden');
+            } else {
+                clearGlobalSearch.classList.add('hidden');
+            }
+        });
+
+        clearGlobalSearch.addEventListener('click', function() {
+            globalSearchInput.value = '';
+            clearGlobalSearch.classList.add('hidden');
+        });
+
+        // Prescription Selection
+        const prescriptionSelectBtns = document.querySelectorAll('.prescription-select-btn');
+        const prescriptionDetails = document.getElementById('prescriptionDetails');
+        const noPrescriptionSelected = document.getElementById('noPrescriptionSelected');
+        const dispensingModal = document.getElementById('dispensingModal');
+        const closeDispensingModal = document.getElementById('closeDispensingModal');
+        const cancelDispensingBtn = document.getElementById('cancelDispensingBtn');
+        const confirmDispensingBtn = document.getElementById('confirmDispensingBtn');
+        const recordDispensingBtn = document.getElementById('recordDispensingBtn');
+        const partialDispenseBtn = document.getElementById('partialDispenseBtn');
+        const printPrescriptionBtn = document.getElementById('printPrescriptionBtn');
+
+        // Initialize - Hide details on load
+        prescriptionDetails.classList.add('hidden');
+
+        // Filter prescriptions by status
+        const filterStatus = document.getElementById('filterStatus');
+        filterStatus.addEventListener('change', function() {
+            const status = this.value;
+            prescriptionSelectBtns.forEach(btn => {
+                if (status === 'all') {
+                    btn.classList.remove('hidden');
+                } else {
+                    const btnStatus = btn.querySelector('.badge').textContent.toLowerCase();
+                    if (btnStatus.includes(status)) {
+                        btn.classList.remove('hidden');
+                    } else {
+                        btn.classList.add('hidden');
+                    }
+                }
+            });
+        });
+
+        // Prescription selection
+        prescriptionSelectBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Remove active class from all buttons
+                prescriptionSelectBtns.forEach(b => b.classList.remove('active-prescription'));
+                // Add active class to clicked button
+                this.classList.add('active-prescription');
+                
+                // Show details
+                prescriptionDetails.classList.remove('hidden');
+                noPrescriptionSelected.classList.add('hidden');
+                
+                // Update dispensing summary
+                updateDispensingSummary();
+            });
+        });
+
+        // Function to update dispensing summary
+        function updateDispensingSummary() {
+            const quantityInput = document.getElementById('dispenseQuantity');
+            const quantity = parseInt(quantityInput.value) || 0;
+            const maxQuantity = 21; // This would come from database in real app
+            const previouslyDispensed = 0; // This would come from database
+            
+            const newTotal = previouslyDispensed + quantity;
+            const remaining = maxQuantity - newTotal;
+            
+            // Update summary display
+            document.getElementById('newTotalDispensed').textContent = `${newTotal} tablets`;
+            document.getElementById('remainingBalance').textContent = `${remaining} tablets`;
+            
+            // Show/hide summary
+            const summary = document.getElementById('dispensingSummary');
+            if (quantity > 0) {
+                summary.classList.remove('hidden');
+            } else {
+                summary.classList.add('hidden');
+            }
+            
+            // Update confirmation modal values
+            document.getElementById('confirmQuantity').textContent = `${quantity} tablets`;
+            document.getElementById('confirmTotal').textContent = `${newTotal}/${maxQuantity} tablets`;
+        }
+
+        // Record Dispensing Button
+        recordDispensingBtn.addEventListener('click', function() {
+            const quantity = parseInt(document.getElementById('dispenseQuantity').value) || 0;
+            
+            if (quantity <= 0) {
+                alert('Please enter a quantity greater than 0 to dispense medication.');
+                return;
+            }
+            
+            if (quantity > 21) { // max quantity
+                alert('Quantity cannot exceed the total prescribed amount.');
+                return;
+            }
+            
+            // Show confirmation modal
+            dispensingModal.classList.remove('hidden');
+        });
+
+        // Partial Dispense Button
+        partialDispenseBtn.addEventListener('click', function() {
+            const quantity = parseInt(document.getElementById('dispenseQuantity').value) || 0;
+            
+            if (quantity <= 0) {
+                alert('Please enter a quantity to record partial dispensing.');
+                return;
+            }
+            
+            updateDispensingSummary();
+            alert(`Partial dispensing of ${quantity} tablets recorded successfully.`);
+        });
+
+        // Print Prescription Button
+        printPrescriptionBtn.addEventListener('click', function() {
+            alert('Printing prescription label...');
+            // In a real application, this would trigger the print dialog
+        });
+
+        // Dispensing Modal Controls
+        closeDispensingModal.addEventListener('click', function() {
+            dispensingModal.classList.add('hidden');
+        });
+
+        cancelDispensingBtn.addEventListener('click', function() {
+            dispensingModal.classList.add('hidden');
+        });
+
+        confirmDispensingBtn.addEventListener('click', function() {
+            const verification = document.getElementById('confirmVerification').checked;
+            
+            if (!verification) {
+                alert('Please confirm you have verified the 5 Rights of Medication Administration.');
+                return;
+            }
+            
+            // Get values
+            const quantity = parseInt(document.getElementById('dispenseQuantity').value) || 0;
+            const notes = document.getElementById('adminNotes').value;
+            
+            // In a real application, this would send data to server
+            console.log('Dispensing recorded:', { quantity, notes });
+            
+            // Show success message
+            alert(`Successfully recorded dispensing of ${quantity} tablets.`);
+            
+            // Close modal
+            dispensingModal.classList.add('hidden');
+            
+            // Reset form
+            document.getElementById('dispenseQuantity').value = '0';
+            document.getElementById('adminNotes').value = '';
+            document.getElementById('confirmVerification').checked = false;
+            
+            // Update UI
+            updateDispensingSummary();
+            
+            // Update prescription status in list
+            const activeBtn = document.querySelector('.active-prescription');
+            if (activeBtn) {
+                const badge = activeBtn.querySelector('.badge');
+                const totalDispensed = 0 + quantity; // In real app, get from database
+                
+                if (totalDispensed >= 21) {
+                    badge.textContent = 'Completed';
+                    badge.className = 'badge badge-success';
+                } else if (totalDispensed > 0) {
+                    badge.textContent = 'Partial';
+                    badge.className = 'badge badge-primary';
+                }
+            }
+        });
+
+        document.getElementById('viewTodayBtn').addEventListener('click', function() {
+            alert('Showing today\'s medication orders...');
+        });
+
+        document.getElementById('refreshBtn').addEventListener('click', function() {
+            alert('Refreshing prescription data...');
+            // In real app, this would fetch updated data from server
+        });
+
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl + F - Search patients
+            if (e.ctrlKey && e.key === 'f') {
+                e.preventDefault();
+                globalSearchInput.focus();
+            }
+            
+            // Ctrl + D - Record dispensing
+            if (e.ctrlKey && e.key === 'd') {
+                e.preventDefault();
+                recordDispensingBtn.click();
+            }
+            
+            // Ctrl + P - Print
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                printPrescriptionBtn.click();
+            }
+        });
+
+        // Close modal when clicking outside
+        dispensingModal.addEventListener('click', function(e) {
+            if (e.target === dispensingModal) {
+                dispensingModal.classList.add('hidden');
+            }
+        });
+
+        // Initialize event listeners for quantity input
+        document.getElementById('dispenseQuantity').addEventListener('input', updateDispensingSummary);
+        document.getElementById('dispenseQuantity').addEventListener('change', updateDispensingSummary);
+    </script>
+<script id="dhws-dataInjector" src="../public/dhws-data-injector.js"></script>
+</body>
+</html>
