@@ -45,19 +45,7 @@ $end   = min($offset + $limit, $totalRecords);
   <script defer src="../js/encoder_inventory_supplieractions.js"></script>
   <script defer src="../js/encoder_inventory_actions.js"></script>
   
-    <style>
-    .modal-container {
-    max-width: 1240px;
-    }
 
-    #addSupplierModalContent {
-    max-width: 340px;
-    }
-
-    #addMedicineModal {
-    max-width: 540px;
-    }
-    </style>
      
   </head>
 <body class="bg-background min-h-screen flex flex-col">
@@ -76,7 +64,6 @@ $end   = min($offset + $limit, $totalRecords);
                 </div>
             </div>
 
-            <!-- Quick Actions & User Profile -->
             <div class="flex items-center gap-4">
                 <!-- User Profile -->
                 <div class="flex items-center gap-4">   
@@ -115,11 +102,11 @@ $end   = min($offset + $limit, $totalRecords);
                         <span>Inventory List</span>
                     </a>
 
-                    <a href="encoder_archive.html" class="nav-item">
+                    <a href="encoder_dispose.php" class="nav-item">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
-                        <span>Inventory Archive</span>
+                        <span>Inventory Dispose</span>
                     </a>
 
                     <a href="../backend/system_logout.php" class="nav-item whitespace-nowrap ml-auto">
@@ -754,11 +741,11 @@ $end   = min($offset + $limit, $totalRecords);
                     <span>Inventory List</span>
                 </a>
 
-                <a href="encoder_archive.html" class="nav-item">
+                <a href="encoder_dispose.php" class="nav-item">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
-                    <span>Inventory Archive</span>
+                    <span>Inventory Dispose</span>
                 </a>
 
                 <div class="divider"></div>
@@ -1184,8 +1171,6 @@ $end   = min($offset + $limit, $totalRecords);
             </div>
         </div>
 
-
-
     <!-- Footer -->
     <footer class="bg-surface border-t border-border py-6 px-6 mt-auto">
         <div class="max-w-7xl mx-auto">
@@ -1207,7 +1192,7 @@ $end   = min($offset + $limit, $totalRecords);
 document.addEventListener("DOMContentLoaded", function () {
     JsBarcode(".barcode").init();
 });
-</script>>
+</script>
 
 </body>
 </html>

@@ -7,10 +7,25 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-$id = (int) ($_POST['id'] ?? 0);
+$id = (int)($_POST['id'] ?? 0);
 
-if ($id <= 0) exit;
+if ($id <= 0) {
+    http_response_code(400);
+    exit;
+}
 
-$stmt = $conn->prepare("DELETE FROM medicine WHERE id = ?");
+$stmt = $conn->prepare("
+    UPDATE medicine 
+    SET is_archived = 1 
+    WHERE id = ?
+");
+
 $stmt->bind_param("i", $id);
 $stmt->execute();
+
+if ($stmt->affected_rows === 0) {
+    http_response_code(404);
+}
+
+$stmt->close();
+$conn->close();

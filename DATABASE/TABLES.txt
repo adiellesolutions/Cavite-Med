@@ -2,7 +2,7 @@
 <> doctor_medical_certificate.html
 <> doctor_patient_records.html
 <> doctor_prescription.html
-<> encoder_archive.html
+<> encoder_disposal.html
 </> encoder_inventory.html
 <> medical_staff_dashboard.html
 <> medical_staff_inventory.html
@@ -17,8 +17,9 @@
 
 CREATE DATABASE cavitemed;
 
+USE cavitemed;
 
-//admin_user_management.php
+--admin_user_management.php
 
 CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -41,7 +42,7 @@ CREATE TABLE users (
 );
 
 
-//encoder_inventory.php
+--encoder_inventory.php
 
 CREATE TABLE suppliers (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -92,6 +93,7 @@ CREATE TABLE inventory_transactions (
     transaction_type ENUM(
         'add',
         'deduct',
+        'dispose',
         'delivery',
         'adjustment',
         'expired'
@@ -145,7 +147,32 @@ CREATE TABLE deliveries (
         ON DELETE RESTRICT
 );
 
+--inventory_disposal.php
 
+CREATE TABLE disposal_records (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    medicine_id INT NOT NULL,
+    batch_number VARCHAR(100) NOT NULL,
+    expiry_date DATE NOT NULL,
+    quantity INT NOT NULL CHECK (quantity > 0),
+    total_value DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    disposal_method ENUM(
+        'incinerated',
+        'returned',
+        'destroyed',
+        'donated',
+        'other'
+    ) NOT NULL,
+    disposal_date DATE NOT NULL,
+    created_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_disposal_medicine
+        FOREIGN KEY (medicine_id)
+        REFERENCES medicine(id)
+        ON DELETE RESTRICT
+);
 
 -- =========================
 -- PATIENT MASTER TABLE

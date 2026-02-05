@@ -1,3 +1,18 @@
+<?php
+session_start();
+
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'medical_staff') {
+    header("Location: system_login_portal.html");
+    exit;
+}
+
+if (!empty($_SESSION['force_change_password'])) {
+    header("Location: force_change_password.php");
+    exit;
+}
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -161,40 +176,32 @@
                     </svg>
                     <div>
                         <h1 class="text-xl font-semibold text-text-primary">CAVMED Portal</h1>
-                        <p class="text-xs text-text-secondary">Nurse e-Prescription System</p>
                     </div>
                 </a>
             </div>
 
-            <!-- Live Status Display -->
-            <div class="flex items-center gap-6">
-                <div class="flex items-center gap-2">
-                    <div class="flex items-center">
-                        <span class="status-indicator status-in-progress mr-2"></span>
-                        <span class="text-sm text-text-secondary">Active Session</span>
+            <div class="flex items-center gap-4">
+                <!-- User Profile -->
+                <div class="flex items-center gap-4">   
+                    <div class="flex items-center gap-3">
+
+                        <!-- User Name & Role -->
+                        <div class="text-right hidden md:block">
+                            <p class="text-sm font-medium text-text-primary">
+                                <?php echo htmlspecialchars($_SESSION['name']); ?>
+                            </p>
+                            <p class="text-xs text-text-secondary">
+                                <?php echo ucfirst(str_replace('_', ' ', $_SESSION['role'])); ?>
+                            </p>
+                        </div>
+
+                        <!-- Profile Picture -->
+                        <img
+                            src="/HIMS/<?php echo $_SESSION['profile_picture'] ?: 'uploads/profile/default.png'; ?>"
+                            alt="User profile picture"
+                            class="w-10 h-10 rounded-full object-cover border-2 border-primary"
+                            onerror="this.src='/HIMS/uploads/profile/default.png'; this.onerror=null;">
                     </div>
-                    <div class="text-sm text-text-primary font-medium">
-                        <span id="currentTime">09:45 AM</span>
-                    </div>
-                </div>
-                <div class="h-8 w-px bg-border"></div>
-                <div class="flex items-center gap-4">
-                    <button type="button" id="emergencyAlertBtn" class="btn btn-error btn-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.346 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-                        </svg>
-                        <span>Emergency</span>
-                    </button>
-                </div>
-                <div class="h-8 w-px bg-border"></div>
-                <div class="flex items-center gap-3">
-                    <div class="text-right hidden md:block">
-                        <p class="text-sm font-medium text-text-primary">Nurse Sarah Chen</p>
-                        <p class="text-xs text-text-secondary">RN • License: RN-489012</p>
-                    </div>
-                    <button type="button" class="w-10 h-10 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-semibold">
-                        SC
-                    </button>
                 </div>
             </div>
         </div>
@@ -206,7 +213,7 @@
         <div class="px-6">
             <div class="flex items-center gap-1 overflow-x-auto scrollbar-thin">
                 
-                <a href="medical_staff_dashboard.html" class="nav-item nav-item-active whitespace-nowrap">
+                <a href="medical_staff_dashboard.php" class="nav-item nav-item-active whitespace-nowrap">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                     </svg>
@@ -220,11 +227,11 @@
                     <span>Dispensation</span>
                 </a>
 
-                <a href="medical_staff_patient_registration.html" class="nav-item">
+                <a href="medical_staff_patient_registration.php" class="nav-item">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                     </svg>
-                    <span>Patient Registration</span>
+                    <span>Patient</span>
                 </a>
 
                 <a href="medical_staff_inventory.html" class="nav-item">
@@ -232,6 +239,14 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                     </svg>
                     <span>Inventory List</span>
+                </a>
+
+                <a href="../backend/system_logout.php" class="nav-item whitespace-nowrap ml-auto">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                    Logout
                 </a>
 
             </div>
@@ -660,27 +675,6 @@
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-surface border-t border-border py-4 px-6">
-        <div class="max-w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-            <div class="flex items-center gap-4 flex-wrap justify-center">
-                <div class="flex items-center gap-2">
-                    <svg class="w-5 h-5 text-success" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                    </svg>
-                    <span class="text-sm text-text-secondary">Active Workflow Session</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="status-indicator status-in-progress"></span>
-                    <span class="text-sm text-text-secondary">6 Patients in Queue</span>
-                </div>
-            </div>
-            <div class="text-sm text-text-secondary text-center md:text-right">
-                <p>Nurse Workflow v2.1 • Last updated: <span id="lastUpdateTime">09:45 AM</span></p>
-            </div>
-        </div>
-    </footer>
-
     <!-- New Patient Modal -->
     <div id="newPatientModal" class="hidden fixed inset-0 modal-backdrop z-modal flex items-center justify-center p-4">
         <div class="card max-w-md w-full fade-in max-h-[90vh] overflow-y-auto">
@@ -759,52 +753,21 @@
         </div>
     </div>
 
-    <!-- Emergency Alert Modal -->
-    <div id="emergencyModal" class="hidden fixed inset-0 bg-red-900 bg-opacity-90 z-modal flex items-center justify-center p-4">
-        <div class="card max-w-md w-full fade-in border-2 border-error-500">
-            <div class="text-center mb-6">
-                <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-error-100 flex items-center justify-center">
-                    <svg class="w-10 h-10 text-error-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.346 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-semibold text-text-primary">Emergency Alert</h3>
-                <p class="text-text-secondary mt-2">Select emergency type and location</p>
-            </div>
-
-            <div class="space-y-4">
-                <div>
-                    <label for="emergencyType" class="block text-sm font-medium text-text-primary mb-2">
-                        Emergency Type
-                    </label>
-                    <select id="emergencyType" class="vital-sign-input">
-                        <option value="">Select type...</option>
-                        <option value="code-blue">Code Blue (Cardiac Arrest)</option>
-                        <option value="code-red">Code Red (Fire)</option>
-                        <option value="code-orange">Code Orange (Hazardous Material)</option>
-                        <option value="rapid-response">Rapid Response Team</option>
-                    </select>
+        <!-- Footer -->
+    <footer class="bg-surface border-t border-border py-6 px-6 mt-auto">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <!-- Compliance Certifications -->
+                <div class="flex items-center gap-4 flex-wrap justify-center">
                 </div>
 
-                <div>
-                    <label for="emergencyLocation" class="block text-sm font-medium text-text-primary mb-2">
-                        Location
-                    </label>
-                    <input type="text" id="emergencyLocation" class="vital-sign-input" placeholder="Triage area, Room number...">
-                </div>
-
-                <div class="flex gap-3 pt-4 border-t border-border">
-                    <button type="button" id="cancelEmergencyBtn" class="btn btn-outline flex-1">Cancel</button>
-                    <button type="button" id="triggerEmergencyBtn" class="btn btn-error flex-1">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.346 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-                        </svg>
-                        <span>Trigger Alert</span>
-                    </button>
+                <!-- Copyright -->
+                <div class="text-sm text-text-secondary text-center md:text-right">
+                    <p>© 2025 CAVMED Portal. All Rights Reserved.</p>
                 </div>
             </div>
         </div>
-    </div>
+    </footer>
 
     <script>
         // Live Time Update
