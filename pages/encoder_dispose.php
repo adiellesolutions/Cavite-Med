@@ -31,6 +31,7 @@ if (!empty($_SESSION['force_change_password'])) {
     <script defer src="../js/barcode_scanstate.js"></script>
     <script defer src="../js/encoder_disposal_form.js"></script>
     <script defer src="../js/encoder_disposal_filters.js"></script>
+    <script defer src="../js/encoder_disposal_restore.js"></script>
 
     
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
@@ -96,7 +97,14 @@ if (!empty($_SESSION['force_change_password'])) {
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
-                    <span>Inventory Dispose</span>
+                    <span>Dispose</span>
+                </a>
+
+                <a href="encoder_archive.php" class="nav-item">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                    </svg>
+                    <span>Archive</span>
                 </a>
 
                 <a href="../backend/system_logout.php" class="nav-item whitespace-nowrap ml-auto">
@@ -115,24 +123,8 @@ if (!empty($_SESSION['force_change_password'])) {
     <!-- Main Content -->
     <main class="flex-1 px-6 py-6">
         <div class="max-w-full mx-auto">
-            <!-- Page Header -->
-            <div class="flex items-center justify-between mb-6 pb-6 border-b border-border">
-                <div>
-                    <h2 class="text-2xl font-semibold text-text-primary"></h2>
-                    <p class="text-text-secondary"></p>
-                </div>
-                <div class="flex items-center gap-3 mb-3 pb-3">
-                    <button type="button" id="printReportBtn" class="btn btn-outline no-print">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
-                        </svg>
-                        <span>Print Report</span>
-                    </button>
-                </div>
-            </div>
-
             <!-- Statistics Overview -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <!-- Total Expired -->
                 <div class="card stats-card hover-card">
                     <div class="flex items-center justify-between">
@@ -188,60 +180,19 @@ if (!empty($_SESSION['force_change_password'])) {
                 </div>
             </div>
 
-            <!-- Filters & Search -->
-            <div class="card no-print">
-                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    <div class="flex-1">
-                        <div class="relative">
-                            <input type="text" id="medicineSearch" 
-                                   placeholder="Search by medicine name, batch number, manufacturer..."
-                                   class="input pl-10 pr-10 w-full">
-                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <svg class="w-5 h-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                                </svg>
-                            </div>
-                            <button type="button" id="clearSearch" class="hidden absolute inset-y-0 right-0 flex items-center pr-3 text-text-tertiary hover:text-text-primary">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-center gap-3">
-                        <select id="statusFilter" class="input w-40">
-                            <option value="">All Status</option>
-                            <option value="expired">Expired</option>
-                            <option value="expiring-soon">Expiring Soon</option>
-                            <option value="disposed">Disposed</option>
-                            <option value="returned">Returned</option>
-                        </select>
-                        
-                        <select id="categoryFilter" class="input w-40">
-                            <option value="">All Categories</option>
-                            <option value="antibiotics">Antibiotics</option>
-                            <option value="analgesics">Analgesics</option>
-                            <option value="cardiovascular">Cardiovascular</option>
-                            <option value="diabetes">Diabetes</option>
-                            <option value="respiratory">Respiratory</option>
-                            <option value="other">Other</option>
-                        </select>
-                        
-                        <select id="disposalFilter" class="input w-40">
-                            <option value="">Disposal Method</option>
-                            <option value="incinerated">Incinerated</option>
-                            <option value="returned">Returned</option>
-                            <option value="destroyed">Destroyed</option>
-                            <option value="donated">Donated</option>
-                            <option value="pending">Pending</option>
-                        </select>
-                    </div>
+            <!-- Page Header -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-semibold text-text-primary"></h2>
+                    <p class="text-text-secondary"></p>
                 </div>
-                
-                <!-- Active Filters -->
-                <div id="activeFilters" class="flex flex-wrap gap-2 mt-4">
-                    <!-- Filters will be added here dynamically -->
+                <div class="flex items-center gap-3">
+                    <button type="button" id="printReportBtn" class="btn btn-outline no-print">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                        </svg>
+                        <span>Print Report</span>
+                    </button>
                 </div>
             </div>
 
@@ -265,9 +216,16 @@ if (!empty($_SESSION['force_change_password'])) {
                         <h3 class="text-lg font-semibold text-text-primary mb-2">No expired medicines found</h3>
                         <p class="text-text-secondary">Try adjusting your search or filters</p>
                     </div>
+                </div>
 
-                    <!-- Pagination -->
-                    <div class="flex items-center justify-between mt-6 pt-6 border-t border-border no-print">
+            </div>
+
+            <!-- Disposal Records Table -->
+            <div class="card mt-6">
+
+
+                               <!-- Pagination -->
+                    <div class="flex items-center justify-between mb-6 pb-6 no-print">
                         <div class="text-sm text-text-secondary">
                             Showing <span id="startIndex">1</span> to <span id="endIndex">8</span> of <span id="totalItems">156</span> entries
                         </div>
@@ -289,12 +247,62 @@ if (!empty($_SESSION['force_change_password'])) {
                             </button>
                         </div>
                     </div>
-                </div>
 
-            </div>
 
-            <!-- Disposal Records Table -->
-            <div class="card mt-6">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 pb-6">
+                        <div class="flex-1">
+                            <div class="relative">
+                                <input type="text" id="medicineSearch" 
+                                    placeholder="Search by medicine name, batch number, manufacturer..."
+                                    class="input pl-10 pr-10 w-full">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                    <svg class="w-5 h-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                    </svg>
+                                </div>
+                                <button type="button" id="clearSearch" class="hidden absolute inset-y-0 right-0 flex items-center pr-3 text-text-tertiary hover:text-text-primary">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-3">
+                            <select id="statusFilter" class="input w-40">
+                                <option value="">All Status</option>
+                                <option value="expired">Expired</option>
+                                <option value="expiring-soon">Expiring Soon</option>
+                                <option value="disposed">Disposed</option>
+                                <option value="returned">Returned</option>
+                            </select>
+                            
+                            <select id="categoryFilter" class="input w-40">
+                                <option value="">All Categories</option>
+                                <option value="antibiotics">Antibiotics</option>
+                                <option value="analgesics">Analgesics</option>
+                                <option value="cardiovascular">Cardiovascular</option>
+                                <option value="diabetes">Diabetes</option>
+                                <option value="respiratory">Respiratory</option>
+                                <option value="other">Other</option>
+                            </select>
+                            
+                            <select id="disposalFilter" class="input w-40">
+                                <option value="">Disposal Method</option>
+                                <option value="incinerated">Incinerated</option>
+                                <option value="returned">Returned</option>
+                                <option value="destroyed">Destroyed</option>
+                                <option value="donated">Donated</option>
+                                <option value="pending">Pending</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Active Filters -->
+                    <div id="activeFilters" class="flex flex-wrap gap-2 mt-4">
+                        <!-- Filters will be added here dynamically -->
+                    </div>
+
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="text-lg font-semibold text-text-primary">Disposal Records</h3>
                     <button type="button" id="addNewRecordBtn" class="btn btn-primary btn-sm">

@@ -67,31 +67,45 @@ function loadDisposalRecords() {
                     <td class="py-3 capitalize">${record.disposal_method}</td>
                     <td class="py-3">${formatDate(record.disposal_date)}</td>
                     <td class="py-3">
-                        <button
-                            type="button"
-                            class="editItemBtn"
-                            data-id="${record.id}"
-                            data-medicine-id="${record.medicine_id}"
-                            data-medicine-name="${record.medicine_name}"
-                            data-barcode="${record.barcode}"
-                            data-batch="${record.batch_number}"
-                            data-expiry="${record.expiry_date}"
-                            data-quantity="${record.quantity}"
-                            data-value="${record.total_value}"
-                            data-method="${record.disposal_method}"
-                            data-date="${record.disposal_date}"
-                            data-notes="${record.notes}"
+                        <div class="flex items-center gap-6">
 
-                        >
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M11 5H6a2 2 0 00-2 2v11a2
-                                        2 0 002 2h11a2 2 0 002-2v-5
-                                        m-1.414-9.414a2 2 0 112.828
-                                        2.828L11.828 15H9v-2.828
-                                        l8.586-8.586z"/>
-                            </svg>
-                        </button>
+                            <button
+                                type="button"
+                                class="editItemBtn"
+                                data-id="${record.id}"
+                                data-medicine-id="${record.medicine_id}"
+                                data-medicine-name="${record.medicine_name}"
+                                data-barcode="${record.barcode}"
+                                data-batch="${record.batch_number}"
+                                data-expiry="${record.expiry_date}"
+                                data-quantity="${record.quantity}"
+                                data-value="${record.total_value}"
+                                data-method="${record.disposal_method}"
+                                data-date="${record.disposal_date}"
+                                data-notes="${record.notes}"
+
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2
+                                            2 0 002 2h11a2 2 0 002-2v-5
+                                            m-1.414-9.414a2 2 0 112.828
+                                            2.828L11.828 15H9v-2.828
+                                            l8.586-8.586z"/>
+                                </svg>
+                            </button>
+
+                            <button type="button" class="restoreItemBtn" data-id="${record.id}" title="Restore item">
+                                <svg class="w-5 h-5 transform group-hover:rotate-12 transition-transform duration-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Restore with circular arrow -->
+                                    <path d="M4 4V9H4.58152M4.58152 9C5.76853 6.06817 8.64262 4 12 4C16.4183 4 20 7.58172 20 12C20 16.4183 16.4183 20 12 20C7.58172 20 4 16.4183 4 12C4 10.8748 4.19128 9.79455 4.53672 8.79279M4.58152 9H9" 
+                                        stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M15 12L12 15L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M12 9V15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                </svg>
+                            </button>
+                        </div>
+    
                     </td>
                 `;
 

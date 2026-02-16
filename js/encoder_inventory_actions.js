@@ -83,7 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const id   = btn.dataset.id;
             const name = btn.dataset.name;
 
-            if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+            if (!confirm(`Archive "${name}"? This cannot be undone.`)) return;
 
             fetch("../backend/encoder_inventory_delete.php", {
                 method: "POST",

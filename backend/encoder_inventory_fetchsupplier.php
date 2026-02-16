@@ -11,6 +11,7 @@ $suppliersResult = $conn->query("
         email,
         address
     FROM suppliers
+    WHERE is_archived = 0
     ORDER BY supplier_name ASC
 ");
 ?>

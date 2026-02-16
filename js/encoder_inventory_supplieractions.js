@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const supplierId = btn.dataset.id;
             const supplierName = btn.dataset.name;
 
-            if (!confirm(`Delete supplier "${supplierName}"? This cannot be undone.`)) {
+            if (!confirm(`Archive supplier "${supplierName}"? This cannot be undone.`)) {
                 return;
             }
 
