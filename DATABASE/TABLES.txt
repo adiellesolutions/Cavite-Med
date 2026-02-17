@@ -159,7 +159,6 @@ CREATE TABLE disposal_records (
         ON DELETE RESTRICT
 );
 
-
 CREATE TABLE patients (
   patient_id INT AUTO_INCREMENT PRIMARY KEY,
   mrn VARCHAR(30) NOT NULL UNIQUE, -- Medical Record Number (e.g. 2024-001234)
@@ -187,10 +186,9 @@ CREATE TABLE patients (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-  CONSTRAINT fk_patients_created_by
-    FOREIGN KEY (created_by) REFERENCES users(user_id)
-    ON DELETE RESTRICT
+  INDEX idx_patients_created_by (created_by)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 ALTER TABLE patients
   ADD COLUMN marital_status VARCHAR(50) NULL AFTER preferred_name,
   ADD COLUMN occupation VARCHAR(120) NULL AFTER marital_status,
@@ -213,9 +211,7 @@ CREATE TABLE patient_medical_profile (
     FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
     ON DELETE CASCADE,
 
-  CONSTRAINT fk_profile_updated_by
-    FOREIGN KEY (updated_by) REFERENCES users(user_id)
-    ON DELETE RESTRICT
+  INDEX idx_profile_updated_by (updated_by)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
@@ -238,19 +234,13 @@ CREATE TABLE patient_visits (
     FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
     ON DELETE CASCADE,
 
-  CONSTRAINT fk_visits_doctor
-    FOREIGN KEY (doctor_id) REFERENCES users(user_id)
-    ON DELETE SET NULL,
-
-  CONSTRAINT fk_visits_created_by
-    FOREIGN KEY (created_by) REFERENCES users(user_id)
-    ON DELETE RESTRICT
+  INDEX idx_visits_doctor_id (doctor_id),
+  INDEX idx_visits_created_by (created_by)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 ALTER TABLE patient_visits
   ADD COLUMN health_center_id INT NULL AFTER doctor_id,
-  ADD CONSTRAINT fk_visits_health_center
-    FOREIGN KEY (health_center_id) REFERENCES health_centers(id)
-    ON DELETE SET NULL;
+  ADD INDEX idx_visits_health_center_id (health_center_id);
 
 
 CREATE TABLE patient_vitals (
@@ -279,9 +269,7 @@ CREATE TABLE patient_vitals (
     FOREIGN KEY (visit_id) REFERENCES patient_visits(visit_id)
     ON DELETE SET NULL,
 
-  CONSTRAINT fk_vitals_recorded_by
-    FOREIGN KEY (recorded_by) REFERENCES users(user_id)
-    ON DELETE RESTRICT
+  INDEX idx_vitals_recorded_by (recorded_by)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
@@ -310,11 +298,8 @@ CREATE TABLE patient_insurance (
     FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
     ON DELETE CASCADE,
 
-  CONSTRAINT fk_insurance_verified_by
-    FOREIGN KEY (verified_by) REFERENCES users(user_id)
-    ON DELETE SET NULL,
-
-  UNIQUE KEY uq_patient_coverage (patient_id, coverage_type)
+  UNIQUE KEY uq_patient_coverage (patient_id, coverage_type),
+  INDEX idx_insurance_verified_by (verified_by)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
@@ -337,9 +322,7 @@ CREATE TABLE patient_emergency_contacts (
     FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
     ON DELETE CASCADE,
 
-  CONSTRAINT fk_emergency_created_by
-    FOREIGN KEY (created_by) REFERENCES users(user_id)
-    ON DELETE RESTRICT
+  INDEX idx_emergency_created_by (created_by)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
@@ -364,9 +347,7 @@ CREATE TABLE patient_documents (
     FOREIGN KEY (visit_id) REFERENCES patient_visits(visit_id)
     ON DELETE SET NULL,
 
-  CONSTRAINT fk_docs_uploaded_by
-    FOREIGN KEY (uploaded_by) REFERENCES users(user_id)
-    ON DELETE RESTRICT
+  INDEX idx_docs_uploaded_by (uploaded_by)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
@@ -376,15 +357,12 @@ CREATE TABLE user_patient_favorites (
   patient_id INT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-  CONSTRAINT fk_fav_user
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
-    ON DELETE CASCADE,
-
   CONSTRAINT fk_fav_patient
     FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
     ON DELETE CASCADE,
 
-  UNIQUE KEY uq_user_patient_fav (user_id, patient_id)
+  UNIQUE KEY uq_user_patient_fav (user_id, patient_id),
+  INDEX idx_fav_user_id (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
@@ -394,15 +372,12 @@ CREATE TABLE user_patient_recent (
   patient_id INT NOT NULL,
   last_viewed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 
-  CONSTRAINT fk_recent_user
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
-    ON DELETE CASCADE,
-
   CONSTRAINT fk_recent_patient
     FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
     ON DELETE CASCADE,
 
-  UNIQUE KEY uq_user_patient_recent (user_id, patient_id)
+  UNIQUE KEY uq_user_patient_recent (user_id, patient_id),
+  INDEX idx_recent_user_id (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
@@ -415,7 +390,5 @@ CREATE TABLE audit_logs (
   ip_address VARCHAR(60) NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-  CONSTRAINT fk_audit_user
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
-    ON DELETE RESTRICT
+  INDEX idx_audit_user_id (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

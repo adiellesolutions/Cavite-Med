@@ -213,7 +213,7 @@ if (!empty($_SESSION['force_change_password'])) {
         <div class="px-6">
             <div class="flex items-center gap-1 overflow-x-auto scrollbar-thin">
                 
-                <a href="medical_staff_dashboard.php" class="nav-item nav-item-active whitespace-nowrap">
+                <a href="medical_staff_dashboard.php" class="nav-item">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                     </svg>
@@ -233,12 +233,13 @@ if (!empty($_SESSION['force_change_password'])) {
                     </svg>
                     <span>Patient</span>
                 </a>
-                <a href="medical_staff_procedures.php" class="nav-item">
+                <a href="medical_staff_procedures.php" class="nav-item nav-item-active whitespace-nowrap">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                     </svg>
                     Procedures
                 </a>
+
                 <a href="medical_staff_inventory.html" class="nav-item">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
@@ -265,61 +266,7 @@ if (!empty($_SESSION['force_change_password'])) {
     <main class="flex-1 px-6 py-6">
 
 
-                <!-- Quick Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div class="card">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-text-secondary">Pending Dispensing</p>
-                        <p class="text-2xl font-semibold text-text-primary mt-1">12</p>
-                    </div>
-                    <div class="w-12 h-12 rounded-lg bg-warning-100 flex items-center justify-center">
-                        <svg class="w-6 h-6 text-warning-600" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-            <div class="card">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-text-secondary">Completed Today</p>
-                        <p class="text-2xl font-semibold text-text-primary mt-1">23</p>
-                    </div>
-                    <div class="w-12 h-12 rounded-lg bg-success-100 flex items-center justify-center">
-                        <svg class="w-6 h-6 text-success-600" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-            <div class="card">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-text-secondary">Requiring Attention</p>
-                        <p class="text-2xl font-semibold text-text-primary mt-1">3</p>
-                    </div>
-                    <div class="w-12 h-12 rounded-lg bg-error-100 flex items-center justify-center">
-                        <svg class="w-6 h-6 text-error-600" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.346 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-            <div class="card">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-text-secondary">Total Patients</p>
-                        <p class="text-2xl font-semibold text-text-primary mt-1">47</p>
-                    </div>
-                    <div class="w-12 h-12 rounded-lg bg-primary-100 flex items-center justify-center">
-                        <svg class="w-6 h-6 text-primary-600" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-        </div>
+        
 
         <div class="max-w-full mx-auto">
             <!-- Dashboard Header -->
@@ -600,83 +547,7 @@ if (!empty($_SESSION['force_change_password'])) {
                 </div>
             </div>
 
-            <!-- Statistics & Recent Activity -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-                <!-- Recent Activity -->
-                <div class="card lg:col-span-2">
-                    <h3 class="text-lg font-semibold text-text-primary mb-4">Recent Activity</h3>
-                    <div class="space-y-3">
-                        <div class="flex items-center gap-3 p-3 bg-secondary-50 rounded-base">
-                            <div class="w-8 h-8 rounded-full bg-success-100 flex items-center justify-center">
-                                <svg class="w-4 h-4 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                            </div>
-                            <div class="flex-1">
-                                <p class="text-sm text-text-primary">Robert Chen placed in Cardiology queue</p>
-                                <p class="text-xs text-text-secondary">09:15 AM</p>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center gap-3 p-3 bg-secondary-50 rounded-base">
-                            <div class="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
-                                <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                            </div>
-                            <div class="flex-1">
-                                <p class="text-sm text-text-primary">Maria Johnson - Critical vitals detected</p>
-                                <p class="text-xs text-text-secondary">09:10 AM</p>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center gap-3 p-3 bg-secondary-50 rounded-base">
-                            <div class="w-8 h-8 rounded-full bg-accent-100 flex items-center justify-center">
-                                <svg class="w-4 h-4 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                                </svg>
-                            </div>
-                            <div class="flex-1">
-                                <p class="text-sm text-text-primary">New patient registered: Sarah Thompson</p>
-                                <p class="text-xs text-text-secondary">08:50 AM</p>
-                            </div>
-                        </div>
-                        
-                    </div>
-                </div>
-
-                <!-- Today's Statistics -->
-                <div class="card">
-                    <h3 class="text-lg font-semibold text-text-primary mb-4">Today's Statistics</h3>
-                    <div class="grid grid-cols-2 gap-3">
-                        <!-- Patients Registered -->
-                        <div class="p-4 rounded-base border-2 border-primary-100">
-                            <p class="text-3xl font-bold text-primary-600 mb-1">8</p>
-                            <p class="text-sm text-text-secondary">Patients Registered</p>
-                        </div>
-                        
-                        <!-- Vitals Taken -->
-                        <div class="p-4 rounded-base border-2 border-success-100">
-                            <p class="text-3xl font-bold text-success-600 mb-1">12</p>
-                            <p class="text-sm text-text-secondary">Vitals Taken</p>
-                        </div>
-                        
-                        <!-- In Queue -->
-                        <div class="p-4 rounded-base border-2 border-warning-100">
-                            <p class="text-3xl font-bold text-warning-600 mb-1">6</p>
-                            <p class="text-sm text-text-secondary">In Queue</p>
-                        </div>
-                        
-                        <!-- Average Time -->
-                        <div class="p-4 rounded-base border-2 border-accent-100">
-                            <p class="text-3xl font-bold text-accent-600 mb-1">7.2</p>
-                            <p class="text-sm text-text-secondary">Avg Time/Patient</p>
-                        </div>
-                    </div>
-                </div>
-                
-            </div>
+           
         </div>
     </main>
 

@@ -21,8 +21,8 @@ if (!empty($_SESSION['force_change_password'])) {
     <meta name="description" content="Patient Records Management Portal - Secure Electronic Medical Records System">
     <title>Patient Records Management - CAVMED Portal</title>
     <link rel="stylesheet" href="../css/main.css">
-  <script type="module" async src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Fcavmedporta6876back.builtwithrocket.new&_be=https%3A%2F%2Fapplication.rocket.new&_v=0.1.10"></script>
-  <script type="module" defer src="https://static.rocket.new/rocket-shot.js?v=0.0.1"></script>
+  <!--<script type="module" async src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Fcavmedporta6876back.builtwithrocket.new&_be=https%3A%2F%2Fapplication.rocket.new&_v=0.1.10"></script>
+  <script type="module" defer src="https://static.rocket.new/rocket-shot.js?v=0.0.1"></script>-->
   </head>
 <body class="bg-background min-h-screen flex flex-col">
     <!-- Header Section -->
@@ -93,10 +93,10 @@ if (!empty($_SESSION['force_change_password'])) {
 
                         <!-- Profile Picture -->
                         <img
-                            src="/HIMS/<?php echo $_SESSION['profile_picture'] ?: 'uploads/profile/default.png'; ?>"
+                            src="/CAVITE-MED/<?php echo $_SESSION['profile_picture'] ?: 'uploads/profile/default.png'; ?>"
                             alt="User profile picture"
                             class="w-10 h-10 rounded-full object-cover border-2 border-primary"
-                            onerror="this.src='/HIMS/uploads/profile/default.png'; this.onerror=null;">
+                            onerror="this.src='/CAVITE-MED/uploads/profile/default.png'; this.onerror=null;">
                     </div>
                 </div>
             </div>
@@ -127,7 +127,12 @@ if (!empty($_SESSION['force_change_password'])) {
                     </svg>
                     <span>Patient</span>
                 </a>
-
+                <a href="medical_staff_procedures.php" class="nav-item">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    Procedures
+                </a>
                 <a href="medical_staff_inventory.html" class="nav-item">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
@@ -527,113 +532,274 @@ if (!empty($_SESSION['force_change_password'])) {
       <div class="alert alert-info">
         <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                d="M18 10a8 8 0 11-16 0 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
                 clip-rule="evenodd"/>
         </svg>
         <p class="text-sm">Update patient information then click <b>Save Changes</b>.</p>
       </div>
 
-      <!-- Names -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-text-primary mb-2">First Name *</label>
-          <input id="ep_first_name" name="first_name" type="text" class="input" required>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-text-primary mb-2">Last Name *</label>
-          <input id="ep_last_name" name="last_name" type="text" class="input" required>
-        </div>
+      <!-- ========================= -->
+      <!-- ACCORDION: PERSONAL INFO -->
+      <!-- ========================= -->
+      <details open class="rounded-lg border border-secondary-200/20 bg-secondary-900/20">
+        <summary class="cursor-pointer select-none px-4 py-3 flex items-center justify-between text-text-primary font-medium">
+          <span>Personal Information</span>
+          <span class="text-text-tertiary text-sm"> >> </span>
+        </summary>
 
-        <div>
-          <label class="block text-sm font-medium text-text-primary mb-2">Middle Name</label>
-          <input id="ep_middle_name" name="middle_name" type="text" class="input">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-text-primary mb-2">Preferred Name</label>
-          <input id="ep_preferred_name" name="preferred_name" type="text" class="input">
-        </div>
+        <div class="p-4 space-y-6">
+          <!-- Names -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">First Name *</label>
+              <input id="ep_first_name" name="first_name" type="text" class="input" required>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">Last Name *</label>
+              <input id="ep_last_name" name="last_name" type="text" class="input" required>
+            </div>
 
-        <div>
-          <label class="block text-sm font-medium text-text-primary mb-2">Marital Status</label>
-          <input id="ep_marital_status" name="marital_status" type="text" class="input">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-text-primary mb-2">Occupation</label>
-          <input id="ep_occupation" name="occupation" type="text" class="input">
-        </div>
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">Middle Name</label>
+              <input id="ep_middle_name" name="middle_name" type="text" class="input">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">Preferred Name</label>
+              <input id="ep_preferred_name" name="preferred_name" type="text" class="input">
+            </div>
 
-        <div class="md:col-span-2">
-          <label class="block text-sm font-medium text-text-primary mb-2">Preferred Language</label>
-          <input id="ep_preferred_language" name="preferred_language" type="text" class="input">
-        </div>
-      </div>
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">Marital Status</label>
+              <input id="ep_marital_status" name="marital_status" type="text" class="input">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">Occupation</label>
+              <input id="ep_occupation" name="occupation" type="text" class="input">
+            </div>
 
-      <!-- Demographics -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-text-primary mb-2">Date of Birth *</label>
-          <input id="ep_date_of_birth" name="date_of_birth" type="date" class="input" required>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-text-primary mb-2">Gender *</label>
-          <select id="ep_gender" name="gender" class="input" required>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-text-primary mb-2">Preferred Language</label>
+              <input id="ep_preferred_language" name="preferred_language" type="text" class="input">
+            </div>
+          </div>
 
-        <div>
-          <label class="block text-sm font-medium text-text-primary mb-2">Phone Number *</label>
-          <input id="ep_phone" name="phone" type="tel" class="input" required>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-text-primary mb-2">Email</label>
-          <input id="ep_email" name="email" type="email" class="input">
-        </div>
+          <!-- Demographics -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">Date of Birth *</label>
+              <input id="ep_date_of_birth" name="date_of_birth" type="date" class="input" required>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">Gender *</label>
+              <select id="ep_gender" name="gender" class="input" required>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
 
-        <div>
-          <label class="block text-sm font-medium text-text-primary mb-2">Blood Type</label>
-          <select id="ep_blood_type" name="blood_type" class="input">
-            <option value="">Select blood type</option>
-            <option value="A+">A+</option>
-            <option value="A-">A-</option>
-            <option value="B+">B+</option>
-            <option value="B-">B-</option>
-            <option value="AB+">AB+</option>
-            <option value="AB-">AB-</option>
-            <option value="O+">O+</option>
-            <option value="O-">O-</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-text-primary mb-2">Status</label>
-          <select id="ep_status" name="status" class="input">
-            <option value="active">active</option>
-            <option value="inactive">inactive</option>
-          </select>
-        </div>
-      </div>
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">Phone Number *</label>
+              <input id="ep_phone" name="phone" type="tel" class="input" required>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">Email</label>
+              <input id="ep_email" name="email" type="email" class="input">
+            </div>
 
-      <!-- Address -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="md:col-span-2">
-          <label class="block text-sm font-medium text-text-primary mb-2">Address *</label>
-          <input id="ep_address_line" name="address_line" type="text" class="input" required>
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">Blood Type</label>
+              <select id="ep_blood_type" name="blood_type" class="input">
+                <option value="">Select blood type</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">Status</label>
+              <select id="ep_status" name="status" class="input">
+                <option value="active">active</option>
+                <option value="inactive">inactive</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Address -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-text-primary mb-2">Address *</label>
+              <input id="ep_address_line" name="address_line" type="text" class="input" required>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">City *</label>
+              <input id="ep_city" name="city" type="text" class="input" required>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">State *</label>
+              <input id="ep_state" name="state" type="text" class="input" required>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">ZIP Code *</label>
+              <input id="ep_zip_code" name="zip_code" type="text" class="input" required>
+            </div>
+          </div>
         </div>
-        <div>
-          <label class="block text-sm font-medium text-text-primary mb-2">City *</label>
-          <input id="ep_city" name="city" type="text" class="input" required>
+      </details>
+
+      <!-- ========================= -->
+      <!-- ACCORDION: MEDICAL INFO -->
+      <!-- ========================= -->
+      <details class="rounded-lg border border-secondary-200/20 bg-secondary-900/20">
+        <summary class="cursor-pointer select-none px-4 py-3 flex items-center justify-between text-text-primary font-medium">
+          <span>Medical Information</span>
+          <span class="text-text-tertiary text-sm"> >> </span>
+        </summary>
+
+        <div class="p-4 space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-text-primary mb-2">Allergies</label>
+            <textarea id="ep_allergies" name="allergies" rows="3" class="input"></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-text-primary mb-2">Chronic Conditions</label>
+            <textarea id="ep_chronic_conditions" name="chronic_conditions" rows="3" class="input"></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-text-primary mb-2">Current Medications</label>
+            <textarea id="ep_current_medications" name="current_medications" rows="3" class="input"></textarea>
+          </div>
+          <div class="max-w-sm">
+            <label class="block text-sm font-medium text-text-primary mb-2">Immunization Status</label>
+            <select id="ep_immunization_status" name="immunization_status" class="input">
+              <option value="unknown">unknown</option>
+              <option value="up_to_date">up_to_date</option>
+              <option value="not_up_to_date">not_up_to_date</option>
+            </select>
+          </div>
         </div>
-        <div>
-          <label class="block text-sm font-medium text-text-primary mb-2">State *</label>
-          <input id="ep_state" name="state" type="text" class="input" required>
+      </details>
+
+      <!-- ========================= -->
+      <!-- ACCORDION: INSURANCE -->
+      <!-- ========================= -->
+      <details class="rounded-lg border border-secondary-200/20 bg-secondary-900/20">
+        <summary class="cursor-pointer select-none px-4 py-3 flex items-center justify-between text-text-primary font-medium">
+          <span>Insurance</span>
+          <span class="text-text-tertiary text-sm"> >> </span>
+        </summary>
+
+        <div class="p-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">Coverage Type</label>
+              <select id="ep_coverage_type" name="coverage_type" class="input">
+                <option value="primary">primary</option>
+                <option value="secondary">secondary</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">Provider Name</label>
+              <input id="ep_provider_name" name="provider_name" type="text" class="input">
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">Policy Number</label>
+              <input id="ep_policy_number" name="policy_number" type="text" class="input">
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">Group Number</label>
+              <input id="ep_group_number" name="group_number" type="text" class="input">
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">Effective Date</label>
+              <input id="ep_effective_date" name="effective_date" type="date" class="input">
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">Subscriber Name</label>
+              <input id="ep_subscriber_name" name="subscriber_name" type="text" class="input">
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">Relationship</label>
+              <select id="ep_relationship" name="relationship" class="input">
+                <option value="self">self</option>
+                <option value="spouse">spouse</option>
+                <option value="child">child</option>
+                <option value="parent">parent</option>
+                <option value="other">other</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">Verified Status</label>
+              <select id="ep_verified_status" name="verified_status" class="input">
+                <option value="unverified">unverified</option>
+                <option value="verified">verified</option>
+              </select>
+            </div>
+
+            <div class="md:col-span-2">
+              <p class="text-xs text-text-tertiary">
+                Note: verified_at / verified_by are usually set automatically in backend when verifying.
+              </p>
+            </div>
+          </div>
         </div>
-        <div>
-          <label class="block text-sm font-medium text-text-primary mb-2">ZIP Code *</label>
-          <input id="ep_zip_code" name="zip_code" type="text" class="input" required>
+      </details>
+
+      <!-- ========================= -->
+      <!-- ACCORDION: EMERGENCY CONTACTS -->
+      <!-- ========================= -->
+      <details class="rounded-lg border border-secondary-200/20 bg-secondary-900/20">
+        <summary class="cursor-pointer select-none px-4 py-3 flex items-center justify-between text-text-primary font-medium">
+          <span>Emergency Contacts</span>
+          <span class="text-text-tertiary text-sm"> >> </span>
+        </summary>
+
+        <div class="p-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-text-primary mb-2">Full Name</label>
+              <input id="ep_ec_full_name" name="ec_full_name" type="text" class="input">
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">Relationship</label>
+              <input id="ep_ec_relationship" name="ec_relationship" type="text" class="input">
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">Phone</label>
+              <input id="ep_ec_phone" name="ec_phone" type="tel" class="input">
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-text-primary mb-2">Email</label>
+              <input id="ep_ec_email" name="ec_email" type="email" class="input">
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-text-primary mb-2">Address</label>
+              <input id="ep_ec_address" name="ec_address" type="text" class="input">
+            </div>
+
+            <div class="md:col-span-2 flex items-center gap-2">
+              <input id="ep_ec_is_primary" name="ec_is_primary" type="checkbox" class="h-4 w-4">
+              <label for="ep_ec_is_primary" class="text-sm text-text-primary">Primary Contact</label>
+            </div>
+          </div>
         </div>
-      </div>
+      </details>
 
       <div id="editPatientMsg" class="text-sm"></div>
 
@@ -644,6 +810,11 @@ if (!empty($_SESSION['force_change_password'])) {
     </form>
   </div>
 </div>
+
+<style>
+  /* optional: remove default triangle if you want cleaner look */
+  details summary::-webkit-details-marker { display: none; }
+</style>
 
 
 
@@ -1008,7 +1179,7 @@ if (!empty($_SESSION['force_change_password'])) {
 <script src="../js/medical_staff_global_search_autocomplete.js"></script>
 <script src="../js/medical_staff_advanced_search_modal.js"></script>
 <script src="../js/medical_staff_sidebar_lists.js"></script>
-<script id="dhws-dataInjector" src="../public/dhws-data-injector.js"></script>
+<!--<script id="dhws-dataInjector" src="../public/dhws-data-injector.js"></script>-->
 
 
 </body>
