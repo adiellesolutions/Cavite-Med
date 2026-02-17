@@ -52,13 +52,30 @@ document.addEventListener("DOMContentLoaded", () => {
     log("Modal opened");
   }
 
-  function closeModal() {
-    if (!modal) return;
-    modal.classList.add("hidden");
-    document.body.style.overflow = "";
-    setMsg("");
-    log("Modal closed");
-  }
+function closeModal() {
+  if (!modal) return;
+  modal.classList.add("hidden");
+  document.body.style.overflow = "";
+  setMsg("");
+
+  // Clear emergency fields on close
+  setVal("ep_ec1_full_name", "");
+  setVal("ep_ec1_relationship", "");
+  setVal("ep_ec1_phone", "");
+  setVal("ep_ec1_email", "");
+  setVal("ep_ec1_address", "");
+  setChecked("ep_ec1_is_primary", false);
+
+  setVal("ep_ec2_full_name", "");
+  setVal("ep_ec2_relationship", "");
+  setVal("ep_ec2_phone", "");
+  setVal("ep_ec2_email", "");
+  setVal("ep_ec2_address", "");
+  setChecked("ep_ec2_is_primary", false);
+
+  log("Modal closed & emergency cleared");
+}
+
 
   const setVal = (id, val) => {
     const el = f(id);
@@ -73,6 +90,27 @@ document.addEventListener("DOMContentLoaded", () => {
     el.checked = String(val ?? 0) === "1";
     log("setChecked", id, "=>", el.checked, "(raw:", val, ")");
   };
+
+
+
+  // =========================
+// EMERGENCY PRIMARY CONTROL
+// =========================
+
+const ec1Primary = f("ep_ec1_is_primary");
+const ec2Primary = f("ep_ec2_is_primary");
+
+if (ec1Primary && ec2Primary) {
+
+  ec1Primary.addEventListener("change", function () {
+    if (this.checked) ec2Primary.checked = false;
+  });
+
+  ec2Primary.addEventListener("change", function () {
+    if (this.checked) ec1Primary.checked = false;
+  });
+
+}
 
   // =========================
   // PERSONAL FIELDS (based on your HTML ids)
@@ -147,7 +185,7 @@ document.addEventListener("DOMContentLoaded", () => {
         setMsg("");
 
         // ✅ safest URL for your structure
-        const url = new URL("/CAVITE-MED/backend/medical_staff_patient_get.php", window.location.origin);
+        const url = new URL("/HIMS/backend/medical_staff_patient_get.php", window.location.origin);
         url.searchParams.set("patient_id", String(selected.patient_id));
 
         log("FETCH URL:", url.toString());
@@ -203,15 +241,53 @@ document.addEventListener("DOMContentLoaded", () => {
         setVal("ep_verified_status", i.verified_status ?? "unverified");
         log("Filled INSURANCE ✅");
 
-        // EMERGENCY
-        const e = data.emergency || {};
-        setVal("ep_ec_full_name", e.full_name);
-        setVal("ep_ec_relationship", e.relationship);
-        setVal("ep_ec_phone", e.phone);
-        setVal("ep_ec_email", e.email);
-        setVal("ep_ec_address", e.address);
-        setChecked("ep_ec_is_primary", e.is_primary);
-        log("Filled EMERGENCY ✅");
+// ===============================
+// EMERGENCY (OPTIONAL 2 CONTACTS)
+// ===============================
+
+const emergencyList = Array.isArray(data.emergency) ? data.emergency : [];
+
+// Reset everything first (important when switching patients)
+setVal("ep_ec1_full_name", "");
+setVal("ep_ec1_relationship", "");
+setVal("ep_ec1_phone", "");
+setVal("ep_ec1_email", "");
+setVal("ep_ec1_address", "");
+setChecked("ep_ec1_is_primary", false);
+
+setVal("ep_ec2_full_name", "");
+setVal("ep_ec2_relationship", "");
+setVal("ep_ec2_phone", "");
+setVal("ep_ec2_email", "");
+setVal("ep_ec2_address", "");
+setChecked("ep_ec2_is_primary", false);
+
+// Fill Contact 1 if exists
+if (emergencyList.length >= 1) {
+  const c1 = emergencyList[0];
+
+  setVal("ep_ec1_full_name", c1.full_name || "");
+  setVal("ep_ec1_relationship", c1.relationship || "");
+  setVal("ep_ec1_phone", c1.phone || "");
+  setVal("ep_ec1_email", c1.email || "");
+  setVal("ep_ec1_address", c1.address || "");
+  setChecked("ep_ec1_is_primary", c1.is_primary == 1);
+}
+
+// Fill Contact 2 if exists
+if (emergencyList.length >= 2) {
+  const c2 = emergencyList[1];
+
+  setVal("ep_ec2_full_name", c2.full_name || "");
+  setVal("ep_ec2_relationship", c2.relationship || "");
+  setVal("ep_ec2_phone", c2.phone || "");
+  setVal("ep_ec2_email", c2.email || "");
+  setVal("ep_ec2_address", c2.address || "");
+  setChecked("ep_ec2_is_primary", c2.is_primary == 1);
+}
+
+log("Filled EMERGENCY (OPTIONAL 2 CONTACTS) ✅");
+
 
         openModal();
       } catch (e) {
@@ -253,7 +329,7 @@ document.addEventListener("DOMContentLoaded", () => {
           log("SUBMIT FORM DATA:", obj);
         }
 
-        const res = await fetch("/CAVITE-MED/backend/medical_staff_update_patient.php", {
+        const res = await fetch("/HIMS/backend/medical_staff_update_patient.php", {
           method: "POST",
           body: fd,
           credentials: "same-origin",

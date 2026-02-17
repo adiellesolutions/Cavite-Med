@@ -757,49 +757,111 @@ if (!empty($_SESSION['force_change_password'])) {
         </div>
       </details>
 
-      <!-- ========================= -->
-      <!-- ACCORDION: EMERGENCY CONTACTS -->
-      <!-- ========================= -->
-      <details class="rounded-lg border border-secondary-200/20 bg-secondary-900/20">
-        <summary class="cursor-pointer select-none px-4 py-3 flex items-center justify-between text-text-primary font-medium">
-          <span>Emergency Contacts</span>
-          <span class="text-text-tertiary text-sm"> >> </span>
-        </summary>
+    <!-- ========================= -->
+<!-- ACCORDION: EMERGENCY CONTACTS -->
+<!-- ========================= -->
+<details class="rounded-lg border border-secondary-200/20 bg-secondary-900/20">
+  <summary class="cursor-pointer select-none px-4 py-3 flex items-center justify-between text-text-primary font-medium">
+    <span>Emergency Contacts</span>
+    <span class="text-text-tertiary text-sm"> >> </span>
+  </summary>
 
-        <div class="p-4">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-text-primary mb-2">Full Name</label>
-              <input id="ep_ec_full_name" name="ec_full_name" type="text" class="input">
-            </div>
+  <div class="p-4 space-y-8">
 
-            <div>
-              <label class="block text-sm font-medium text-text-primary mb-2">Relationship</label>
-              <input id="ep_ec_relationship" name="ec_relationship" type="text" class="input">
-            </div>
+    <!-- ========================= -->
+    <!-- EMERGENCY CONTACT 1 -->
+    <!-- ========================= -->
+    <div>
+      <h4 class="text-sm font-semibold text-text-primary mb-4">
+        Contact 1
+      </h4>
 
-            <div>
-              <label class="block text-sm font-medium text-text-primary mb-2">Phone</label>
-              <input id="ep_ec_phone" name="ec_phone" type="tel" class="input">
-            </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-            <div>
-              <label class="block text-sm font-medium text-text-primary mb-2">Email</label>
-              <input id="ep_ec_email" name="ec_email" type="email" class="input">
-            </div>
-
-            <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-text-primary mb-2">Address</label>
-              <input id="ep_ec_address" name="ec_address" type="text" class="input">
-            </div>
-
-            <div class="md:col-span-2 flex items-center gap-2">
-              <input id="ep_ec_is_primary" name="ec_is_primary" type="checkbox" class="h-4 w-4">
-              <label for="ep_ec_is_primary" class="text-sm text-text-primary">Primary Contact</label>
-            </div>
-          </div>
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-text-primary mb-2">Full Name</label>
+          <input id="ep_ec1_full_name" name="ec1_full_name" type="text" class="input">
         </div>
-      </details>
+
+        <div>
+          <label class="block text-sm font-medium text-text-primary mb-2">Relationship</label>
+          <input id="ep_ec1_relationship" name="ec1_relationship" type="text" class="input">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-text-primary mb-2">Phone</label>
+          <input id="ep_ec1_phone" name="ec1_phone" type="tel" class="input">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-text-primary mb-2">Email</label>
+          <input id="ep_ec1_email" name="ec1_email" type="email" class="input">
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-text-primary mb-2">Address</label>
+          <input id="ep_ec1_address" name="ec1_address" type="text" class="input">
+        </div>
+
+        <div class="md:col-span-2 flex items-center gap-2">
+          <input id="ep_ec1_is_primary" name="ec1_is_primary" type="checkbox" class="h-4 w-4">
+          <label for="ep_ec1_is_primary" class="text-sm text-text-primary">
+            Primary Contact
+          </label>
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- EMERGENCY CONTACT 2 -->
+    <!-- ========================= -->
+    <div>
+      <h4 class="text-sm font-semibold text-text-primary mb-4">
+        Contact 2
+      </h4>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-text-primary mb-2">Full Name</label>
+          <input id="ep_ec2_full_name" name="ec2_full_name" type="text" class="input">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-text-primary mb-2">Relationship</label>
+          <input id="ep_ec2_relationship" name="ec2_relationship" type="text" class="input">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-text-primary mb-2">Phone</label>
+          <input id="ep_ec2_phone" name="ec2_phone" type="tel" class="input">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-text-primary mb-2">Email</label>
+          <input id="ep_ec2_email" name="ec2_email" type="email" class="input">
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-text-primary mb-2">Address</label>
+          <input id="ep_ec2_address" name="ec2_address" type="text" class="input">
+        </div>
+
+        <div class="md:col-span-2 flex items-center gap-2">
+          <input id="ep_ec2_is_primary" name="ec2_is_primary" type="checkbox" class="h-4 w-4">
+          <label for="ep_ec2_is_primary" class="text-sm text-text-primary">
+            Primary Contact
+          </label>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</details>
+
 
       <div id="editPatientMsg" class="text-sm"></div>
 

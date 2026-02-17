@@ -8,9 +8,10 @@ if (!isset($_SESSION['user_id'])) {
   exit;
 }
 
-require_once __DIR__ . "/db/cavitemed_db.php"; // provides $conn (mysqli)
+require_once __DIR__ . "/db/cavitemed_db.php";
 
 $patient_id = isset($_GET['patient_id']) ? trim($_GET['patient_id']) : '';
+
 if ($patient_id === '' || !ctype_digit($patient_id)) {
   http_response_code(400);
   echo json_encode(["ok" => false, "error" => "Invalid patient_id"]);
@@ -21,32 +22,12 @@ try {
 
   $pid = (int)$patient_id;
 
-  /* ===================================================== */
-  /* 1️⃣ PATIENT (MAIN TABLE) */
-  /* ===================================================== */
+  /* =========================
+     1️⃣ PATIENT
+  ========================= */
 
   $stmt = $conn->prepare("
-    SELECT
-      patient_id,
-      mrn,
-      first_name,
-      last_name,
-      middle_name,
-      preferred_name,
-      marital_status,
-      occupation,
-      preferred_language,
-      date_of_birth,
-      gender,
-      blood_type,
-      phone,
-      email,
-      address_line,
-      city,
-      state,
-      zip_code,
-      status,
-      created_at
+    SELECT *
     FROM patients
     WHERE patient_id = ?
     LIMIT 1
@@ -64,16 +45,12 @@ try {
     exit;
   }
 
-  /* ===================================================== */
-  /* 2️⃣ MEDICAL PROFILE */
-  /* ===================================================== */
+  /* =========================
+     2️⃣ MEDICAL
+  ========================= */
 
   $stmt = $conn->prepare("
-    SELECT
-      allergies,
-      chronic_conditions,
-      current_medications,
-      immunization_status
+    SELECT allergies, chronic_conditions, current_medications, immunization_status
     FROM patient_medical_profile
     WHERE patient_id = ?
     LIMIT 1
@@ -94,20 +71,13 @@ try {
     ];
   }
 
-  /* ===================================================== */
-  /* 3️⃣ INSURANCE (PRIMARY FIRST) */
-  /* ===================================================== */
+  /* =========================
+     3️⃣ INSURANCE
+  ========================= */
 
   $stmt = $conn->prepare("
-    SELECT
-      coverage_type,
-      provider_name,
-      policy_number,
-      group_number,
-      effective_date,
-      subscriber_name,
-      relationship,
-      verified_status
+    SELECT coverage_type, provider_name, policy_number, group_number,
+           effective_date, subscriber_name, relationship, verified_status
     FROM patient_insurance
     WHERE patient_id = ?
     ORDER BY coverage_type = 'primary' DESC
@@ -133,44 +103,32 @@ try {
     ];
   }
 
-  /* ===================================================== */
-  /* 4️⃣ EMERGENCY CONTACT (PRIMARY FIRST) */
-  /* ===================================================== */
+  /* =========================
+     4️⃣ EMERGENCY (ARRAY)
+  ========================= */
 
   $stmt = $conn->prepare("
-    SELECT
-      full_name,
-      relationship,
-      phone,
-      email,
-      address,
-      is_primary
+    SELECT full_name, relationship, phone, email, address, is_primary
     FROM patient_emergency_contacts
     WHERE patient_id = ?
-    ORDER BY is_primary DESC
-    LIMIT 1
+    ORDER BY is_primary DESC, contact_id ASC
+    LIMIT 2
   ");
   if (!$stmt) throw new Exception($conn->error);
 
   $stmt->bind_param("i", $pid);
   $stmt->execute();
-  $emergency = $stmt->get_result()->fetch_assoc();
+  $result = $stmt->get_result();
+  $emergency = $result->fetch_all(MYSQLI_ASSOC);
   $stmt->close();
 
   if (!$emergency) {
-    $emergency = [
-      "full_name" => null,
-      "relationship" => null,
-      "phone" => null,
-      "email" => null,
-      "address" => null,
-      "is_primary" => 0
-    ];
+    $emergency = [];
   }
 
-  /* ===================================================== */
-  /* FINAL JSON RESPONSE */
-  /* ===================================================== */
+  /* =========================
+     FINAL RESPONSE
+  ========================= */
 
   echo json_encode([
     "ok" => true,
@@ -181,6 +139,7 @@ try {
   ]);
 
 } catch (Throwable $e) {
+
   http_response_code(500);
   echo json_encode([
     "ok" => false,
