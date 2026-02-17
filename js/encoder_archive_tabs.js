@@ -6,11 +6,6 @@ class ArchiveTabManager {
             medicines: document.getElementById('medicinesTabContent'),
         };
         this.currentTab = 'suppliers';
-        this.filters = {
-            date: '',
-            type: '',
-            search: ''
-        };
     }
 
     init() {
@@ -18,83 +13,154 @@ class ArchiveTabManager {
             tab.addEventListener('click', (e) => this.switchTab(e));
         });
 
-        // Update type filter options based on active tab
         this.updateTypeFilterOptions();
     }
 
     switchTab(event) {
+
         const tab = event.currentTarget;
         const tabName = tab.dataset.tab;
 
-        // Update active state
+        if (this.currentTab === tabName) return;
+
+        this.currentTab = tabName;
+
+        /* ===============================
+        🔥 RESET EVERYTHING FIRST
+        =============================== */
+        this.resetFilters();
+
+        /* ===============================
+        UPDATE TAB STYLES
+        =============================== */
         this.tabs.forEach(t => {
             t.classList.remove('active', 'border-primary', 'text-primary');
             t.classList.add('border-transparent', 'text-text-secondary');
         });
-        
+
         tab.classList.add('active', 'border-primary', 'text-primary');
         tab.classList.remove('border-transparent', 'text-text-secondary');
 
-        // Hide all content
+        /* ===============================
+        SWITCH CONTENT
+        =============================== */
         Object.values(this.contents).forEach(content => {
             if (content) content.classList.add('hidden');
         });
 
-        // Show selected content
         if (this.contents[tabName]) {
             this.contents[tabName].classList.remove('hidden');
         }
 
-        this.currentTab = tabName;
-        
-        // Update type filter options for new tab
+        /* ===============================
+        UPDATE TYPE DROPDOWN
+        =============================== */
         this.updateTypeFilterOptions();
-        
-        // Reset and trigger search for new tab
-        this.resetPagination();
-        
-        // Dispatch event for other modules
-        document.dispatchEvent(new CustomEvent('tabChanged', { 
-            detail: { tab: tabName } 
+
+        /* ===============================
+        RESET PAGE TO 1 + FORCE RELOAD
+        =============================== */
+        if (tabName === 'suppliers') {
+            if (typeof suppliersPage !== "undefined") suppliersPage = 1;
+            if (typeof loadArchivedSuppliers === "function") loadArchivedSuppliers();
+        }
+
+        if (tabName === 'medicines') {
+            if (typeof medicinesPage !== "undefined") medicinesPage = 1;
+            if (typeof loadArchivedMedicines === "function") loadArchivedMedicines();
+        }
+
+        /* ===============================
+        🔥 REFRESH STATS HERE
+        =============================== */
+        if (typeof loadArchiveStats === "function") {
+            loadArchiveStats();
+        }
+
+        /* ===============================
+        NOTIFY OTHER MODULES
+        =============================== */
+        document.dispatchEvent(new CustomEvent('tabChanged', {
+            detail: { tab: tabName }
         }));
     }
 
+
+    /* ==============================================
+       🔥 RESET FILTER INPUTS
+    ============================================== */
+    resetFilters() {
+
+        const searchInput = document.getElementById('archiveSearch');
+        const dateFilter  = document.getElementById('archiveDateFilter');
+        const typeFilter  = document.getElementById('archiveTypeFilter');
+        const activeFiltersContainer = document.getElementById('archiveActiveFilters');
+        const clearBtn = document.getElementById('clearArchiveSearch');
+
+        /* Reset inputs */
+        if (searchInput) searchInput.value = '';
+        if (dateFilter) dateFilter.value = '';
+        if (typeFilter) typeFilter.value = '';
+
+        /* Reset global filter state */
+        if (typeof archiveFilters !== "undefined") {
+            archiveFilters.search = '';
+            archiveFilters.date = '';
+            archiveFilters.type = '';
+        }
+
+        /* 🔥 Clear filter chips */
+        if (activeFiltersContainer) {
+            activeFiltersContainer.innerHTML = '';
+        }
+
+        /* Hide clear button */
+        if (clearBtn) {
+            clearBtn.classList.add('hidden');
+        }
+    }
+
+
     updateTypeFilterOptions() {
+
         const typeFilter = document.getElementById('archiveTypeFilter');
         if (!typeFilter) return;
 
         let options = '<option value="">All Types</option>';
 
-        switch(this.currentTab) {
+        switch (this.currentTab) {
+
             case 'suppliers':
                 options += `
-                    <option value="distributor">Distributor</option>
-                    <option value="manufacturer">Manufacturer</option>
-                    <option value="wholesaler">Wholesaler</option>
-                    <option value="retailer">Retailer</option>
+                    <option value="private">Private</option>
+                    <option value="donation">Donation</option>
+                    <option value="government">Government</option>
                 `;
                 break;
+
             case 'medicines':
                 options += `
                     <option value="branded">Branded</option>
                     <option value="generic">Generic</option>
-                    <option value="prescription">Prescription</option>
-                    <option value="otc">Over-the-Counter</option>
                 `;
                 break;
         }
 
         typeFilter.innerHTML = options;
+        typeFilter.value = ''; // ensure reset
     }
 
     resetPagination() {
-        // Reset page numbers for current tab
-        const pageEvents = {
-            suppliers: 'resetSuppliersPagination',
-            medicines: 'resetMedicinesPagination',
-        };
 
-        document.dispatchEvent(new CustomEvent(pageEvents[this.currentTab]));
+        if (this.currentTab === 'suppliers') {
+            if (typeof suppliersPage !== "undefined") suppliersPage = 1;
+            if (typeof loadArchivedSuppliers === "function") loadArchivedSuppliers();
+        }
+
+        if (this.currentTab === 'medicines') {
+            if (typeof medicinesPage !== "undefined") medicinesPage = 1;
+            if (typeof loadArchivedMedicines === "function") loadArchivedMedicines();
+        }
     }
 
     getCurrentFilters() {
@@ -107,7 +173,9 @@ class ArchiveTabManager {
     }
 }
 
-// Initialize tab manager
+/* ==============================================
+   INIT
+============================================== */
 const archiveTabs = new ArchiveTabManager();
 
 document.addEventListener('DOMContentLoaded', () => {

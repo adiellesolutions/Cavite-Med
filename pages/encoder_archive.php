@@ -24,6 +24,9 @@ if (!empty($_SESSION['force_change_password'])) {
     <!-- JavaScript Modules -->
     <script defer src="../js/encoder_archive_tabs.js"></script>
     <script defer src="../js/encoder_archive_fetch.js"></script>
+    <script defer src="../js/encoder_archive_restore.js"></script>
+    <script defer src="../js/encoder_archive_search.js"></script>
+    <script defer src="../js/encoder_archive_stats.js"></script>
 
     
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
@@ -95,6 +98,22 @@ if (!empty($_SESSION['force_change_password'])) {
                     </svg>
                     <span>Archive</span>
                 </a>
+
+                <a href="encoder_distribution.php" class="nav-item"> 
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <!-- Box -->
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 7l9-4 9 4-9 4-9-4z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 7v10l9 4 9-4V7"/>
+
+                        <!-- Outgoing arrow (distribution) -->
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M16 13h5m0 0l-2-2m2 2l-2 2"/>
+                    </svg>
+                    <span>Distribution</span> 
+                </a>
+
 
                 <a href="../backend/system_logout.php" class="nav-item whitespace-nowrap ml-auto">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -195,14 +214,6 @@ if (!empty($_SESSION['force_change_password'])) {
                     </div>
                     
                     <div class="flex items-center gap-3 flex-wrap">
-                        <!-- Dynamic filters based on active tab -->
-                        <select id="archiveDateFilter" class="input w-40">
-                            <option value="">All Dates</option>
-                            <option value="today">Today</option>
-                            <option value="week">This Week</option>
-                            <option value="month">This Month</option>
-                            <option value="year">This Year</option>
-                        </select>
                         
                         <select id="archiveTypeFilter" class="input w-40" data-tab-specific>
                             <!-- Options change based on tab -->
@@ -335,62 +346,6 @@ if (!empty($_SESSION['force_change_password'])) {
             </div>
         </div>
     </main>
-
-    <!-- Supplier Details Modal -->
-    <div id="supplierDetailsModal" class="hidden fixed inset-0 bg-secondary-900 bg-opacity-50 z-modal flex items-center justify-center p-4">
-        <div class="card max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-semibold text-text-primary">Supplier Archive Details</h3>
-                <button type="button" id="closeSupplierModal" class="text-text-tertiary hover:text-text-primary transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-
-            <div id="supplierDetailsContent" class="space-y-6">
-                <!-- Supplier details will be populated here -->
-            </div>
-
-            <div class="flex justify-end gap-3 pt-6 border-t border-border">
-                <button type="button" class="btn btn-outline" onclick="closeSupplierModal()">Close</button>
-                <button type="button" class="btn btn-primary" id="restoreSupplierBtn">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                    </svg>
-                    Restore Supplier
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Medicine Details Modal -->
-    <div id="medicineDetailsModal" class="hidden fixed inset-0 bg-secondary-900 bg-opacity-50 z-modal flex items-center justify-center p-4">
-        <div class="card max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-semibold text-text-primary">Medicine Archive Details</h3>
-                <button type="button" id="closeMedicineModal" class="text-text-tertiary hover:text-text-primary transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-
-            <div id="medicineDetailsContent" class="space-y-6">
-                <!-- Medicine details will be populated here -->
-            </div>
-
-            <div class="flex justify-end gap-3 pt-6 border-t border-border">
-                <button type="button" class="btn btn-outline" onclick="closeMedicineModal()">Close</button>
-                <button type="button" class="btn btn-primary" id="restoreMedicineBtn">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                    </svg>
-                    Restore to Inventory
-                </button>
-            </div>
-        </div>
-    </div>
 
     <!-- Restore Confirmation Modal -->
     <div id="restoreConfirmModal" class="hidden fixed inset-0 bg-secondary-900 bg-opacity-50 z-modal flex items-center justify-center p-4">
