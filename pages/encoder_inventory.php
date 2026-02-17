@@ -116,6 +116,21 @@ $end   = min($offset + $limit, $totalRecords);
                         <span>Archive</span>
                     </a>
 
+                    <a href="encoder_distribution.php" class="nav-item"> 
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <!-- Box -->
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 7l9-4 9 4-9 4-9-4z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 7v10l9 4 9-4V7"/>
+
+                            <!-- Outgoing arrow (distribution) -->
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M16 13h5m0 0l-2-2m2 2l-2 2"/>
+                        </svg>
+                        <span>Distribution</span> 
+                    </a>
+
                     <a href="../backend/system_logout.php" class="nav-item whitespace-nowrap ml-auto">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

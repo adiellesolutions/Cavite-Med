@@ -77,7 +77,7 @@ CREATE TABLE inventory_transactions (
         'add',
         'deduct',
         'dispose',
-        'delivery',
+        'distribute',
         'adjustment',
         'expired'
     ) NOT NULL,
@@ -109,22 +109,22 @@ CREATE TABLE health_centers (
 );
 
 
-CREATE TABLE deliveries (
+CREATE TABLE distribution (
     id INT AUTO_INCREMENT PRIMARY KEY,
     health_center_id INT NOT NULL,
     medicine_id INT NOT NULL,
     quantity INT NOT NULL,
-    status ENUM('pending','delivered','cancelled') DEFAULT 'pending',
+    status ENUM('pending','distributed','cancelled') DEFAULT 'pending',
     remarks TEXT,
     created_by INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT fk_delivery_health_center
+    CONSTRAINT fk_distribute_health_center
         FOREIGN KEY (health_center_id)
         REFERENCES health_centers(id)
         ON DELETE RESTRICT,
 
-    CONSTRAINT fk_delivery_medicine
+    CONSTRAINT fk_distribute_medicine
         FOREIGN KEY (medicine_id)
         REFERENCES medicine(id)
         ON DELETE RESTRICT
