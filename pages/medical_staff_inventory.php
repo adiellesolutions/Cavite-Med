@@ -1,3 +1,17 @@
+<?php
+session_start();
+
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'medical_staff') {
+    header("Location: system_login_portal.html");
+    exit;
+}
+
+if (!empty($_SESSION['force_change_password'])) {
+    header("Location: force_change_password.php");
+    exit;
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,21 +36,29 @@
                 </svg>
                 <div>
                     <h1 class="text-xl font-semibold text-text-primary">CAVMED Portal</h1>
-                    <p class="text-xs text-text-secondary">Medicine Inventory</p>
                 </div>
             </div>
 
-            <!-- Quick Actions & User Profile -->
             <div class="flex items-center gap-4">
-
                 <!-- User Profile -->
-                <div class="flex items-center gap-3 pl-4">
-                    <div class="text-right hidden md:block">
-                        <p class="text-sm font-medium text-text-primary">Nurse John Jacoba</p>
-                        <p class="text-xs text-text-secondary">RN • License: RN-789012</p>
-                    </div>
-                    <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
-                        <span class="text-primary-700 font-semibold">JJ</span>
+                <div class="flex items-center gap-4">   
+                    <div class="flex items-center gap-3">
+                        <!-- User Name & Role -->
+                        <div class="text-right hidden md:block">
+                            <p class="text-sm font-medium text-text-primary">
+                                <?php echo htmlspecialchars($_SESSION['name']); ?>
+                            </p>
+                            <p class="text-xs text-text-secondary">
+                                <?php echo ucfirst(str_replace('_', ' ', $_SESSION['role'])); ?>
+                            </p>
+                        </div>
+
+                        <!-- Profile Picture -->
+                        <img
+                            src="/HIMS/<?php echo $_SESSION['profile_picture'] ?: 'uploads/profile/default.png'; ?>"
+                            alt="User profile picture"
+                            class="w-10 h-10 rounded-full object-cover border-2 border-primary"
+                            onerror="this.src='/HIMS/uploads/profile/default.png'; this.onerror=null;">
                     </div>
                 </div>
             </div>
@@ -61,7 +83,7 @@
                     <span>Dispensation</span>
                 </a>
 
-                <a href="medical_staff_patient_registration.html" class="nav-item">
+                <a href="medical_staff_patient_registration.php" class="nav-item">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                     </svg>
@@ -73,13 +95,19 @@
                     </svg>
                     Procedures
                 </a>
-                <a href="medical_staff_inventory.html" class="nav-item nav-item-active whitespace-nowrap">
+                <a href="medical_staff_inventory.php" class="nav-item nav-item-active whitespace-nowrap">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                     </svg>
                     <span>Inventory List</span>
                 </a>
-
+                <a href="../backend/system_logout.php" class="nav-item whitespace-nowrap ml-auto">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                    Logout
+                </a>
             </div>
         </div>
     </nav>
@@ -437,212 +465,23 @@
             </div>
         </div>
     </main>
+    
+    <!-- Footer -->
+    <footer class="bg-surface border-t border-border py-6 px-6 mt-auto">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <!-- Compliance Certifications -->
+                <div class="flex items-center gap-4 flex-wrap justify-center">
+                </div>
 
-    <!-- Navigation Sidebar (Hidden by default, toggle with hamburger) -->
-    <nav class="fixed left-0 top-0 h-full w-64 bg-surface border-r border-border shadow-lg transform -translate-x-full transition-transform duration-300 z-modal" id="navSidebar">
-        <div class="p-6">
-            <div class="flex items-center justify-between mb-8">
-                <h2 class="text-lg font-semibold text-text-primary">Navigation</h2>
-                <button class="text-text-secondary hover:text-text-primary transition-colors" id="closeSidebar">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-
-            <div class="space-y-2">
-                <a href="administrative_command_dashboard.html" class="nav-item">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                    </svg>
-                    Admin Dashboard
-                </a>
-
-                <a href="inventory_management_system.html" class="nav-item nav-item-active">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-                    </svg>
-                    Inventory Management
-                </a>
-
-                <a href="patient_records_management_portal.html" class="nav-item">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                    </svg>
-                    Patient Records
-                </a>
-
-                <a href="electronic_prescription_management_system.html" class="nav-item">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                    e-Prescription
-                </a>
-
-                <a href="analytics_and_reporting_dashboard.html" class="nav-item">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                    </svg>
-                    Analytics & Reports
-                </a>
-
-                <div class="divider"></div>
-
-                <a href="system_login_portal.html" class="nav-item text-error">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                    </svg>
-                    Logout
-                </a>
+                <!-- Copyright -->
+                <div class="text-sm text-text-secondary text-center md:text-right">
+                    <p>© 2025 CAVMED Portal. All Rights Reserved.</p>
+                </div>
             </div>
         </div>
-    </nav>
+    </footer>
 
-    <!-- Sidebar Overlay -->
-    <div class="fixed inset-0 bg-secondary-900 bg-opacity-50 z-modal-backdrop hidden" id="sidebarOverlay"></div>
-
-    <!-- Hamburger Menu Button (Mobile) -->
-    <button class="fixed top-4 left-4 p-2 bg-surface rounded-base shadow-md hover:shadow-lg transition-shadow z-fixed md:hidden" id="hamburgerBtn">
-        <svg class="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-        </svg>
-    </button>
-
-    <script>
-        // Sidebar Navigation Toggle
-        const hamburgerBtn = document.getElementById('hamburgerBtn');
-        const navSidebar = document.getElementById('navSidebar');
-        const closeSidebar = document.getElementById('closeSidebar');
-        const sidebarOverlay = document.getElementById('sidebarOverlay');
-
-        function openSidebar() {
-            navSidebar.classList.remove('-translate-x-full');
-            sidebarOverlay.classList.remove('hidden');
-        }
-
-        function closeSidebarFunc() {
-            navSidebar.classList.add('-translate-x-full');
-            sidebarOverlay.classList.add('hidden');
-        }
-
-        hamburgerBtn.addEventListener('click', openSidebar);
-        closeSidebar.addEventListener('click', closeSidebarFunc);
-        sidebarOverlay.addEventListener('click', closeSidebarFunc);
-
-        // Inventory Row Click - Show Detail Panel
-        const inventoryRows = document.querySelectorAll('.inventory-row');
-        const detailPanel = document.getElementById('detailPanel');
-        const closeDetailPanel = document.getElementById('closeDetailPanel');
-
-        inventoryRows.forEach(row => {
-            row.addEventListener('click', function(e) {
-                // Don't trigger if clicking checkbox or edit button
-                if (e.target.type === 'checkbox' || e.target.closest('button')) {
-                    return;
-                }
-                
-                // Remove active class from all rows
-                inventoryRows.forEach(r => r.classList.remove('bg-primary-50'));
-                
-                // Add active class to clicked row
-                this.classList.add('bg-primary-50');
-                
-                // Show detail panel (already visible in desktop layout)
-                detailPanel.classList.remove('hidden');
-            });
-        });
-
-        // Search Functionality
-        const inventorySearch = document.getElementById('inventorySearch');
-        inventorySearch.addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            // In production, this would filter the table rows
-            console.log('Searching for:', searchTerm);
-        });
-
-        // Filter Functionality
-        const categoryFilter = document.getElementById('categoryFilter');
-        const stockStatusFilter = document.getElementById('stockStatusFilter');
-        const expiryFilter = document.getElementById('expiryFilter');
-        const supplierFilter = document.getElementById('supplierFilter');
-
-        [categoryFilter, stockStatusFilter, expiryFilter, supplierFilter].forEach(filter => {
-            filter.addEventListener('change', function() {
-                console.log('Filter changed:', this.id, this.value);
-                // In production, this would apply filters to the table
-            });
-        });
-
-        // Reset Filters
-        const resetFiltersBtn = document.getElementById('resetFiltersBtn');
-        resetFiltersBtn.addEventListener('click', function() {
-            categoryFilter.value = '';
-            stockStatusFilter.value = '';
-            expiryFilter.value = '';
-            supplierFilter.value = '';
-            inventorySearch.value = '';
-            console.log('Filters reset');
-        });
-
-        // Sort Functionality
-        const sortBy = document.getElementById('sortBy');
-        sortBy.addEventListener('change', function() {
-            console.log('Sorting by:', this.value);
-            // In production, this would sort the table
-        });
-
-        // Add New Item Button
-        const addNewItemBtn = document.getElementById('addNewItemBtn');
-        addNewItemBtn.addEventListener('click', function() {
-            alert('Add New Item modal would open here');
-        });
-
-        // Saved Filters Button
-        const savedFiltersBtn = document.getElementById('savedFiltersBtn');
-        savedFiltersBtn.addEventListener('click', function() {
-            alert('Saved filters dropdown would open here');
-        });
-
-        // Quick Add FAB
-        const quickAddFab = document.getElementById('quickAddFab');
-        quickAddFab.addEventListener('click', function() {
-            alert('Quick add item modal would open here');
-        });
-
-        // Keyboard Shortcuts
-        document.addEventListener('keydown', function(e) {
-            // Ctrl/Cmd + K for search focus
-            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-                e.preventDefault();
-                inventorySearch.focus();
-            }
-            
-            // Ctrl/Cmd + N for new item
-            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-                e.preventDefault();
-                addNewItemBtn.click();
-            }
-            
-            // Escape to close detail panel on mobile
-            if (e.key === 'Escape') {
-                closeSidebarFunc();
-            }
-        });
-
-        // Auto-refresh inventory data (simulated)
-        setInterval(function() {
-            console.log('Auto-refreshing inventory data...');
-            // In production, this would fetch updated data from the server
-        }, 30000); // Every 30 seconds
-
-        // Initialize tooltips for action buttons
-        const actionButtons = document.querySelectorAll('[title]');
-        actionButtons.forEach(button => {
-            button.addEventListener('mouseenter', function() {
-                // Tooltip functionality would be implemented here
-            });
-        });
-    </script>
 <script id="dhws-dataInjector" src="../public/dhws-data-injector.js"></script>
 </body>
 </html>
