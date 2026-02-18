@@ -1,6 +1,8 @@
 let allDistributions = [];
+let filteredDistributions = [];
 let currentPage = 1;
 const rowsPerPage = 10;
+
 
 function loadDistributions() {
 
@@ -11,6 +13,7 @@ function loadDistributions() {
             if (!data.success) return;
 
             allDistributions = data.data;
+            filteredDistributions = [...allDistributions];
             currentPage = 1;
 
             renderTable();
@@ -27,7 +30,7 @@ function renderTable() {
 
     tbody.innerHTML = '';
 
-    if (allDistributions.length === 0) {
+    if (filteredDistributions.length === 0) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="9" class="text-center py-6 text-text-secondary">
@@ -41,7 +44,7 @@ function renderTable() {
 
     const start = (currentPage - 1) * rowsPerPage;
     const end = start + rowsPerPage;
-    const paginatedData = allDistributions.slice(start, end);
+    const paginatedData = filteredDistributions.slice(start, end);
 
     paginatedData.forEach(row => {
 
@@ -52,12 +55,20 @@ function renderTable() {
                 day: 'numeric'
             });
 
-        const statusBadge =
-            row.status === 'distributed'
-                ? `<span class="px-2 py-1 text-xs font-semibold rounded bg-success-100 text-success-700">Distributed</span>`
-                : row.status === 'pending'
-                ? `<span class="px-2 py-1 text-xs font-semibold rounded bg-warning-100 text-warning-700">Pending</span>`
-                : `<span class="px-2 py-1 text-xs font-semibold rounded bg-error-100 text-error-700">Cancelled</span>`;
+        const statusMap = {
+            distributed: "bg-success-100 text-success-700",
+            pending: "bg-warning-100 text-warning-700",
+            cancelled: "bg-error-100 text-error-700",
+            returned: "bg-primary-100 text-primary-700"
+        };
+
+        const statusClass = statusMap[row.status] || "bg-gray-100 text-gray-700";
+
+        const statusBadge = `
+            <span class="px-2 py-1 text-xs font-semibold rounded ${statusClass}">
+                ${row.status.charAt(0).toUpperCase() + row.status.slice(1)}
+            </span>
+        `;
 
         tbody.innerHTML += `
             <tr class="border-b border-border hover:bg-secondary-50 transition">
@@ -124,19 +135,19 @@ function renderTable() {
         `;
     });
 
-    countDisplay.textContent = `${allDistributions.length} records`;
+    countDisplay.textContent = `${filteredDistributions.length} records`;
 
     document.getElementById('startIndex').textContent = start + 1;
     document.getElementById('endIndex').textContent =
-        Math.min(end, allDistributions.length);
+        Math.min(end, filteredDistributions.length);
     document.getElementById('totalItems').textContent =
-        allDistributions.length;
+        filteredDistributions.length;
 }
 
 
 function renderPagination() {
 
-    const totalPages = Math.ceil(allDistributions.length / rowsPerPage);
+    const totalPages = Math.ceil(filteredDistributions.length / rowsPerPage);
     const pageNumbers = document.getElementById('pageNumbers');
     const prevBtn = document.getElementById('prevPage');
     const nextBtn = document.getElementById('nextPage');
@@ -183,4 +194,132 @@ function renderPagination() {
 
 document.addEventListener("DOMContentLoaded", function () {
     loadDistributions();
+    loadDistributionStatistics();
 });
+
+function loadDistributionStatistics() {
+
+    fetch('../backend/encoder_distribution_stats.php')
+        .then(res => res.json())
+        .then(data => {
+
+            if (!data.success) return;
+
+            document.getElementById('Distributed').textContent =
+                data.distributed ?? 0;
+
+            document.getElementById('pendingCount').textContent =
+                data.pending ?? 0;
+
+            document.getElementById('cancelledCount').textContent =
+                data.cancelled ?? 0;
+
+            document.getElementById('returnedCount').textContent =
+                data.returned ?? 0;
+        })
+        .catch(err => console.error("Stats load error:", err));
+}
+
+function applyFilters() {
+
+    const searchValue = document.getElementById('distributionSearch')
+        .value
+        .toLowerCase();
+
+    const statusValue = document.getElementById('statusFilter').value;
+    const centerValue = document.getElementById('healthCenterFilter').value;
+
+    filteredDistributions = allDistributions.filter(row => {
+
+        const matchesSearch =
+            row.center_name.toLowerCase().includes(searchValue) ||
+            row.medicine_name.toLowerCase().includes(searchValue) ||
+            (row.remarks || '').toLowerCase().includes(searchValue);
+
+        const matchesStatus =
+            !statusValue || row.status === statusValue;
+
+        const matchesCenter =
+            !centerValue || row.health_center_id == centerValue;
+
+        return matchesSearch && matchesStatus && matchesCenter;
+    });
+
+    currentPage = 1;
+
+    renderTable();
+    renderPagination();
+
+    updateActiveFilters(searchValue, statusValue, centerValue);
+}
+
+
+document.getElementById('distributionSearch')
+    ?.addEventListener('input', function () {
+
+        const clearBtn = document.getElementById('clearDistributionSearch');
+
+        clearBtn.classList.toggle('hidden', this.value.length === 0);
+
+        applyFilters();
+    });
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    document.getElementById('distributionSearch')
+        ?.addEventListener('input', function () {
+
+            const clearBtn = document.getElementById('clearDistributionSearch');
+            clearBtn.classList.toggle('hidden', this.value.length === 0);
+            applyFilters();
+        });
+
+    document.getElementById('clearDistributionSearch')
+        ?.addEventListener('click', function () {
+            document.getElementById('distributionSearch').value = '';
+            this.classList.add('hidden');
+            applyFilters();
+        });
+
+    document.getElementById('statusFilter')
+        ?.addEventListener('change', applyFilters);
+
+    document.getElementById('healthCenterFilter')
+        ?.addEventListener('change', applyFilters);
+
+});
+
+
+function updateActiveFilters(search, status, center) {
+
+    const container = document.getElementById('distributionActiveFilters');
+    container.innerHTML = '';
+
+    if (search) {
+        container.innerHTML += `
+            <span class="px-3 py-1 bg-secondary-100 rounded text-sm">
+                Search: ${search}
+            </span>
+        `;
+    }
+
+    if (status) {
+        container.innerHTML += `
+            <span class="px-3 py-1 bg-secondary-100 rounded text-sm">
+                Status: ${status}
+            </span>
+        `;
+    }
+
+    if (center) {
+        const centerText = document.querySelector(
+            '#healthCenterFilter option:checked'
+        ).textContent;
+
+        container.innerHTML += `
+            <span class="px-3 py-1 bg-secondary-100 rounded text-sm">
+                Center: ${centerText}
+            </span>
+        `;
+    }
+}

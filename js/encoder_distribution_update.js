@@ -27,19 +27,17 @@ document.addEventListener("DOMContentLoaded", function () {
         const healthSelect = document.getElementById("edit_health_center");
         const medicineSelect = document.getElementById("edit_medicine");
 
-        // 🔥 WAIT until dropdown options exist
-        setTimeout(() => {
-            healthSelect.value = centerId;
-            medicineSelect.value = medicineId;
-        }, 1);
+        // No artificial delay needed if dropdowns already loaded
+        healthSelect.value = centerId;
+        medicineSelect.value = medicineId;
 
-        const isCancelled = status === "cancelled";
+        // 🔥 Lock fields if cancelled OR returned
+        const isLocked = status === "cancelled" || status === "returned";
 
-        healthSelect.disabled = isCancelled;
-        medicineSelect.disabled = isCancelled;
-        document.getElementById("edit_quantity").disabled = isCancelled;
+        healthSelect.disabled = isLocked;
+        medicineSelect.disabled = isLocked;
+        document.getElementById("edit_quantity").disabled = isLocked;
     });
-
 
     /* =====================
        SUBMIT EDIT FORM
@@ -72,6 +70,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (typeof loadDistributions === "function") {
                 loadDistributions();
+            }
+
+            if (typeof loadDistributionStatistics === "function") {
+                loadDistributionStatistics();
             }
 
         })

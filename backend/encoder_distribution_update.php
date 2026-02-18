@@ -11,16 +11,16 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 /* =========================
-   SAFE INPUT
+   INPUT
 ========================= */
 
-$id = isset($_POST['distribution_id']) ? intval($_POST['distribution_id']) : 0;
+$id = intval($_POST['distribution_id'] ?? 0);
 $new_status = $_POST['status'] ?? null;
 $remarks = $_POST['remarks'] ?? '';
 
-$new_center = isset($_POST['health_center_id']) ? intval($_POST['health_center_id']) : null;
-$new_medicine = isset($_POST['medicine_id']) ? intval($_POST['medicine_id']) : null;
-$new_quantity = isset($_POST['quantity']) ? intval($_POST['quantity']) : null;
+$new_center = intval($_POST['health_center_id'] ?? 0);
+$new_medicine = intval($_POST['medicine_id'] ?? 0);
+$new_quantity = intval($_POST['quantity'] ?? 0);
 
 if (!$id || !$new_status) {
     echo json_encode(['success' => false, 'message' => 'Invalid request']);
@@ -53,7 +53,7 @@ $old_quantity = intval($old['quantity']);
 $old_status   = $old['status'];
 
 /* =========================
-   USE OLD VALUES IF NOT SENT
+   Fallback values
 ========================= */
 
 if (!$new_center)   $new_center   = $old_center;
@@ -61,7 +61,7 @@ if (!$new_medicine) $new_medicine = $old_medicine;
 if (!$new_quantity) $new_quantity = $old_quantity;
 
 /* =========================
-   BEGIN TRANSACTION
+   TRANSACTION START
 ========================= */
 
 $conn->begin_transaction();
@@ -70,45 +70,43 @@ try {
 
     /*
     =========================================================
-    STOCK LOGIC
+    STATUS TRANSITION LOGIC
     =========================================================
-
-    We must compare OLD vs NEW status carefully.
     */
 
-    // CASE 1: distributed → cancelled
-    if ($old_status === 'distributed' && $new_status === 'cancelled') {
+    $stockChange = 0;         // how much to change stock
+    $targetMedicine = $old_medicine;
 
-        // return stock
-        $stmt = $conn->prepare("
-            UPDATE medicine
-            SET current_stock = current_stock + ?
-            WHERE id = ?
-        ");
-        $stmt->bind_param("ii", $old_quantity, $old_medicine);
-        $stmt->execute();
+    /*
+    Determine stock movement based on transition
+    */
+
+    if ($old_status !== $new_status) {
+
+        // Any status → distributed (deduct)
+        if ($new_status === 'distributed') {
+            $stockChange = -$new_quantity;
+            $targetMedicine = $new_medicine;
+        }
+
+        // distributed → cancelled / returned / pending
+        elseif ($old_status === 'distributed' &&
+               in_array($new_status, ['cancelled', 'returned', 'pending'])) {
+
+            $stockChange = +$old_quantity;
+            $targetMedicine = $old_medicine;
+        }
     }
 
-    // CASE 2: cancelled → distributed
-    elseif ($old_status === 'cancelled' && $new_status === 'distributed') {
+    /*
+    If still distributed and editing medicine/quantity
+    */
 
-        // deduct stock
-        $stmt = $conn->prepare("
-            UPDATE medicine
-            SET current_stock = current_stock - ?
-            WHERE id = ?
-        ");
-        $stmt->bind_param("ii", $old_quantity, $old_medicine);
-        $stmt->execute();
-    }
+    if ($old_status === 'distributed' && $new_status === 'distributed') {
 
-    // CASE 3: distributed → distributed (medicine or quantity changed)
-    elseif ($old_status === 'distributed' && $new_status === 'distributed') {
-
-        // If medicine changed
         if ($old_medicine != $new_medicine) {
 
-            // return old stock
+            // return old
             $stmt = $conn->prepare("
                 UPDATE medicine
                 SET current_stock = current_stock + ?
@@ -117,7 +115,7 @@ try {
             $stmt->bind_param("ii", $old_quantity, $old_medicine);
             $stmt->execute();
 
-            // deduct new stock
+            // deduct new
             $stmt = $conn->prepare("
                 UPDATE medicine
                 SET current_stock = current_stock - ?
@@ -127,7 +125,7 @@ try {
             $stmt->execute();
         }
         else {
-            // same medicine → adjust difference only
+
             $difference = $new_quantity - $old_quantity;
 
             if ($difference != 0) {
@@ -141,10 +139,24 @@ try {
             }
         }
     }
+    else {
+
+        // Apply stock change if needed
+        if ($stockChange != 0) {
+
+            $stmt = $conn->prepare("
+                UPDATE medicine
+                SET current_stock = current_stock + ?
+                WHERE id = ?
+            ");
+            $stmt->bind_param("ii", $stockChange, $targetMedicine);
+            $stmt->execute();
+        }
+    }
 
     /*
     =========================================================
-    UPDATE DISTRIBUTION RECORD
+    UPDATE DISTRIBUTION
     =========================================================
     */
 

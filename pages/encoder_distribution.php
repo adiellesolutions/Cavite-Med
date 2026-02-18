@@ -29,8 +29,12 @@ if (!empty($_SESSION['force_change_password'])) {
     <script defer src="../js/encoder_distribution_fetch.js"></script>
     <script src="../js/encoder_distribution_restore.js"></script>
     <script src="../js/encoder_distribution_update.js"></script>
-
-
+    <script src="../js/encoder_distribution_stats.js"></script>
+    <script src="../js/encoder_distribution_healthcentermodal.js"></script>
+    <script src="../js/encoder_distribution_healthcenterfetch.js"></script>
+    <script src="../js/encoder_distribution_healthcenteraddmodal.js"></script>
+    <script src="../js/encoder_distribution_healthcenterarchive.js"></script>
+    <script src="../js/barcode_scanstate.js"></script>
 
     <style>
         .modal-overlay {
@@ -54,6 +58,16 @@ if (!empty($_SESSION['force_change_password'])) {
             max-height: 90vh;
             overflow: hidden;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        #barcodeInput {
+            position: fixed;
+            top: -1000px !important;
+            left: -100px;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            z-index: -1;
         }
 
     </style>
@@ -158,43 +172,14 @@ if (!empty($_SESSION['force_change_password'])) {
         <div class="max-w-full mx-auto">
             <!-- Statistics Overview -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <!-- Total Distributions -->
-                <div class="card stats-card hover-card">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-text-secondary">Total Distributions</p>
-                            <p class="text-2xl font-semibold text-text-primary mt-1" id="totalDistributions">0</p>
-                        </div>
-                        <div class="w-12 h-12 rounded-lg bg-primary-100 flex items-center justify-center">
-                            <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
                 
-
-                <!-- Distributed -->
-                <div class="card stats-card hover-card">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-text-secondary">Distributed</p>
-                            <p class="text-2xl font-semibold text-text-primary mt-1" id="distributedCount">0</p>
-                        </div>
-                        <div class="w-12 h-12 rounded-lg bg-success-100 flex items-center justify-center">
-                            <svg class="w-6 h-6 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Total Items Distributed -->
                 <div class="card stats-card hover-card">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-text-secondary">Total Items Distributed</p>
-                            <p class="text-2xl font-semibold text-text-primary mt-1" id="totalItemsDistributed">0</p>
+                            <p class="text-sm text-text-secondary">Distributed</p>
+                            <p class="text-2xl font-semibold text-text-primary mt-1" id="Distributed">0</p>
                         </div>
                         <div class="w-12 h-12 rounded-lg bg-secondary-100 flex items-center justify-center">
                             <svg class="w-6 h-6 text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -203,6 +188,58 @@ if (!empty($_SESSION['force_change_password'])) {
                         </div>
                     </div>
                 </div>
+
+                <!-- Pending -->
+                <div class="card stats-card hover-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-text-secondary">Pending</p>
+                            <p class="text-2xl font-semibold text-text-primary mt-1" id="pendingCount">0</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-warning-100 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-warning-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- Cancelled -->
+                <div class="card stats-card hover-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-text-secondary">Cancelled</p>
+                            <p class="text-2xl font-semibold text-text-primary mt-1" id="cancelledCount">0</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-error-100 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-error-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- Returned -->
+                <div class="card stats-card hover-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-text-secondary">Returned</p>
+                            <p class="text-2xl font-semibold text-text-primary mt-1" id="returnedCount">0</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-lg bg-primary-100 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 14l-4-4m0 0l4-4m-4 4h11a4 4 0 110 8h-1"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+
             </div>
 
             <!-- Add Distribution Button -->
@@ -273,12 +310,16 @@ if (!empty($_SESSION['force_change_password'])) {
                                         Medicine <span class="text-error">*</span>
                                     </label>
                                     <select id="medicine_id" name="medicine_id"
-                                        required class="input w-full"
-                                        onchange="updateMedicineDetails()">
+                                        required class="input w-full">
                                         <option value="">Select Medicine</option>
                                     </select>
                                 </div>
 
+                                <input 
+                                    type="text"
+                                    id="barcodeInput"
+                                    class="absolute opacity-0 pointer-events-none"
+                                />
 
                                 <!-- Quantity -->
                                 <div>
@@ -311,16 +352,27 @@ if (!empty($_SESSION['force_change_password'])) {
                             <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-border">
                                 <button type="button"
                                     id="cancelDistributionModal"
-                                    class="btn btn-outline">
+                                    class="btn btn-outline flex-1">
                                     Cancel
                                 </button>
 
                                 <button type="submit"
                                     name="action"
                                     value="create"
-                                    class="btn btn-primary">
+                                    class="btn btn-primary flex-1">
                                     Create Distribution
                                 </button>
+
+                                <button type="button"
+                                        id="barcodeModeBtn"
+                                        class="btn btn-outline btn-sm"
+                                        title="Barcode mode">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 5v14M7 5v14M11 5v14M15 5v14M19 5v14"/>
+                                    </svg>
+                                </button>
+
                             </div>
 
                         </form>
@@ -353,13 +405,6 @@ if (!empty($_SESSION['force_change_password'])) {
                     </div>
                     
                     <div class="flex items-center gap-3 flex-wrap">
-                        <select id="statusFilter" class="input w-40">
-                            <option value="">All Status</option>
-                            <option value="pending">Pending</option>
-                            <option value="distributed">Distributed</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
-
                         <select id="healthCenterFilter" class="input w-48">
                             <option value="">All Health Centers</option>
                             <?php foreach ($healthCenters as $center): ?>
@@ -368,6 +413,15 @@ if (!empty($_SESSION['force_change_password'])) {
                                 </option>
                             <?php endforeach; ?>
                         </select>
+
+                        <select id="statusFilter" class="input w-40">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="distributed">Distributed</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="returned">Returned</option>
+                        </select>
+
                     </div>
                 </div>
 
@@ -468,6 +522,7 @@ if (!empty($_SESSION['force_change_password'])) {
                         <option value="pending">Pending</option>
                         <option value="distributed">Distributed</option>
                         <option value="cancelled">Cancelled</option>
+                        <option value="returned">Returned</option>
                     </select>
                 </div>
 
@@ -527,6 +582,10 @@ if (!empty($_SESSION['force_change_password'])) {
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
+                    <input type="hidden" name="health_center_id" id="hidden_health_center">
+                <input type="hidden" name="medicine_id" id="hidden_medicine">
+                <input type="hidden" name="quantity" id="hidden_quantity">
+
                     <!-- Health Center -->
                     <div>
                         <label class="block text-sm font-medium mb-2">
@@ -571,6 +630,7 @@ if (!empty($_SESSION['force_change_password'])) {
                             <option value="pending">Pending</option>
                             <option value="distributed">Distributed</option>
                             <option value="cancelled">Cancelled</option>
+                            <option value="returned">Returned</option>
                         </select>
                     </div>
 
@@ -605,6 +665,139 @@ if (!empty($_SESSION['force_change_password'])) {
             </form>
 
 
+        </div>
+    </div>
+
+    <!-- Health Center List Modal -->
+    <div id="healthCenterModal" class="modal-overlay hidden">
+        <div class="modal-container max-w-4xl w-full flex flex-col">
+
+            <!-- Header -->
+            <div class="flex items-center justify-between px-4 py-3 border-b border-border">
+                <h2 class="text-base font-semibold text-text-primary">
+                    Health Centers
+                </h2>
+                <button id="closeHealthCenterModal"
+                    class="text-text-tertiary hover:text-text-primary text-lg">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 overflow-auto px-4 py-3">
+                <table class="w-full border border-border rounded text-sm">
+                    <thead class="bg-secondary-50 sticky top-0 z-10">
+                        <tr class="text-xs uppercase text-text-secondary">
+                            <th class="px-3 py-2 text-left">Name</th>
+                            <th class="px-3 py-2 text-left">Type</th>
+                            <th class="px-3 py-2 text-left">Contact</th>
+                            <th class="px-3 py-2 text-left">Phone</th>
+                            <th class="px-3 py-2 text-left">Address</th>
+                            <th class="px-3 py-2 text-left">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="healthCentersTable" class="divide-y divide-border">
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Footer -->
+            <div class="border-t border-border px-4 py-3 flex items-center justify-between">
+
+                <button
+                    class="btn btn-ghost btn-sm"
+                    id="closeHealthCenterModalBottom">
+                    Close
+                </button>
+
+                <button
+                    class="btn btn-primary btn-sm"
+                    id="addNewHealthCenterFromModal">
+                    + Add Health Center
+                </button>
+
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- Add / Edit Health Center Modal -->
+    <div id="addHealthCenterModal" class="modal-overlay">
+        <div class="modal-container max-w-md w-full flex flex-col">
+
+            <!-- Header -->
+            <div class="modal-header flex items-center justify-between px-4 py-3 border-b border-border">
+                <h2 id="healthCenterModalTitle" class="text-base font-semibold text-text-primary">
+                    Add Health Center
+                </h2>
+                <button id="closeAddHealthCenterModal" class="text-lg text-text-secondary">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Form -->
+            <form 
+                id="addHealthCenterForm"
+                class="px-4 py-3 space-y-3"
+                method="post"
+                action="../backend/encoder_distribution_healthcenter_save.php"
+            >
+
+                <input type="hidden" name="center_id" id="editHealthCenterId">
+
+                <div>
+                    <label class="text-xs text-text-secondary">Center Name</label>
+                    <input name="center_name" class="input w-full h-9" required>
+                </div>
+
+                <div>
+                    <label class="text-xs text-text-secondary">Center Type</label>
+                    <select name="center_type" class="input w-full h-9" required>
+                        <option value="">Select Center Type</option>
+                        <option value="rhu">RHU</option>
+                        <option value="barangay_health_center">Barangay Health Center</option>
+                        <option value="hospital">Hospital</option>
+                        <option value="clinic">Clinic</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-xs text-text-secondary">Contact Person</label>
+                    <input name="contact_person" class="input w-full h-9">
+                </div>
+
+                <div>
+                    <label class="text-xs text-text-secondary">Contact Number</label>
+                    <input name="contact_number" class="input w-full h-9">
+                </div>
+
+                <div>
+                    <label class="text-xs text-text-secondary">Address</label>
+                    <textarea name="address" class="input w-full h-20 resize-none"></textarea>
+                </div>
+
+                <!-- Actions -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button
+                        type="button"
+                        class="btn btn-ghost btn-sm"
+                        id="cancelAddHealthCenter"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary btn-sm"
+                    >
+                        Save
+                    </button>
+                </div>
+
+            </form>
         </div>
     </div>
 

@@ -1,7 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-
     loadDistributionDropdowns();
-
 });
 
 function loadDistributionDropdowns() {
@@ -13,17 +11,24 @@ function loadDistributionDropdowns() {
             if (!data.success) return;
 
             const createHealth = document.getElementById('health_center_id');
-            const createMedicine = document.getElementById('medicine_id');
-
             const editHealth = document.getElementById('edit_health_center');
+            const filterHealth = document.getElementById('healthCenterFilter');
+
+            const createMedicine = document.getElementById('medicine_id');
             const editMedicine = document.getElementById('edit_medicine');
 
-            // Reset all dropdowns
+            /* ======================
+               RESET DROPDOWNS
+            ======================= */
+
             if (createHealth)
                 createHealth.innerHTML = '<option value="">Select Health Center</option>';
 
             if (editHealth)
                 editHealth.innerHTML = '<option value="">Select Health Center</option>';
+
+            if (filterHealth)
+                filterHealth.innerHTML = '<option value="">All Health Centers</option>';
 
             if (createMedicine)
                 createMedicine.innerHTML = '<option value="">Select Medicine</option>';
@@ -32,8 +37,9 @@ function loadDistributionDropdowns() {
                 editMedicine.innerHTML = '<option value="">Select Medicine</option>';
 
             /* ======================
-               Populate Health Centers
+               HEALTH CENTERS
             ======================= */
+
             data.health_centers.forEach(center => {
 
                 const option = `
@@ -44,15 +50,20 @@ function loadDistributionDropdowns() {
 
                 if (createHealth) createHealth.innerHTML += option;
                 if (editHealth) editHealth.innerHTML += option;
+                if (filterHealth) filterHealth.innerHTML += option;
             });
 
             /* ======================
-               Populate Medicines
+               MEDICINES
             ======================= */
+
             data.medicines.forEach(med => {
 
                 const option = `
-                    <option value="${med.id}">
+                    <option 
+                        value="${med.id}"
+                        data-barcode="${med.barcode}"
+                    >
                         ${med.medicine_name}
                     </option>
                 `;

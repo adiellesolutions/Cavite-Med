@@ -49,7 +49,7 @@ $conn->query("
     INSERT INTO distribution 
     (health_center_id, medicine_id, quantity, status, remarks, created_by)
     VALUES
-    ($health_center_id, $medicine_id, $quantity, 'distributed', '$remarks', $user_id)
+    ($health_center_id, $medicine_id, $quantity, 'pending', '$remarks', $user_id)
 ");
 
 /* =============================
