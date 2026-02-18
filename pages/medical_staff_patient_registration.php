@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'medical_staff') {
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] || $_SESSION['healthcenter'] !== 'medical_staff') {
     header("Location: system_login_portal.html");
     exit;
 }

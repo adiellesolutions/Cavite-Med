@@ -1,66 +1,77 @@
+document.addEventListener("DOMContentLoaded", function () {
+    loadDistributionDropdowns();
+});
+
 function loadDistributionDropdowns() {
 
-    console.log("Loading dropdowns...");
-
     fetch('../backend/encoder_distribution_fetchdropdowns.php')
-        .then(response => {
-            console.log("Response status:", response.status);
-            console.log("Response ok:", response.ok);
-            return response.text(); // 👈 get raw text first
-        })
-        .then(text => {
-            console.log("Raw response:", text);
+        .then(res => res.json())
+        .then(data => {
 
-            let data;
+            if (!data.success) return;
 
-            try {
-                data = JSON.parse(text);
-                console.log("Parsed JSON:", data);
-            } catch (e) {
-                console.error("JSON parse error:", e);
-                return;
-            }
+            const createHealth = document.getElementById('health_center_id');
+            const editHealth = document.getElementById('edit_health_center');
+            const filterHealth = document.getElementById('healthCenterFilter');
 
-            if (!data.success) {
-                console.error("Backend returned success = false");
-                return;
-            }
+            const createMedicine = document.getElementById('medicine_id');
+            const editMedicine = document.getElementById('edit_medicine');
 
-            const healthSelect = document.getElementById('health_center_id');
-            const medicineSelect = document.getElementById('medicine_id');
+            /* ======================
+               RESET DROPDOWNS
+            ======================= */
 
-            if (!healthSelect || !medicineSelect) {
-                console.error("Dropdown elements not found in DOM");
-                return;
-            }
+            if (createHealth)
+                createHealth.innerHTML = '<option value="">Select Health Center</option>';
 
-            // Reset
-            healthSelect.innerHTML = '<option value="">Select Health Center</option>';
-            medicineSelect.innerHTML = '<option value="">Select Medicine</option>';
+            if (editHealth)
+                editHealth.innerHTML = '<option value="">Select Health Center</option>';
 
-            console.log("Populating health centers...");
+            if (filterHealth)
+                filterHealth.innerHTML = '<option value="">All Health Centers</option>';
+
+            if (createMedicine)
+                createMedicine.innerHTML = '<option value="">Select Medicine</option>';
+
+            if (editMedicine)
+                editMedicine.innerHTML = '<option value="">Select Medicine</option>';
+
+            /* ======================
+               HEALTH CENTERS
+            ======================= */
+
             data.health_centers.forEach(center => {
-                healthSelect.innerHTML += `
+
+                const option = `
                     <option value="${center.id}">
                         ${center.center_name}
                     </option>
                 `;
+
+                if (createHealth) createHealth.innerHTML += option;
+                if (editHealth) editHealth.innerHTML += option;
+                if (filterHealth) filterHealth.innerHTML += option;
             });
 
-            console.log("Populating medicines...");
+            /* ======================
+               MEDICINES
+            ======================= */
+
             data.medicines.forEach(med => {
-                medicineSelect.innerHTML += `
-                    <option value="${med.id}"
-                        data-stock="${med.current_stock}"
-                        data-unit="${med.unit_of_measure}">
-                        ${med.medicine_name} - Stock: ${med.current_stock} ${med.unit_of_measure}
+
+                const option = `
+                    <option 
+                        value="${med.id}"
+                        data-barcode="${med.barcode}"
+                    >
+                        ${med.medicine_name}
                     </option>
                 `;
+
+                if (createMedicine) createMedicine.innerHTML += option;
+                if (editMedicine) editMedicine.innerHTML += option;
             });
 
-            console.log("Dropdown population complete.");
         })
-        .catch(error => {
-            console.error("Fetch error:", error);
-        });
+        .catch(err => console.error("Dropdown load error:", err));
 }

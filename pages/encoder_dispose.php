@@ -429,14 +429,14 @@ if (!empty($_SESSION['force_change_password'])) {
                             <button type="button" id="cancelDisposal" class="btn btn-outline flex-1">Cancel</button>
                             <button type="submit" class="btn btn-primary flex-1">Save Disposal Record</button>
                             <button type="button"
-                                id="barcodeModeBtn"
-                                class="btn btn-outline btn-sm"
-                                title="Barcode mode">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M3 5v14M7 5v14M11 5v14M15 5v14M19 5v14"/>
-                            </svg>
-                        </button>
+                                    id="barcodeModeBtn"
+                                    class="btn btn-outline btn-sm"
+                                    title="Barcode mode">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 5v14M7 5v14M11 5v14M15 5v14M19 5v14"/>
+                                </svg>
+                            </button>
 
                         </div>
                     </form>

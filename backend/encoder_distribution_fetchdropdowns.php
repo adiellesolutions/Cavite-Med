@@ -12,6 +12,7 @@ $healthCenters = [];
 $hcQuery = $conn->query("
     SELECT id, center_name
     FROM health_centers
+    WHERE is_archived = 0
     ORDER BY center_name ASC
 ");
 
@@ -27,7 +28,7 @@ if ($hcQuery) {
 ========================= */
 $medicines = [];
 $medQuery = $conn->query("
-    SELECT id, medicine_name, current_stock, unit_of_measure
+    SELECT id, medicine_name, barcode
     FROM medicine
     WHERE current_stock > 0
       AND is_archived = 0

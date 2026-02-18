@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const barcodeBtn = document.getElementById("barcodeModeBtn");
     const barcodeInput = document.getElementById("barcodeInput");
-    const medicineSelect = document.getElementById("medicineSelect");
+    const medicineSelect = document.getElementById("medicine_id");
 
     if (!barcodeBtn || !barcodeInput || !medicineSelect) return;
 

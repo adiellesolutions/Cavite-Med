@@ -112,7 +112,7 @@ VALUES
 ('District Hospital', 'hospital', 'San Pablo City', 'Admin Office', '09178883456');
 
 
-INSERT INTO distribute
+INSERT INTO distribution
 (health_center_id, medicine_id, quantity, status, remarks, created_by)
 VALUES
 (2, 1, 300, 'distributed', 'Routine barangay supply', 1),

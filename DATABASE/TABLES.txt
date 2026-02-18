@@ -105,6 +105,7 @@ CREATE TABLE health_centers (
     address TEXT,
     contact_person VARCHAR(255),
     contact_number VARCHAR(100),
+    is_archived TINYINT(1) DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -114,7 +115,7 @@ CREATE TABLE distribution (
     health_center_id INT NOT NULL,
     medicine_id INT NOT NULL,
     quantity INT NOT NULL,
-    status ENUM('pending','distributed','cancelled') DEFAULT 'pending',
+    status ENUM('pending','distributed','cancelled','returned') DEFAULT 'pending',
     remarks TEXT,
     created_by INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
