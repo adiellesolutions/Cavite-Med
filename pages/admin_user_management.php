@@ -1,11 +1,6 @@
 <?php
 
-session_start();
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header("Location: system_login_portal.html");
-    exit;
-}
 
 require "../backend/admin_UM_fetch.php";
 require "../backend/admin_UM_pagination.php";

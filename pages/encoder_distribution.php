@@ -23,8 +23,13 @@ if (!empty($_SESSION['force_change_password'])) {
     
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script defer src="../js/encoder_distribute_modal.js"></script>
+    <script defer src="../js/encoder_distribution_modal.js"></script>
     <script defer src="../js/encoder_distribution_fetchdropdowns.js"></script>
+    <script defer src="../js/encoder_distribution_submit.js"></script>
+    <script defer src="../js/encoder_distribution_fetch.js"></script>
+    <script src="../js/encoder_distribution_restore.js"></script>
+    <script src="../js/encoder_distribution_update.js"></script>
+
 
 
     <style>
@@ -247,7 +252,7 @@ if (!empty($_SESSION['force_change_password'])) {
                     <!-- Body -->
                     <div class="flex-1 overflow-auto px-6 py-6">
 
-                        <form id="distributionForm" method="POST" action="../backend/process_distribution.php">
+                        <form id="distributionForm" method="POST" action="../backend/encoder_distribution_add.php">
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
@@ -374,34 +379,9 @@ if (!empty($_SESSION['force_change_password'])) {
 
             <!-- Distributions Table -->
             <div class="card">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-lg font-semibold text-text-primary">Distribution Records</h3>
-                    <span class="text-sm text-text-secondary" id="distributionsCount">0 records</span>
-                </div>
-                
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead>
-                            <tr class="text-left text-sm text-text-secondary border-b border-border">
-                                <th class="pb-3 font-medium">ID</th>
-                                <th class="pb-3 font-medium">Health Center</th>
-                                <th class="pb-3 font-medium">Medicine</th>
-                                <th class="pb-3 font-medium">Quantity</th>
-                                <th class="pb-3 font-medium">Status</th>
-                                <th class="pb-3 font-medium">Remarks</th>
-                                <th class="pb-3 font-medium">Created By</th>
-                                <th class="pb-3 font-medium">Date</th>
-                                <th class="pb-3 font-medium">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="distributionsTable">
-                            <!-- Distributions data will be populated here -->
-                        </tbody>
-                    </table>
-                </div>
 
                 <!-- Pagination -->
-                <div class="flex items-center justify-between mt-6 pt-6 border-t border-border no-print">
+                <div class="flex items-center justify-between mt-6 pt-6 mb-6 pb-6 border-t border-border no-print">
                     <div class="text-sm text-text-secondary">
                         Showing <span id="startIndex">1</span> to <span id="endIndex">10</span> of <span id="totalItems">0</span> entries
                     </div>
@@ -421,6 +401,33 @@ if (!empty($_SESSION['force_change_password'])) {
                         </button>
                     </div>
                 </div>
+
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-semibold text-text-primary">Distribution Records</h3>
+                    <span class="text-sm text-text-secondary" id="distributionsCount">0 records</span>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm table-auto">
+                        <thead>
+                            <tr class="text-left text-sm text-text-secondary border-b border-border">
+                                <th class="pb-3 font-medium">ID</th>
+                                <th class="pb-3 font-medium">Health Center</th>
+                                <th class="pb-3 font-medium">Medicine</th>
+                                <th class="pb-3 font-medium">Quantity</th>
+                                <th class="pb-3 font-medium">Status</th>
+                                <th class="pb-3 font-medium">Remarks</th>
+                                <th class="pb-3 font-medium">Created By</th>
+                                <th class="pb-3 font-medium">Date</th>
+                                <th class="pb-3 font-medium">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="distributionsTable">
+                            <!-- Distributions data will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+
             </div>
 
             <!-- No Results Message -->
@@ -504,6 +511,104 @@ if (!empty($_SESSION['force_change_password'])) {
             </form>
         </div>
     </div>
+
+    <!-- Edit Distribution Modal -->
+    <div id="editDistributionModal" class="modal-overlay hidden">
+        <div class="modal-container max-w-2xl w-full">
+
+            <div class="flex items-center justify-between px-6 py-4 border-b">
+                <h3 class="text-lg font-semibold">Edit Distribution</h3>
+                <button id="closeEditModal">✕</button>
+            </div>
+
+            <form id="editDistributionForm" class="p-6">
+
+                <input type="hidden" name="distribution_id" id="edit_distribution_id">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    <!-- Health Center -->
+                    <div>
+                        <label class="block text-sm font-medium mb-2">
+                            Health Center
+                        </label>
+                        <select name="health_center_id"
+                                id="edit_health_center"
+                                class="input w-full">
+                        </select>
+                    </div>
+
+                    <!-- Medicine -->
+                    <div>
+                        <label class="block text-sm font-medium mb-2">
+                            Medicine
+                        </label>
+                        <select name="medicine_id"
+                                id="edit_medicine"
+                                class="input w-full">
+                        </select>
+                    </div>
+
+                    <!-- Quantity -->
+                    <div>
+                        <label class="block text-sm font-medium mb-2">
+                            Quantity
+                        </label>
+                        <input type="number"
+                            name="quantity"
+                            id="edit_quantity"
+                            class="input w-full">
+                    </div>
+
+                    <!-- Status -->
+                    <div>
+                        <label class="block text-sm font-medium mb-2">
+                            Status
+                        </label>
+                        <select name="status"
+                                id="edit_status"
+                                class="input w-full">
+                            <option value="pending">Pending</option>
+                            <option value="distributed">Distributed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+
+                    <!-- Remarks (Full Width) -->
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">
+                            Remarks
+                        </label>
+                        <textarea name="remarks"
+                                id="edit_remarks"
+                                rows="3"
+                                class="input w-full">
+                        </textarea>
+                    </div>
+
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex justify-end gap-3 mt-6 pt-6 border-t">
+                    <button type="button"
+                            id="cancelEditModal"
+                            class="btn btn-outline">
+                        Cancel
+                    </button>
+
+                    <button type="submit"
+                            class="btn btn-primary">
+                        Save Changes
+                    </button>
+                </div>
+
+            </form>
+
+
+        </div>
+    </div>
+
+
 
     <!-- Footer -->
     <footer class="bg-surface border-t border-border py-6 px-6 mt-auto">
