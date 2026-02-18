@@ -28,6 +28,14 @@ function toNull($v) {
   return $v === "" ? null : $v;
 }
 
+/* ✅ ADDED: created_by for emergency FK */
+$created_by = (int)($_SESSION['user_id'] ?? 0);
+if ($created_by <= 0) {
+  http_response_code(401);
+  echo json_encode(["ok" => false, "error" => "Invalid session user_id"]);
+  exit;
+}
+
 /* =========================
    VALIDATE PATIENT
 ========================= */
@@ -90,7 +98,7 @@ $subscriber_name = toNull(post("subscriber_name"));
 $relationship = post("relationship") ?? "self";
 $verified_status = post("verified_status") ?? "unverified";
 
-/* EMERGENCY */
+/* EMERGENCY (your original single-contact vars - KEEP) */
 $ec_full_name = toNull(post("ec_full_name"));
 $ec_relationship = toNull(post("ec_relationship"));
 $ec_phone = toNull(post("ec_phone"));
@@ -117,6 +125,8 @@ try {
     LIMIT 1
   ");
 
+  if (!$stmt) throw new Exception("Prepare failed: " . $conn->error);
+
   $stmt->bind_param(
     "sssssssssssssssssi",
     $first_name, $middle_name, $last_name, $preferred_name,
@@ -140,7 +150,7 @@ try {
 
   if ($hasMedical) {
 
-    $stmt = $conn->prepare("SELECT patient_id FROM patient_medical_profile WHERE patient_id = ?");
+    $stmt = $conn->prepare("SELECT patient_id FROM patient_medical_profile WHERE patient_id = ? LIMIT 1");
     $stmt->bind_param("i", $patient_id);
     $stmt->execute();
     $exists = $stmt->get_result()->fetch_assoc();
@@ -168,6 +178,7 @@ try {
 
   /* =========================
      3️⃣ INSURANCE (CONDITIONAL)
+     ✅ FIX: avoid NOT NULL policy_number errors
   ========================= */
   $hasInsurance =
     $provider_name !== null ||
@@ -175,6 +186,11 @@ try {
     $group_number !== null ||
     $effective_date !== null ||
     $subscriber_name !== null;
+
+  // ✅ If may insurance info pero policy_number blank and DB requires NOT NULL → use empty string instead of NULL
+  if ($hasInsurance && $policy_number === null) {
+    $policy_number = ""; // important for NOT NULL columns
+  }
 
   if ($hasInsurance) {
 
@@ -227,131 +243,153 @@ try {
 
   /* =========================
    4️⃣ EMERGENCY (OPTIONAL 2 CONTACTS)
+   ✅ FIX: supports BOTH ec_* and ec1_/ec2_ inputs
+   ✅ FIX: created_by FK on insert
 ========================= */
 
-// Contact 1
-$ec1_full_name = toNull(post("ec1_full_name"));
-$ec1_relationship = toNull(post("ec1_relationship"));
-$ec1_phone = toNull(post("ec1_phone"));
-$ec1_email = toNull(post("ec1_email"));
-$ec1_address = toNull(post("ec1_address"));
-$ec1_is_primary = isset($_POST["ec1_is_primary"]) ? 1 : 0;
+  // Contact 1
+  $ec1_full_name = toNull(post("ec1_full_name"));
+  $ec1_relationship = toNull(post("ec1_relationship"));
+  $ec1_phone = toNull(post("ec1_phone"));
+  $ec1_email = toNull(post("ec1_email"));
+  $ec1_address = toNull(post("ec1_address"));
+  $ec1_is_primary = isset($_POST["ec1_is_primary"]) ? 1 : 0;
 
-// Contact 2
-$ec2_full_name = toNull(post("ec2_full_name"));
-$ec2_relationship = toNull(post("ec2_relationship"));
-$ec2_phone = toNull(post("ec2_phone"));
-$ec2_email = toNull(post("ec2_email"));
-$ec2_address = toNull(post("ec2_address"));
-$ec2_is_primary = isset($_POST["ec2_is_primary"]) ? 1 : 0;
+  // Contact 2
+  $ec2_full_name = toNull(post("ec2_full_name"));
+  $ec2_relationship = toNull(post("ec2_relationship"));
+  $ec2_phone = toNull(post("ec2_phone"));
+  $ec2_email = toNull(post("ec2_email"));
+  $ec2_address = toNull(post("ec2_address"));
+  $ec2_is_primary = isset($_POST["ec2_is_primary"]) ? 1 : 0;
 
-// Allow only one primary
-if ($ec1_is_primary && $ec2_is_primary) {
-  $ec2_is_primary = 0;
-}
+  /* ✅ ADDED: if your modal sends only ec_* (single contact),
+     map it to ec1_* so this emergency block will still save */
+  if (
+    $ec1_full_name === null && $ec1_phone === null && $ec1_relationship === null &&
+    $ec1_email === null && $ec1_address === null
+  ) {
+    // use ec_* as contact 1
+    $ec1_full_name = $ec_full_name;
+    $ec1_relationship = $ec_relationship;
+    $ec1_phone = $ec_phone;
+    $ec1_email = $ec_email;
+    $ec1_address = $ec_address;
+    $ec1_is_primary = $ec_is_primary;
+  }
 
-// 🔥 Reset existing primary in DB
-if ($ec1_is_primary || $ec2_is_primary) {
+  // Allow only one primary
+  if ($ec1_is_primary && $ec2_is_primary) {
+    $ec2_is_primary = 0;
+  }
+
+  // 🔥 Reset existing primary in DB
+  if ($ec1_is_primary || $ec2_is_primary) {
+    $stmt = $conn->prepare("
+      UPDATE patient_emergency_contacts
+      SET is_primary = 0
+      WHERE patient_id = ?
+    ");
+    $stmt->bind_param("i", $patient_id);
+    $stmt->execute();
+    $stmt->close();
+  }
+
+  // Get existing contacts (max 2)
   $stmt = $conn->prepare("
-    UPDATE patient_emergency_contacts
-    SET is_primary = 0
+    SELECT contact_id
+    FROM patient_emergency_contacts
     WHERE patient_id = ?
+    ORDER BY contact_id ASC
+    LIMIT 2
   ");
   $stmt->bind_param("i", $patient_id);
   $stmt->execute();
+  $result = $stmt->get_result();
+  $existing = $result->fetch_all(MYSQLI_ASSOC);
   $stmt->close();
-}
 
+  // Helper to insert/update
+  function saveEmergency($conn, $patient_id, $created_by, $data, $contact_id = null) {
 
-// Get existing contacts (max 2)
-$stmt = $conn->prepare("
-  SELECT contact_id
-  FROM patient_emergency_contacts
-  WHERE patient_id = ?
-  ORDER BY contact_id ASC
-  LIMIT 2
-");
-$stmt->bind_param("i", $patient_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$existing = $result->fetch_all(MYSQLI_ASSOC);
-$stmt->close();
+    // If completely empty → skip (optional)
+    $allEmpty =
+      $data['full_name'] === null &&
+      $data['phone'] === null &&
+      $data['relationship'] === null &&
+      $data['email'] === null &&
+      $data['address'] === null;
 
-// Helper to insert/update
-function saveEmergency($conn, $patient_id, $data, $contact_id = null) {
+    if ($allEmpty) return;
 
-  // If completely empty → skip
-  if (
-    $data['full_name'] === null &&
-    $data['phone'] === null &&
-    $data['relationship'] === null &&
-    $data['email'] === null &&
-    $data['address'] === null
-  ) {
-    return;
+    // ✅ ADDED: if may laman but missing full_name, stop with clear error (DB requires NOT NULL)
+    if ($data['full_name'] === null) {
+      throw new Exception("Emergency contact full name is required if you fill any emergency contact fields.");
+    }
+
+    if ($contact_id) {
+      $stmt = $conn->prepare("
+        UPDATE patient_emergency_contacts
+        SET full_name=?, relationship=?, phone=?, email=?, address=?, is_primary=?
+        WHERE contact_id=?
+      ");
+
+      $stmt->bind_param(
+        "sssssii",
+        $data['full_name'],
+        $data['relationship'],
+        $data['phone'],
+        $data['email'],
+        $data['address'],
+        $data['is_primary'],
+        $contact_id
+      );
+    } else {
+      // ✅ ADDED: created_by to satisfy FK constraint
+      $stmt = $conn->prepare("
+        INSERT INTO patient_emergency_contacts
+        (patient_id, full_name, relationship, phone, email, address, is_primary, created_by)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ");
+
+      $stmt->bind_param(
+        "isssssii",
+        $patient_id,
+        $data['full_name'],
+        $data['relationship'],
+        $data['phone'],
+        $data['email'],
+        $data['address'],
+        $data['is_primary'],
+        $created_by
+      );
+    }
+
+    $stmt->execute();
+    $stmt->close();
   }
 
-  if ($contact_id) {
-    $stmt = $conn->prepare("
-      UPDATE patient_emergency_contacts
-      SET full_name=?, relationship=?, phone=?, email=?, address=?, is_primary=?
-      WHERE contact_id=?
-    ");
+  // Save Contact 1
+  saveEmergency($conn, $patient_id, $created_by, [
+    'full_name' => $ec1_full_name,
+    'relationship' => $ec1_relationship,
+    'phone' => $ec1_phone,
+    'email' => $ec1_email,
+    'address' => $ec1_address,
+    'is_primary' => $ec1_is_primary
+  ], $existing[0]['contact_id'] ?? null);
 
-    $stmt->bind_param(
-      "sssssii",
-      $data['full_name'],
-      $data['relationship'],
-      $data['phone'],
-      $data['email'],
-      $data['address'],
-      $data['is_primary'],
-      $contact_id
-    );
-  } else {
-    $stmt = $conn->prepare("
-      INSERT INTO patient_emergency_contacts
-      (patient_id, full_name, relationship, phone, email, address, is_primary)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    ");
+  // Save Contact 2
+  saveEmergency($conn, $patient_id, $created_by, [
+    'full_name' => $ec2_full_name,
+    'relationship' => $ec2_relationship,
+    'phone' => $ec2_phone,
+    'email' => $ec2_email,
+    'address' => $ec2_address,
+    'is_primary' => $ec2_is_primary
+  ], $existing[1]['contact_id'] ?? null);
 
-    $stmt->bind_param(
-      "isssssi",
-      $patient_id,
-      $data['full_name'],
-      $data['relationship'],
-      $data['phone'],
-      $data['email'],
-      $data['address'],
-      $data['is_primary']
-    );
-  }
-
-  $stmt->execute();
-  $stmt->close();
-}
-
-// Save Contact 1
-saveEmergency($conn, $patient_id, [
-  'full_name' => $ec1_full_name,
-  'relationship' => $ec1_relationship,
-  'phone' => $ec1_phone,
-  'email' => $ec1_email,
-  'address' => $ec1_address,
-  'is_primary' => $ec1_is_primary
-], $existing[0]['contact_id'] ?? null);
-
-// Save Contact 2
-saveEmergency($conn, $patient_id, [
-  'full_name' => $ec2_full_name,
-  'relationship' => $ec2_relationship,
-  'phone' => $ec2_phone,
-  'email' => $ec2_email,
-  'address' => $ec2_address,
-  'is_primary' => $ec2_is_primary
-], $existing[1]['contact_id'] ?? null);
-$conn->commit();
-
+  $conn->commit();
 
   echo json_encode(["ok" => true, "patient_id" => $patient_id]);
 

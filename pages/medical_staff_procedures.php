@@ -197,7 +197,7 @@ if (!empty($_SESSION['force_change_password'])) {
 
                         <!-- Profile Picture -->
                         <img
-                            src="/HIMS/<?php echo $_SESSION['profile_picture'] ?: 'uploads/profile/default.png'; ?>"
+                            src="/CAVITE-MED/<?php echo $_SESSION['profile_picture'] ?: 'uploads/profile/default.png'; ?>"
                             alt="User profile picture"
                             class="w-10 h-10 rounded-full object-cover border-2 border-primary"
                             onerror="this.src='/HIMS/uploads/profile/default.png'; this.onerror=null;">
@@ -285,55 +285,90 @@ if (!empty($_SESSION['force_change_password'])) {
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                 <!-- Left Column: Active Patients & Queue -->
                 <div class="lg:col-span-1">
-                    <!-- Active Session -->
-                    <div class="card mb-6">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold text-text-primary">Active Patient</h3>
-                            <button type="button" id="startNewSessionBtn" class="btn btn-success btn-sm">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                </svg>
-                                <span>New Patient</span>
-                            </button>
-                        </div>
+                   <!-- Active Session -->
+<div class="card mb-6">
+    <div class="flex items-center justify-between mb-4">
+        <div>
+            <h3 class="text-lg font-semibold text-text-primary">Active Patient</h3>
+            <p class="text-xs text-text-secondary">
+                today’s visit queue:
+                <span id="queueCount" class="font-semibold text-text-primary">0</span>
+            </p>
+        </div>
 
-                        <div id="activePatientCard" class="bg-secondary-50 p-4 rounded-base mb-4">
-                            <div class="flex items-center gap-3 mb-3">
-                                <div class="patient-avatar bg-primary-100 text-primary-700">
-                                    JS
-                                </div>
-                                <div class="flex-1">
-                                    <p class="font-medium text-text-primary">John Smith</p>
-                                    <p class="text-xs text-text-secondary">New Patient • Registration Required</p>
-                                </div>
-                                <span class="badge badge-waiting">Waiting</span>
-                            </div>
-                            
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <p class="text-xs text-text-secondary">Age</p>
-                                    <p class="text-sm font-medium text-text-primary">42</p>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-text-secondary">Gender</p>
-                                    <p class="text-sm font-medium text-text-primary">Male</p>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-text-secondary">Arrival Time</p>
-                                    <p class="text-sm font-medium text-text-primary">09:30 AM</p>
-                                </div>
-                            </div>
-                        </div>
+        <button type="button" id="startNewSessionBtn" class="btn btn-success btn-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            <span>new patient</span>
+        </button>
+    </div>
 
-                        <div class="flex gap-2">
-                            <button type="button" id="skipPatientBtn" class="btn btn-outline flex-1">
-                                Skip
-                            </button>
-                            <button type="button" id="nextStepBtn" class="btn btn-primary flex-1">
-                                Next Step →
-                            </button>
-                        </div>
-                    </div>
+    <!-- ACTIVE PATIENT CARD (DYNAMIC) -->
+    <div id="activePatientCard" class="bg-secondary-50 p-4 rounded-base mb-4 border border-border">
+        <div class="flex items-center gap-3 mb-3">
+            <div id="activePatientAvatar" class="patient-avatar bg-secondary-200 text-text-secondary">
+                --
+            </div>
+
+            <div class="flex-1">
+                <p id="activePatientName" class="font-medium text-text-primary">no active patient</p>
+                <p id="activePatientStatusText" class="text-xs text-text-secondary">
+                    select a patient from the queue
+                </p>
+            </div>
+
+            <span id="activePatientBadge" class="badge badge-waiting hidden">waiting</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <p class="text-xs text-text-secondary">age</p>
+                <p id="activePatientAge" class="text-sm font-medium text-text-primary">--</p>
+            </div>
+
+            <div>
+                <p class="text-xs text-text-secondary">gender</p>
+                <p id="activePatientGender" class="text-sm font-medium text-text-primary">--</p>
+            </div>
+
+            <div>
+                <p class="text-xs text-text-secondary">arrival time</p>
+                <p id="activePatientArrival" class="text-sm font-medium text-text-primary">--</p>
+            </div>
+
+            <div>
+                <p class="text-xs text-text-secondary">visit type</p>
+                <p id="activePatientVisitType" class="text-sm font-medium text-text-primary">--</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="flex gap-2 mb-4">
+        <button type="button" id="skipPatientBtn" class="btn btn-outline flex-1" disabled>
+            skip
+        </button>
+        <button type="button" id="nextStepBtn" class="btn btn-primary flex-1" disabled>
+            next step →
+        </button>
+    </div>
+
+    <!-- QUEUE LIST (DYNAMIC POPULATE) -->
+    <div>
+        <h4 class="text-sm font-semibold text-text-primary mb-2">queue</h4>
+
+        <!-- JS will populate this -->
+        <div id="patientQueue" class="space-y-2">
+            <div class="bg-secondary-50 rounded-base p-4 border border-border">
+                <p class="text-sm text-text-secondary text-center">
+                    no patients in queue
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
 
                 </div>
 
@@ -344,67 +379,7 @@ if (!empty($_SESSION['force_change_password'])) {
                         <h3 class="text-lg font-semibold text-text-primary mb-4">Patient Workflow</h3>
                         
                         <div class="space-y-4">
-                            <!-- Step 1: Registration -->
-                            <div class="workflow-step active p-4 rounded-base border border-border">
-                                <div class="flex items-center justify-between mb-3">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-semibold">
-                                            1
-                                        </div>
-                                        <h4 class="font-semibold text-text-primary">Patient Registration</h4>
-                                    </div>
-                                    <span class="badge badge-in-progress">In Progress</span>
-                                </div>
-                                
-                                <div id="registrationForm" class="space-y-4">
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-text-primary mb-2">
-                                                First Name *
-                                            </label>
-                                            <input type="text" id="firstName" class="vital-sign-input" placeholder="Enter first name" value="John">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-text-primary mb-2">
-                                                Last Name *
-                                            </label>
-                                            <input type="text" id="lastName" class="vital-sign-input" placeholder="Enter last name" value="Smith">
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-text-primary mb-2">
-                                                Age *
-                                            </label>
-                                            <input type="number" id="age" class="vital-sign-input" placeholder="Age" value="42">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-text-primary mb-2">
-                                                Gender *
-                                            </label>
-                                            <select id="gender" class="vital-sign-input">
-                                                <option value="male" selected>Male</option>
-                                                <option value="female">Female</option>
-                                                <option value="other">Other</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    
-                                    <div>
-                                        <label class="block text-sm font-medium text-text-primary mb-2">
-                                            Reason for Visit *
-                                        </label>
-                                        <textarea id="visitReason" class="vital-sign-input" rows="2" placeholder="Describe reason for visit">Persistent headache and fever for 3 days</textarea>
-                                    </div>
-                                    
-                                    <div class="flex gap-3 pt-4 border-t border-border">
-                                        <button type="button" id="saveRegistrationBtn" class="btn btn-primary">
-                                            Save Registration
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+                            
                             
                             <!-- Step 2: Vital Signs -->
                             <div class="workflow-step p-4 rounded-base border border-border">
@@ -550,84 +525,104 @@ if (!empty($_SESSION['force_change_password'])) {
            
         </div>
     </main>
-
-    <!-- New Patient Modal -->
-    <div id="newPatientModal" class="hidden fixed inset-0 modal-backdrop z-modal flex items-center justify-center p-4">
-        <div class="card max-w-md w-full fade-in max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-semibold text-text-primary">New Patient Registration</h3>
-                <button type="button" id="closeNewPatientModal" class="text-text-tertiary hover:text-text-primary transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-
-            <div class="space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-text-primary mb-2">
-                            First Name *
-                        </label>
-                        <input type="text" id="newFirstName" class="vital-sign-input" placeholder="First name">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-text-primary mb-2">
-                            Last Name *
-                        </label>
-                        <input type="text" id="newLastName" class="vital-sign-input" placeholder="Last name">
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-text-primary mb-2">
-                            Age *
-                        </label>
-                        <input type="number" id="newAge" class="vital-sign-input" placeholder="Age">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-text-primary mb-2">
-                            Gender *
-                        </label>
-                        <select id="newGender" class="vital-sign-input">
-                            <option value="">Select gender</option>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-text-primary mb-2">
-                        Reason for Visit *
-                    </label>
-                    <textarea id="newVisitReason" class="vital-sign-input" rows="2" placeholder="Brief description"></textarea>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-text-primary mb-2">
-                        Initial Priority Assessment *
-                    </label>
-                    <select id="newPriority" class="vital-sign-input">
-                        <option value="low">Low - Non-urgent</option>
-                        <option value="medium" selected>Medium - Semi-urgent</option>
-                        <option value="high">High - Urgent</option>
-                    </select>
-                </div>
-                
-                <div class="flex gap-3 pt-4 border-t border-border">
-                    <button type="button" id="cancelNewPatientBtn" class="btn btn-outline flex-1">
-                        Cancel
-                    </button>
-                    <button type="button" id="addToQueueBtn" class="btn btn-primary flex-1">
-                        Add to Queue
-                    </button>
-                </div>
-            </div>
-        </div>
+<!-- New Visit Modal (Add to Queue) -->
+<div id="newVisitModal" class="hidden fixed inset-0 modal-backdrop z-modal flex items-center justify-center p-4">
+  <div class="card max-w-md w-full fade-in max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-xl font-semibold text-text-primary">New Visit / Add to Queue</h3>
+      <button type="button" id="closeNewVisitModal" class="text-text-tertiary hover:text-text-primary transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
     </div>
+
+    <div class="space-y-4">
+<!-- Select Existing Patient -->
+<div>
+  <label class="block text-sm font-medium text-text-primary mb-2">
+    Select Patient *
+  </label>
+
+  <!-- Search Input -->
+  <div class="flex gap-2">
+    <input 
+      type="text" 
+      id="visitPatientSearch" 
+      class="vital-sign-input w-full"
+      placeholder="Search patient name / MRN..."
+      autocomplete="off"
+    />
+  </div>
+
+  <!-- Hidden field to store REAL patient_id -->
+  <input type="hidden" id="visitPatientId" value="">
+
+  <!-- Patient search results dropdown -->
+  <select 
+    id="patientList" 
+    class="vital-sign-input mt-2 w-full"
+    size="5"
+    style="display: none;">
+  </select>
+
+  <!-- Display selected patient -->
+  <p class="text-sm text-text-secondary mt-2">
+    Selected:
+    <span id="visitSelectedPatientName" class="font-medium text-text-primary">
+      None
+    </span>
+  </p>
+</div>
+
+
+
+      <!-- Visit Type -->
+      <div>
+        <label class="block text-sm font-medium text-text-primary mb-2">
+          Visit Type *
+        </label>
+        <select id="visitType" class="vital-sign-input">
+          <option value="" selected disabled>Select visit type</option>
+          <option value="consultation">Consultation</option>
+          <option value="follow_up">Follow-up</option>
+          <option value="check_up">Check-up</option>
+          <option value="emergency">Emergency</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-text-primary mb-2">
+          Reason for Visit / Chief Complaint *
+        </label>
+        <textarea id="visitReason" class="vital-sign-input" rows="2" placeholder="Brief description..."></textarea>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-text-primary mb-2">
+          Priority Assessment *
+        </label>
+        <select id="visitPriority" class="vital-sign-input">
+          <option value="low">Low - Non-urgent</option>
+          <option value="medium" selected>Medium - Semi-urgent</option>
+          <option value="high">High - Urgent</option>
+        </select>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex gap-3 pt-4 border-t border-border">
+        <button type="button" id="cancelNewVisitBtn" class="btn btn-outline flex-1">
+          Cancel
+        </button>
+        <button type="button" id="addVisitToQueueBtn" class="btn btn-primary flex-1">
+          Add to Queue
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
         <!-- Footer -->
     <footer class="bg-surface border-t border-border py-6 px-6 mt-auto">
@@ -645,583 +640,10 @@ if (!empty($_SESSION['force_change_password'])) {
         </div>
     </footer>
 
-    <script>
-        // Live Time Update
-        function updateCurrentTime() {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                hour12: true 
-            });
-            document.getElementById('currentTime').textContent = timeString;
-            document.getElementById('lastUpdateTime').textContent = timeString;
-        }
-        
-        // Update time immediately and then every minute
-        updateCurrentTime();
-        setInterval(updateCurrentTime, 60000);
+   
 
-        // Workflow State Management
-        let currentStep = 1;
-        let activePatientId = 1;
-        let patients = {
-            1: {
-                id: 1,
-                firstName: 'John',
-                lastName: 'Smith',
-                age: 42,
-                gender: 'male',
-                priority: 'medium',
-                visitReason: 'Persistent headache and fever for 3 days',
-                vitals: {},
-                status: 'registration',
-                arrivalTime: '09:30',
-                initials: 'JS'
-            },
-            2: {
-                id: 2,
-                firstName: 'Maria',
-                lastName: 'Johnson',
-                age: 35,
-                gender: 'female',
-                priority: 'high',
-                visitReason: 'Chest pain and shortness of breath',
-                vitals: {
-                    bloodPressure: '150/95',
-                    heartRate: '112',
-                    temperature: '101.2',
-                    spo2: '92',
-                    respiratoryRate: '24',
-                },
-                status: 'vitals',
-                arrivalTime: '09:15',
-                initials: 'MJ'
-            },
-            3: {
-                id: 3,
-                firstName: 'Robert',
-                lastName: 'Chen',
-                age: 58,
-                gender: 'male',
-                priority: 'low',
-                visitReason: 'Routine check-up',
-                vitals: {
-                    bloodPressure: '118/76',
-                    heartRate: '72',
-                    temperature: '98.6',
-                    spo2: '98',
-                    respiratoryRate: '16',
-                },
-                status: 'queue',
-                arrivalTime: '09:00',
-                initials: 'RC'
-            }
-        };
+<script src="../js/medical_staff_new_visit_modal.js"></script>
+<script src="../js/medical_staff_visit_queue.js"></script>
 
-        // Update Workflow Progress
-        function updateWorkflowProgress() {
-            const progressBar = document.getElementById('workflowProgress');
-            const stepText = document.getElementById('workflowStepText');
-            
-            progressBar.style.width = `${(currentStep / 2) * 100}%`;
-            stepText.textContent = `Step ${currentStep} of 2`;
-            
-            // Update workflow step UI
-            const steps = document.querySelectorAll('.workflow-step');
-            steps.forEach((step, index) => {
-                step.classList.remove('active', 'completed');
-                if (index + 1 === currentStep) {
-                    step.classList.add('active');
-                } else if (index + 1 < currentStep) {
-                    step.classList.add('completed');
-                }
-            });
-            
-            // Show/hide forms based on current step
-            document.getElementById('registrationForm').classList.toggle('hidden', currentStep !== 1);
-            document.getElementById('vitalSignsForm').classList.toggle('hidden', currentStep !== 2);
-        }
-
-        // Load Patient Data
-        function loadPatient(patientId) {
-            const patient = patients[patientId];
-            if (!patient) return;
-            
-            activePatientId = patientId;
-            
-            // Update active patient card
-            const avatar = document.querySelector('#activePatientCard .patient-avatar');
-            const name = document.querySelector('#activePatientCard .font-medium');
-            const status = document.querySelector('#activePatientCard .text-xs.text-text-secondary');
-            const priority = document.querySelector('#activePatientCard .text-warning-600');
-            
-            avatar.textContent = patient.initials;
-            avatar.className = `patient-avatar ${
-                patient.priority === 'high' ? 'bg-error-100 text-error-700' :
-                patient.priority === 'medium' ? 'bg-warning-100 text-warning-700' :
-                'bg-success-100 text-success-700'
-            }`;
-            
-            name.textContent = `${patient.firstName} ${patient.lastName}`;
-            status.textContent = `${patient.status === 'registration' ? 'Registration Required' : 
-                                  patient.status === 'vitals' ? 'Vital Signs Required' : 
-                                  'Ready for Queue'}`;
-            
-            // Update form fields
-            document.getElementById('firstName').value = patient.firstName || '';
-            document.getElementById('lastName').value = patient.lastName || '';
-            document.getElementById('age').value = patient.age || '';
-            document.getElementById('gender').value = patient.gender || '';
-            document.getElementById('visitReason').value = patient.visitReason || '';
-            
-            // Update vital signs monitor
-            const vitals = patient.vitals || {};
-            document.getElementById('bloodPressure').value = vitals.bloodPressure || '';
-            document.getElementById('heartRate').value = vitals.heartRate || '';
-            document.getElementById('temperature').value = vitals.temperature || '';
-            document.getElementById('spo2').value = vitals.spo2 || '';
-            document.getElementById('respiratoryRate').value = vitals.respiratoryRate || '';
-            document.getElementById('vitalNotes').value = vitals.notes || '';
-            
-            // Determine current step based on patient status
-            currentStep = patient.status === 'registration' ? 1 :
-                         patient.status === 'vitals' ? 2 : 3;
-            
-            updateWorkflowProgress();
-            updateVitalMonitor();
-        }
-
-        // Update Vital Signs Monitor Display
-        function updateVitalMonitor() {
-            const patient = patients[activePatientId];
-            const vitals = patient.vitals || {};
-            
-            const bpElement = document.querySelector('.vital-sign-card:nth-child(1) .text-2xl');
-            const hrElement = document.querySelector('.vital-sign-card:nth-child(2) .text-2xl');
-            const tempElement = document.querySelector('.vital-sign-card:nth-child(3) .text-2xl');
-            const spo2Element = document.querySelector('.vital-sign-card:nth-child(4) .text-2xl');
-            
-            const bpStatus = document.querySelector('.vital-sign-card:nth-child(1) .text-xs');
-            const hrStatus = document.querySelector('.vital-sign-card:nth-child(2) .text-xs');
-            const tempStatus = document.querySelector('.vital-sign-card:nth-child(3) .text-xs');
-            const spo2Status = document.querySelector('.vital-sign-card:nth-child(4) .text-xs');
-            
-            const bpCard = document.querySelector('.vital-sign-card:nth-child(1)');
-            const hrCard = document.querySelector('.vital-sign-card:nth-child(2)');
-            const tempCard = document.querySelector('.vital-sign-card:nth-child(3)');
-            const spo2Card = document.querySelector('.vital-sign-card:nth-child(4)');
-            
-            // Reset all cards
-            [bpCard, hrCard, tempCard, spo2Card].forEach(card => {
-                card.classList.remove('critical', 'warning');
-            });
-            
-            // Update Blood Pressure
-            if (vitals.bloodPressure) {
-                bpElement.textContent = vitals.bloodPressure;
-                bpElement.classList.remove('text-text-secondary');
-                bpElement.classList.add('text-text-primary');
-                
-                const [systolic, diastolic] = vitals.bloodPressure.split('/').map(Number);
-                if (systolic > 140 || diastolic > 90) {
-                    bpStatus.textContent = 'High';
-                    bpStatus.className = 'text-xs text-error-600';
-                    bpCard.classList.add('critical');
-                } else if (systolic < 90 || diastolic < 60) {
-                    bpStatus.textContent = 'Low';
-                    bpStatus.className = 'text-xs text-warning-600';
-                    bpCard.classList.add('warning');
-                } else {
-                    bpStatus.textContent = 'Normal';
-                    bpStatus.className = 'text-xs text-success-600';
-                }
-            } else {
-                bpElement.textContent = '--/--';
-                bpElement.classList.remove('text-text-primary');
-                bpElement.classList.add('text-text-secondary');
-                bpStatus.textContent = 'Not Taken';
-                bpStatus.className = 'text-xs text-warning-600';
-            }
-            
-            // Update Heart Rate
-            if (vitals.heartRate) {
-                hrElement.textContent = vitals.heartRate;
-                hrElement.classList.remove('text-text-secondary');
-                hrElement.classList.add('text-text-primary');
-                
-                const hr = parseInt(vitals.heartRate);
-                if (hr > 100) {
-                    hrStatus.textContent = 'High';
-                    hrStatus.className = 'text-xs text-error-600';
-                    hrCard.classList.add('critical');
-                } else if (hr < 60) {
-                    hrStatus.textContent = 'Low';
-                    hrStatus.className = 'text-xs text-warning-600';
-                    hrCard.classList.add('warning');
-                } else {
-                    hrStatus.textContent = 'Normal';
-                    hrStatus.className = 'text-xs text-success-600';
-                }
-            } else {
-                hrElement.textContent = '--';
-                hrElement.classList.remove('text-text-primary');
-                hrElement.classList.add('text-text-secondary');
-                hrStatus.textContent = 'Not Taken';
-                hrStatus.className = 'text-xs text-warning-600';
-            }
-            
-            // Update Temperature
-            if (vitals.temperature) {
-                hrElement.textContent = `${vitals.temperature}°C`;
-                hrElement.classList.remove('text-text-secondary');
-                hrElement.classList.add('text-text-primary');
-                
-                const temp = parseFloat(vitals.temperature);
-                if (temp > 100.4) {
-                    hrStatus.textContent = 'Fever';
-                    hrStatus.className = 'text-xs text-error-600';
-                    tempCard.classList.add('critical');
-                } else if (temp < 96.8) {
-                    hrStatus.textContent = 'Low';
-                    hrStatus.className = 'text-xs text-warning-600';
-                    tempCard.classList.add('warning');
-                } else {
-                    hrStatus.textContent = 'Normal';
-                    hrStatus.className = 'text-xs text-success-600';
-                }
-            } else {
-                tempElement.textContent = '--°C';
-                tempElement.classList.remove('text-text-primary');
-                tempElement.classList.add('text-text-secondary');
-                tempStatus.textContent = 'Not Taken';
-                tempStatus.className = 'text-xs text-warning-600';
-            }
-            
-            // Update SpO2
-            if (vitals.spo2) {
-                spo2Element.textContent = `${vitals.spo2}%`;
-                spo2Element.classList.remove('text-text-secondary');
-                spo2Element.classList.add('text-text-primary');
-                
-                const spo2 = parseInt(vitals.spo2);
-                if (spo2 < 92) {
-                    spo2Status.textContent = 'Critical';
-                    spo2Status.className = 'text-xs text-error-600';
-                    spo2Card.classList.add('critical');
-                } else if (spo2 < 95) {
-                    spo2Status.textContent = 'Low';
-                    spo2Status.className = 'text-xs text-warning-600';
-                    spo2Card.classList.add('warning');
-                } else {
-                    spo2Status.textContent = 'Normal';
-                    spo2Status.className = 'text-xs text-success-600';
-                }
-            } else {
-                spo2Element.textContent = '--%';
-                spo2Element.classList.remove('text-text-primary');
-                spo2Element.classList.add('text-text-secondary');
-                spo2Status.textContent = 'Not Taken';
-                spo2Status.className = 'text-xs text-warning-600';
-            }
-        }
-
-        // Update Queue UI
-        function updateQueueUI() {
-            const queueContainer = document.getElementById('patientQueue');
-            const queueCount = document.getElementById('queueCount');
-            
-            // Count patients in each status
-            let waitingCount = 0;
-            let inProgressCount = 0;
-            let completedCount = 0;
-            
-            Object.values(patients).forEach(patient => {
-                if (patient.status === 'registration') waitingCount++;
-                else if (patient.status === 'vitals') inProgressCount++;
-                else if (patient.status === 'queue') completedCount++;
-            });
-            
-                        
-            Object.values(patients)
-                .sort((a, b) => {
-                    // Sort by priority (high first), then arrival time
-                    const priorityOrder = { high: 3, medium: 2, low: 1 };
-                    if (priorityOrder[b.priority] !== priorityOrder[a.priority]) {
-                        return priorityOrder[b.priority] - priorityOrder[a.priority];
-                    }
-                    return a.arrivalTime.localeCompare(b.arrivalTime);
-                })
-                .forEach(patient => {
-                    const queueItem = document.createElement('div');
-                    queueItem.className = `queue-item p-3 rounded-base border border-border ${patient.id === activePatientId ? 'active' : ''}`;
-                    queueItem.dataset.patientId = patient.id;
-                    
-                    const statusText = patient.status === 'registration' ? 'Registration' :
-                                     patient.status === 'vitals' ? 'Vital Signs' :
-                                     'Ready for Queue';
-                    
-                    const statusClass = patient.status === 'registration' ? 'status-waiting' :
-                                      patient.status === 'vitals' ? 'status-in-progress' :
-                                      'status-completed';
-                    
-                    const priorityClass = `priority-${patient.priority}`;
-                    
-                    queueItem.innerHTML = `
-                        <div class="flex items-center gap-3">
-                            <div class="patient-avatar ${
-                                patient.priority === 'high' ? 'bg-error-100 text-error-700' :
-                                patient.priority === 'medium' ? 'bg-warning-100 text-warning-700' :
-                                'bg-success-100 text-success-700'
-                            }">
-                                ${patient.initials}
-                            </div>
-                            <div class="flex-1">
-                                <p class="font-medium text-text-primary">${patient.firstName} ${patient.lastName}</p>
-                                <div class="flex items-center gap-2 mt-1">
-                                    <span class="text-xs text-text-secondary">${statusText}</span>
-                                    <span class="status-indicator ${statusClass}"></span>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-xs text-text-secondary">${patient.arrivalTime}</p>
-                                <span class="priority-indicator ${priorityClass}"></span>
-                            </div>
-                        </div>
-                    `;
-                    
-                    
-                    // Add click event
-                    queueItem.addEventListener('click', function() {
-                        loadPatient(patient.id);
-                    });
-                });
-        }
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            loadPatient(1);
-            
-            // Next Step Button
-            document.getElementById('nextStepBtn').addEventListener('click', function() {
-                if (currentStep < 3) {
-                    currentStep++;
-                    updateWorkflowProgress();
-                }
-            });
-            
-            // Skip Patient Button
-            document.getElementById('skipPatientBtn').addEventListener('click', function() {
-                // Find next patient in queue
-                const patientIds = Object.keys(patients).map(Number);
-                const currentIndex = patientIds.indexOf(activePatientId);
-                const nextPatientId = patientIds[(currentIndex + 1) % patientIds.length];
-                
-                loadPatient(nextPatientId);
-            });
-            
-            // Save Registration
-            document.getElementById('saveRegistrationBtn').addEventListener('click', function() {
-                const patient = patients[activePatientId];
-                
-                patient.firstName = document.getElementById('firstName').value;
-                patient.lastName = document.getElementById('lastName').value;
-                patient.age = parseInt(document.getElementById('age').value);
-                patient.gender = document.getElementById('gender').value;
-                patient.visitReason = document.getElementById('visitReason').value;
-                patient.initials = patient.firstName[0] + patient.lastName[0];
-                patient.status = 'vitals';
-                
-                // Move to next step
-                currentStep = 2;
-                updateWorkflowProgress();
-                updateQueueUI();
-                
-                alert('Registration saved successfully!');
-            });
-            
-            // Skip Registration
-            document.getElementById('skipRegistrationBtn').addEventListener('click', function() {
-                patients[activePatientId].status = 'vitals';
-                currentStep = 2;
-                updateWorkflowProgress();
-                updateQueueUI();
-            });
-            
-            // Save Vital Signs
-            document.getElementById('saveVitalsBtn').addEventListener('click', function() {
-                const patient = patients[activePatientId];
-                
-                patient.vitals = {
-                    bloodPressure: document.getElementById('bloodPressure').value,
-                    heartRate: document.getElementById('heartRate').value,
-                    temperature: document.getElementById('temperature').value,
-                    spo2: document.getElementById('spo2').value,
-                    respiratoryRate: document.getElementById('respiratoryRate').value,
-                    notes: document.getElementById('vitalNotes').value
-                };
-                
-                patient.status = 'queue';
-                
-                // Move to next step
-                currentStep = 2;
-                updateWorkflowProgress();
-                updateVitalMonitor();
-                
-                alert('Vital signs saved successfully!');
-                
-                // Check for critical values
-                const hr = parseInt(patient.vitals.heartRate);
-                const spo2 = parseInt(patient.vitals.spo2);
-                
-                if (hr > 120 || spo2 < 92) {
-                    alert('CRITICAL ALERT: Patient has critical vital signs! Please review immediately.');
-                }
-            });
-            
-            
-            
-            // Auto-fill Normal Values
-            document.getElementById('autoFillBtn').addEventListener('click', function() {
-                document.getElementById('bloodPressure').value = '120/80';
-                document.getElementById('heartRate').value = '72';
-                document.getElementById('temperature').value = '98.6';
-                document.getElementById('spo2').value = '98';
-                document.getElementById('respiratoryRate').value = '16';
-                document.getElementById('vitalNotes').value = 'Patient appears stable, all vital signs within normal range';
-                
-                updateVitalMonitor();
-                alert('Normal vital signs values auto-filled.');
-            });
-            
-            // Start New Session
-            document.getElementById('startNewSessionBtn').addEventListener('click', function() {
-                document.getElementById('newPatientModal').classList.remove('hidden');
-            });
-            
-            // Close New Patient Modal
-            document.getElementById('closeNewPatientModal').addEventListener('click', function() {
-                document.getElementById('newPatientModal').classList.add('hidden');
-            });
-            
-            document.getElementById('cancelNewPatientBtn').addEventListener('click', function() {
-                document.getElementById('newPatientModal').classList.add('hidden');
-            });
-            
-            // Add New Patient to Queue
-            document.getElementById('addToQueueBtn').addEventListener('click', function() {
-                const firstName = document.getElementById('newFirstName').value;
-                const lastName = document.getElementById('newLastName').value;
-                const age = document.getElementById('newAge').value;
-                const gender = document.getElementById('newGender').value;
-                const visitReason = document.getElementById('newVisitReason').value;
-                const priority = document.getElementById('newPriority').value;
-                
-                if (!firstName || !lastName || !age || !gender || !visitReason) {
-                    alert('Please fill in all required fields marked with *');
-                    return;
-                }
-                
-                const newId = Object.keys(patients).length + 1;
-                const arrivalTime = new Date().toLocaleTimeString('en-US', { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                });
-                
-                patients[newId] = {
-                    id: newId,
-                    firstName,
-                    lastName,
-                    age: parseInt(age),
-                    gender,
-                    priority,
-                    visitReason,
-                    vitals: {},
-                    status: 'registration',
-                    arrivalTime,
-                    initials: firstName[0] + lastName[0]
-                };
-                
-                // Clear form
-                document.getElementById('newFirstName').value = '';
-                document.getElementById('newLastName').value = '';
-                document.getElementById('newAge').value = '';
-                document.getElementById('newGender').value = '';
-                document.getElementById('newVisitReason').value = '';
-                document.getElementById('newPriority').value = 'medium';
-                
-                // Close modal and load new patient
-                document.getElementById('newPatientModal').classList.add('hidden');
-                loadPatient(newId);
-                
-                alert(`New patient ${firstName} ${lastName} added to queue!`);
-            });
-            
-            // Emergency Alert System
-            const emergencyAlertBtn = document.getElementById('emergencyAlertBtn');
-            const emergencyModal = document.getElementById('emergencyModal');
-            const cancelEmergencyBtn = document.getElementById('cancelEmergencyBtn');
-            const triggerEmergencyBtn = document.getElementById('triggerEmergencyBtn');
-
-            emergencyAlertBtn.addEventListener('click', function() {
-                emergencyModal.classList.remove('hidden');
-            });
-
-            cancelEmergencyBtn.addEventListener('click', function() {
-                emergencyModal.classList.add('hidden');
-            });
-
-            triggerEmergencyBtn.addEventListener('click', function() {
-                const type = document.getElementById('emergencyType').value;
-                const location = document.getElementById('emergencyLocation').value;
-                
-                if (!type || !location) {
-                    alert('Please select emergency type and enter location');
-                    return;
-                }
-                
-                // In a real app, this would trigger emergency protocols
-                console.log('Emergency triggered:', { type, location });
-                
-                alert(`EMERGENCY ALERT: ${type} at ${location}. Emergency services have been notified.`);
-                
-                // Reset and close modal
-                document.getElementById('emergencyType').value = '';
-                document.getElementById('emergencyLocation').value = '';
-                emergencyModal.classList.add('hidden');
-            });
-
-            emergencyModal.addEventListener('click', function(e) {
-                if (e.target === emergencyModal) {
-                    emergencyModal.classList.add('hidden');
-                }
-            });
-
-            document.getElementById('newPatientModal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    this.classList.add('hidden');
-                }
-            });
-
-            // Update queue count initially
-            updateQueueUI();
-        });
-
-        // Simulate real-time updates
-        function simulateRealTimeUpdates() {
-            // Randomly update arrival times for demo purposes
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-            });
-            
-            document.getElementById('currentTime').textContent = timeString;
-            document.getElementById('lastUpdateTime').textContent = timeString;
-        }
-        
-        // Update every 30 seconds
-        setInterval(simulateRealTimeUpdates, 30000);
-    </script>
 </body>
 </html>

@@ -1,10 +1,9 @@
-
 CREATE DATABASE cavitemed;
-
 USE cavitemed;
 
-
-
+-- -----------------------------------------
+-- USERS
+-- -----------------------------------------
 CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     full_name VARCHAR(100) NOT NULL,
@@ -23,9 +22,11 @@ CREATE TABLE users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at DATETIME NULL,
     must_change_password TINYINT(1) DEFAULT 1
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
+-- -----------------------------------------
+-- SUPPLIERS
+-- -----------------------------------------
 CREATE TABLE suppliers (
     id INT AUTO_INCREMENT PRIMARY KEY,
     supplier_name VARCHAR(255) NOT NULL,
@@ -35,138 +36,23 @@ CREATE TABLE suppliers (
     is_archived TINYINT(1) DEFAULT 0,
     email VARCHAR(255),
     address TEXT
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE medicine (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    supplier_id INT NOT NULL,
-    barcode VARCHAR(100) UNIQUE NOT NULL,
-    medicine_name VARCHAR(255) NOT NULL,
-    medicine_type ENUM('generic', 'branded') NOT NULL,
-    category VARCHAR(100) NOT NULL,
-    funding_source ENUM('donation','city_health','mixed') NOT NULL,
-    batch_number VARCHAR(100) NOT NULL,
-    expiry_date DATE NOT NULL,
-    unit_of_measure ENUM('bottle','tablet','capsule','other') NOT NULL,
-    manufacturing_date DATE NOT NULL,
-    current_stock INT NOT NULL DEFAULT 0,
-    reorder_point INT NOT NULL DEFAULT 0,
-    unit_price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    notes TEXT,
-    status ENUM(
-        'in_stock',
-        'low_stock',
-        'out_of_stock',
-        'expired'
-    ) DEFAULT 'in_stock',
-    is_archived TINYINT(1) DEFAULT 0,
-    created_by INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-    CONSTRAINT fk_medicine_supplier
-        FOREIGN KEY (supplier_id)
-        REFERENCES suppliers(id)
-        ON DELETE RESTRICT
-);
-
-CREATE TABLE inventory_transactions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    medicine_id INT NOT NULL,
-    transaction_type ENUM(
-        'add',
-        'deduct',
-        'dispose',
-        'distribute',
-        'adjustment',
-        'expired'
-    ) NOT NULL,
-    quantity INT NOT NULL,
-    remarks VARCHAR(255),
-    performed_by INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT fk_transaction_medicine
-        FOREIGN KEY (medicine_id)
-        REFERENCES medicine(id)
-        ON DELETE CASCADE
-);
-
-CREATE TABLE health_centers (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    center_name VARCHAR(255) NOT NULL,
-    center_type ENUM(
-        'rhu',
-        'barangay_health_center',
-        'hospital',
-        'clinic',
-        'other'
-    ) NOT NULL,
-    address TEXT,
-    contact_person VARCHAR(255),
-    contact_number VARCHAR(100),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-
-CREATE TABLE distribution (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    health_center_id INT NOT NULL,
-    medicine_id INT NOT NULL,
-    quantity INT NOT NULL,
-    status ENUM('pending','distributed','cancelled') DEFAULT 'pending',
-    remarks TEXT,
-    created_by INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT fk_distribute_health_center
-        FOREIGN KEY (health_center_id)
-        REFERENCES health_centers(id)
-        ON DELETE RESTRICT,
-
-    CONSTRAINT fk_distribute_medicine
-        FOREIGN KEY (medicine_id)
-        REFERENCES medicine(id)
-        ON DELETE RESTRICT
-);
-
-
-
-CREATE TABLE disposal_records (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    medicine_id INT NOT NULL,
-    batch_number VARCHAR(100) NOT NULL,
-    expiry_date DATE NOT NULL,
-    quantity INT NOT NULL CHECK (quantity > 0),
-    total_value DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    disposal_method ENUM(
-        'incinerated',
-        'returned',
-        'destroyed',
-        'donated',
-        'other'
-    ) NOT NULL,
-    disposal_date DATE NOT NULL,
-    created_by INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    notes TEXT NULL,
-    is_archived TINYINT(1) DEFAULT 0,
-
-    CONSTRAINT fk_disposal_medicine
-        FOREIGN KEY (medicine_id)
-        REFERENCES medicine(id)
-        ON DELETE RESTRICT
-);
-
+-- -----------------------------------------
+-- PATIENTS (ALTER INCLUDED HERE)
+-- -----------------------------------------
 CREATE TABLE patients (
   patient_id INT AUTO_INCREMENT PRIMARY KEY,
-  mrn VARCHAR(30) NOT NULL UNIQUE, -- Medical Record Number (e.g. 2024-001234)
+  mrn VARCHAR(30) NOT NULL UNIQUE,
 
   first_name VARCHAR(100) NOT NULL,
   last_name VARCHAR(100) NOT NULL,
   middle_name VARCHAR(100) NULL,
   preferred_name VARCHAR(100) NULL,
+
+  marital_status VARCHAR(50) NULL,
+  occupation VARCHAR(120) NULL,
+  preferred_language VARCHAR(120) NULL,
 
   date_of_birth DATE NOT NULL,
   gender ENUM('male','female','other') NOT NULL,
@@ -186,22 +72,153 @@ CREATE TABLE patients (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-  INDEX idx_patients_created_by (created_by)
+  INDEX idx_patients_created_by (created_by),
+
+  CONSTRAINT fk_patients_created_by
+    FOREIGN KEY (created_by) REFERENCES users(user_id)
+    ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-ALTER TABLE patients
-  ADD COLUMN marital_status VARCHAR(50) NULL AFTER preferred_name,
-  ADD COLUMN occupation VARCHAR(120) NULL AFTER marital_status,
-  ADD COLUMN preferred_language VARCHAR(120) NULL AFTER occupation;
+-- -----------------------------------------
+-- MEDICINE
+-- -----------------------------------------
+CREATE TABLE medicine (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    supplier_id INT NOT NULL,
+    barcode VARCHAR(100) UNIQUE NOT NULL,
+    medicine_name VARCHAR(255) NOT NULL,
+    medicine_type ENUM('generic', 'branded') NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    funding_source ENUM('donation','city_health','mixed') NOT NULL,
+    batch_number VARCHAR(100) NOT NULL,
+    expiry_date DATE NOT NULL,
+    unit_of_measure ENUM('bottle','tablet','capsule','other') NOT NULL,
+    manufacturing_date DATE NOT NULL,
+    current_stock INT NOT NULL DEFAULT 0,
+    reorder_point INT NOT NULL DEFAULT 0,
+    unit_price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    notes TEXT,
+    status ENUM('in_stock','low_stock','out_of_stock','expired') DEFAULT 'in_stock',
+    is_archived TINYINT(1) DEFAULT 0,
+    created_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
+    CONSTRAINT fk_medicine_supplier
+        FOREIGN KEY (supplier_id)
+        REFERENCES suppliers(id)
+        ON DELETE RESTRICT,
 
+    CONSTRAINT fk_medicine_created_by
+        FOREIGN KEY (created_by)
+        REFERENCES users(user_id)
+        ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- -----------------------------------------
+-- INVENTORY TRANSACTIONS
+-- -----------------------------------------
+CREATE TABLE inventory_transactions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    medicine_id INT NOT NULL,
+    transaction_type ENUM('add','deduct','dispose','distribute','adjustment','expired') NOT NULL,
+    quantity INT NOT NULL,
+    remarks VARCHAR(255),
+    performed_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_transaction_medicine
+        FOREIGN KEY (medicine_id)
+        REFERENCES medicine(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_transaction_performed_by
+        FOREIGN KEY (performed_by)
+        REFERENCES users(user_id)
+        ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- -----------------------------------------
+-- HEALTH CENTERS
+-- -----------------------------------------
+CREATE TABLE health_centers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    center_name VARCHAR(255) NOT NULL,
+    center_type ENUM('rhu','barangay_health_center','hospital','clinic','other') NOT NULL,
+    address TEXT,
+    contact_person VARCHAR(255),
+    contact_number VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- -----------------------------------------
+-- DISTRIBUTION
+-- -----------------------------------------
+CREATE TABLE distribution (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    health_center_id INT NOT NULL,
+    medicine_id INT NOT NULL,
+    quantity INT NOT NULL,
+    status ENUM('pending','distributed','cancelled') DEFAULT 'pending',
+    remarks TEXT,
+    created_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_distribute_health_center
+        FOREIGN KEY (health_center_id)
+        REFERENCES health_centers(id)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_distribute_medicine
+        FOREIGN KEY (medicine_id)
+        REFERENCES medicine(id)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_distribution_created_by
+        FOREIGN KEY (created_by)
+        REFERENCES users(user_id)
+        ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- -----------------------------------------
+-- DISPOSAL RECORDS
+-- -----------------------------------------
+CREATE TABLE disposal_records (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    medicine_id INT NOT NULL,
+    batch_number VARCHAR(100) NOT NULL,
+    expiry_date DATE NOT NULL,
+    quantity INT NOT NULL CHECK (quantity > 0),
+    total_value DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    disposal_method ENUM('incinerated','returned','destroyed','donated','other') NOT NULL,
+    disposal_date DATE NOT NULL,
+    created_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    notes TEXT NULL,
+    is_archived TINYINT(1) DEFAULT 0,
+
+    CONSTRAINT fk_disposal_medicine
+        FOREIGN KEY (medicine_id)
+        REFERENCES medicine(id)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_disposal_created_by
+        FOREIGN KEY (created_by)
+        REFERENCES users(user_id)
+        ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- -----------------------------------------
+-- PATIENT MEDICAL PROFILE
+-- -----------------------------------------
 CREATE TABLE patient_medical_profile (
   id INT AUTO_INCREMENT PRIMARY KEY,
   patient_id INT NOT NULL,
 
-  allergies TEXT NULL,        
-  chronic_conditions TEXT NULL,   
-  current_medications TEXT NULL, 
+  allergies TEXT NULL,
+  chronic_conditions TEXT NULL,
+  current_medications TEXT NULL,
   immunization_status ENUM('up_to_date','not_up_to_date','unknown') DEFAULT 'unknown',
 
   updated_by INT NOT NULL,
@@ -211,24 +228,30 @@ CREATE TABLE patient_medical_profile (
     FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
     ON DELETE CASCADE,
 
+  CONSTRAINT fk_profile_updated_by
+    FOREIGN KEY (updated_by) REFERENCES users(user_id)
+    ON DELETE RESTRICT,
+
   INDEX idx_profile_updated_by (updated_by)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
+-- -----------------------------------------
+-- PATIENT VISITS
+-- -----------------------------------------
 CREATE TABLE patient_visits (
   visit_id INT AUTO_INCREMENT PRIMARY KEY,
   patient_id INT NOT NULL,
 
-  visit_type VARCHAR(120) NOT NULL,  -- Type of visit (Consultation, Follow-up, etc.)
-  visit_datetime DATETIME NOT NULL,  -- Date and time of the visit
+  visit_type VARCHAR(120) NOT NULL,
+  visit_datetime DATETIME NOT NULL,
 
-  doctor_id INT NULL,   
-  created_by INT NOT NULL,  
+  doctor_id INT NULL,
+  created_by INT NOT NULL,
 
-  reason_for_visit TEXT NULL,  -- Reason for the visit (chief complaint)
-  priority ENUM('low', 'medium', 'high') DEFAULT 'medium',  -- Visit priority
-  status ENUM('waiting', 'in_progress', 'completed', 'for_dispense') DEFAULT 'waiting',  -- Status of the visit
-  notes TEXT NULL,  -- Additional notes about the visit
+  reason_for_visit TEXT NULL,
+  priority ENUM('low', 'medium', 'high') DEFAULT 'medium',
+  status ENUM('waiting', 'in_progress', 'completed', 'for_dispense') DEFAULT 'waiting',
+  notes TEXT NULL,
 
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
@@ -236,12 +259,21 @@ CREATE TABLE patient_visits (
     FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
     ON DELETE CASCADE,
 
+  CONSTRAINT fk_visits_doctor_id
+    FOREIGN KEY (doctor_id) REFERENCES users(user_id)
+    ON DELETE SET NULL,
+
+  CONSTRAINT fk_visits_created_by
+    FOREIGN KEY (created_by) REFERENCES users(user_id)
+    ON DELETE RESTRICT,
+
   INDEX idx_visits_doctor_id (doctor_id),
   INDEX idx_visits_created_by (created_by)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
-
+-- -----------------------------------------
+-- PATIENT VITALS
+-- -----------------------------------------
 CREATE TABLE patient_vitals (
   vitals_id INT AUTO_INCREMENT PRIMARY KEY,
   patient_id INT NOT NULL,
@@ -250,11 +282,11 @@ CREATE TABLE patient_vitals (
   bp_systolic INT NULL,
   bp_diastolic INT NULL,
   heart_rate INT NULL,
-  temperature DECIMAL(4,1) NULL,      
-  spo2 INT NULL,                     
-  respiratory_rate INT NULL,        
-  blood_glucose INT NULL,            
-  weight DECIMAL(6,2) NULL,       
+  temperature DECIMAL(4,1) NULL,
+  spo2 INT NULL,
+  respiratory_rate INT NULL,
+  blood_glucose INT NULL,
+  weight DECIMAL(6,2) NULL,
 
   nurse_notes TEXT NULL,
   recorded_by INT NOT NULL,
@@ -268,10 +300,16 @@ CREATE TABLE patient_vitals (
     FOREIGN KEY (visit_id) REFERENCES patient_visits(visit_id)
     ON DELETE SET NULL,
 
+  CONSTRAINT fk_vitals_recorded_by
+    FOREIGN KEY (recorded_by) REFERENCES users(user_id)
+    ON DELETE RESTRICT,
+
   INDEX idx_vitals_recorded_by (recorded_by)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
+-- -----------------------------------------
+-- PATIENT INSURANCE
+-- -----------------------------------------
 CREATE TABLE patient_insurance (
   insurance_id INT AUTO_INCREMENT PRIMARY KEY,
   patient_id INT NOT NULL,
@@ -297,17 +335,23 @@ CREATE TABLE patient_insurance (
     FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
     ON DELETE CASCADE,
 
+  CONSTRAINT fk_insurance_verified_by
+    FOREIGN KEY (verified_by) REFERENCES users(user_id)
+    ON DELETE SET NULL,
+
   UNIQUE KEY uq_patient_coverage (patient_id, coverage_type),
   INDEX idx_insurance_verified_by (verified_by)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
+-- -----------------------------------------
+-- PATIENT EMERGENCY CONTACTS
+-- -----------------------------------------
 CREATE TABLE patient_emergency_contacts (
   contact_id INT AUTO_INCREMENT PRIMARY KEY,
   patient_id INT NOT NULL,
 
   full_name VARCHAR(150) NOT NULL,
-  relationship VARCHAR(60) NOT NULL, 
+  relationship VARCHAR(60) NOT NULL,
   phone VARCHAR(30) NOT NULL,
   email VARCHAR(150) NULL,
   address VARCHAR(255) NULL,
@@ -321,19 +365,25 @@ CREATE TABLE patient_emergency_contacts (
     FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
     ON DELETE CASCADE,
 
+  CONSTRAINT fk_emergency_created_by
+    FOREIGN KEY (created_by) REFERENCES users(user_id)
+    ON DELETE RESTRICT,
+
   INDEX idx_emergency_created_by (created_by)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
+-- -----------------------------------------
+-- PATIENT DOCUMENTS
+-- -----------------------------------------
 CREATE TABLE patient_documents (
   document_id INT AUTO_INCREMENT PRIMARY KEY,
   patient_id INT NOT NULL,
   visit_id INT NULL,
 
   document_title VARCHAR(200) NOT NULL,
-  file_type VARCHAR(30) NOT NULL,      
+  file_type VARCHAR(30) NOT NULL,
   file_size_kb INT NULL,
-  file_path VARCHAR(255) NOT NULL,   
+  file_path VARCHAR(255) NOT NULL,
 
   uploaded_by INT NOT NULL,
   uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -346,15 +396,25 @@ CREATE TABLE patient_documents (
     FOREIGN KEY (visit_id) REFERENCES patient_visits(visit_id)
     ON DELETE SET NULL,
 
+  CONSTRAINT fk_docs_uploaded_by
+    FOREIGN KEY (uploaded_by) REFERENCES users(user_id)
+    ON DELETE RESTRICT,
+
   INDEX idx_docs_uploaded_by (uploaded_by)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
+-- -----------------------------------------
+-- USER PATIENT FAVORITES
+-- -----------------------------------------
 CREATE TABLE user_patient_favorites (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
   patient_id INT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_fav_user
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+    ON DELETE CASCADE,
 
   CONSTRAINT fk_fav_patient
     FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
@@ -364,12 +424,18 @@ CREATE TABLE user_patient_favorites (
   INDEX idx_fav_user_id (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
+-- -----------------------------------------
+-- USER PATIENT RECENT
+-- -----------------------------------------
 CREATE TABLE user_patient_recent (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
   patient_id INT NOT NULL,
   last_viewed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_recent_user
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+    ON DELETE CASCADE,
 
   CONSTRAINT fk_recent_patient
     FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
@@ -379,15 +445,21 @@ CREATE TABLE user_patient_recent (
   INDEX idx_recent_user_id (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
+-- -----------------------------------------
+-- AUDIT LOGS
+-- -----------------------------------------
 CREATE TABLE audit_logs (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
-  action VARCHAR(120) NOT NULL,       
-  entity_type VARCHAR(60) NOT NULL,  
+  action VARCHAR(120) NOT NULL,
+  entity_type VARCHAR(60) NOT NULL,
   entity_id INT NULL,
   ip_address VARCHAR(60) NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_audit_user_id
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+    ON DELETE RESTRICT,
 
   INDEX idx_audit_user_id (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

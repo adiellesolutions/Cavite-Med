@@ -185,7 +185,7 @@ if (ec1Primary && ec2Primary) {
         setMsg("");
 
         // ✅ safest URL for your structure
-        const url = new URL("/HIMS/backend/medical_staff_patient_get.php", window.location.origin);
+        const url = new URL("/CAVITE-MED/backend/medical_staff_patient_get.php", window.location.origin);
         url.searchParams.set("patient_id", String(selected.patient_id));
 
         log("FETCH URL:", url.toString());
@@ -329,7 +329,7 @@ log("Filled EMERGENCY (OPTIONAL 2 CONTACTS) ✅");
           log("SUBMIT FORM DATA:", obj);
         }
 
-        const res = await fetch("/HIMS/backend/medical_staff_update_patient.php", {
+        const res = await fetch("/CAVITE-MED/backend/medical_staff_update_patient.php", {
           method: "POST",
           body: fd,
           credentials: "same-origin",
