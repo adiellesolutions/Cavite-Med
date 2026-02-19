@@ -125,57 +125,83 @@ try {
 
     // ---------- Insert Patient ----------
     // NOTE: includes status (since your table has it); created_at/updated_at auto.
-    $sql = "INSERT INTO patients (
-        mrn,
-        first_name, last_name, middle_name, preferred_name,
-        marital_status, occupation, preferred_language,
-        date_of_birth, gender, blood_type,
-        phone, email,
-        address_line, city, state, zip_code,
-        status,
-        created_by
-    ) VALUES (
-        ?, ?, ?, ?, ?,
-        ?, ?, ?,
-        ?, ?, ?,
-        ?, ?,
-        ?, ?, ?, ?,
-        ?,
-        ?
-    )";
+    $conn->begin_transaction();
 
-    $stmt = $conn->prepare($sql);
-    if (!$stmt) respond(false, "Insert prepare failed: " . $conn->error);
+// ---------- Insert Patient ----------
+$sql = "INSERT INTO patients (
+    mrn,
+    first_name, last_name, middle_name, preferred_name,
+    marital_status, occupation, preferred_language,
+    date_of_birth, gender, blood_type,
+    phone, email,
+    address_line, city, state, zip_code,
+    status,
+    created_by
+) VALUES (
+    ?, ?, ?, ?, ?,
+    ?, ?, ?,
+    ?, ?, ?,
+    ?, ?,
+    ?, ?, ?, ?,
+    ?,
+    ?
+)";
 
-    // 19 values total:
-    // 18 strings + 1 int (created_by)
-    // mrn (s)
-    // first_name..status (all strings)
-    // created_by (i)
-    $stmt->bind_param(
-        "ssssssssssssssssssi",
-        $mrn,
-        $first_name, $last_name, $middle_name, $preferred_name,
-        $marital_status, $occupation, $preferred_language,
-        $date_of_birth, $gender, $blood_type,
-        $phone, $email,
-        $address_line, $city, $state, $zip_code,
-        $status,
-        $created_by
-    );
+$stmt = $conn->prepare($sql);
+if (!$stmt) {
+    $conn->rollback();
+    respond(false, "Insert prepare failed: " . $conn->error);
+}
 
-    if (!$stmt->execute()) {
-        // Duplicate MRN or other errors
-        respond(false, "Insert failed: " . $stmt->error);
-    }
+$stmt->bind_param(
+    "ssssssssssssssssssi",
+    $mrn,
+    $first_name, $last_name, $middle_name, $preferred_name,
+    $marital_status, $occupation, $preferred_language,
+    $date_of_birth, $gender, $blood_type,
+    $phone, $email,
+    $address_line, $city, $state, $zip_code,
+    $status,
+    $created_by
+);
 
-    $new_id = $stmt->insert_id;
-    $stmt->close();
+if (!$stmt->execute()) {
+    $conn->rollback();
+    respond(false, "Insert failed: " . $stmt->error);
+}
 
-    respond(true, "Patient registered successfully.", [
-        "patient_id" => $new_id,
-        "mrn" => $mrn
-    ]);
+$new_id = (int)$stmt->insert_id;
+$stmt->close();
+
+
+// ✅ IMPORTANT: create empty medical profile row (updated_by must be a valid users.user_id)
+$prof = $conn->prepare("
+    INSERT INTO patient_medical_profile
+      (patient_id, allergies, chronic_conditions, current_medications, immunization_status, updated_by)
+    VALUES
+      (?, NULL, NULL, NULL, 'unknown', ?)
+");
+if (!$prof) {
+    $conn->rollback();
+    respond(false, "Profile prepare failed: " . $conn->error);
+}
+
+$prof->bind_param("ii", $new_id, $created_by);
+
+if (!$prof->execute()) {
+    $conn->rollback();
+    respond(false, "Profile insert failed: " . $prof->error);
+}
+
+$prof->close();
+
+$conn->commit();
+
+respond(true, "Patient registered successfully.", [
+    "patient_id" => $new_id,
+    "mrn" => $mrn
+]);
+
 
 } catch (Throwable $e) {
     respond(false, "Server error: " . $e->getMessage());
