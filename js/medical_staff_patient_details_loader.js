@@ -330,12 +330,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     ${d.uploaded_by_name ? `• ${esc(d.uploaded_by_name)}` : ""}
                   </div>
                 </div>
-  
                 ${d.file_path ? `
-                  <a class="btn btn-outline btn-sm" href="${esc(d.file_path)}" target="_blank" rel="noopener">
-                    View
-                  </a>
-                ` : ""}
+                <a class="btn btn-outline btn-sm"
+                   href="/CAVITE-MED/${esc(d.file_path.replace(/^pages\//, ''))}"
+                   target="_blank"
+                   rel="noopener">
+                  View
+                </a>
+              ` : ""}
+              
               </div>
             </div>
           `).join("")}

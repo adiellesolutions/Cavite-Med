@@ -1,3 +1,24 @@
+<?php
+session_start();
+
+// ✅ require login
+if (!isset($_SESSION['user_id'])) {
+    header("Location: system_login_portal.html");
+    exit;
+}
+
+// ✅ optional: require doctor role (edit if your role name is different)
+if (isset($_SESSION['role']) && $_SESSION['role'] !== 'doctor') {
+    header("Location: system_login_portal.html");
+    exit;
+}
+
+// ✅ optional: force password change
+if (!empty($_SESSION['force_change_password'])) {
+    header("Location: force_change_password.php");
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -53,17 +74,28 @@
             </div>
 
             <!-- User Info & Actions -->
-            <div class="flex items-center gap-4">
-                <div class="flex items-center gap-3">
-                    <div class="text-right hidden md:block">
-                        <p class="text-sm font-medium text-text-primary">Dr. Sarah Johnson</p>
-                        <p class="text-xs text-text-secondary">Doctor • DEA: AJ1234567</p>
-                    </div>
-                    <button type="button" class="w-10 h-10 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-semibold">
-                        SJ
-                    </button>
+           <!-- User Profile -->
+           <div class="flex items-center gap-4">   
+            <div class="flex items-center gap-3">
+
+                <!-- User Name & Role -->
+                <div class="text-right hidden md:block">
+                    <p class="text-sm font-medium text-text-primary">
+                        <?php echo htmlspecialchars($_SESSION['name']); ?>
+                    </p>
+                    <p class="text-xs text-text-secondary">
+                        <?php echo ucfirst(str_replace('_', ' ', $_SESSION['role'])); ?>
+                    </p>
                 </div>
+
+                <!-- Profile Picture -->
+                <img
+                    src="/CAVITE-MED/<?php echo $_SESSION['profile_picture'] ?: 'uploads/profile/default.png'; ?>"
+                    alt="User profile picture"
+                    class="w-10 h-10 rounded-full object-cover border-2 border-primary"
+                    onerror="this.src='/HIMS/uploads/profile/default.png'; this.onerror=null;">
             </div>
+        </div>
         </div>
     </header>
 
@@ -72,21 +104,21 @@
         <div class="px-6">
             <div class="flex items-center gap-1 overflow-x-auto scrollbar-thin">
 
-                <a href="doctor_prescription.html" class="nav-item nav-item-active whitespace-nowrap">
+                <a href="doctor_prescription.php" class="nav-item nav-item-active whitespace-nowrap">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                     </svg>
                     <span>e-Prescription</span>
                 </a>
 
-                <a href="doctor_medical_certificate.html" class="nav-item">
+                <a href="doctor_medical_certificate.php" class="nav-item">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
                     <span>Medical Certificates</span>
                 </a>
 
-                <a href="doctor_patient_records.html" class="nav-item">
+                <a href="doctor_patient_records.php" class="nav-item">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                     </svg>

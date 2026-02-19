@@ -357,6 +357,35 @@ CREATE TABLE patient_documents (
   INDEX idx_docs_uploaded_by (uploaded_by)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+----
+ALTER TABLE patient_documents
+  ADD COLUMN document_type ENUM(
+    'general',
+    'medical_certificate',
+    'prescription',
+    'lab_result',
+    'imaging',
+    'other'
+  ) NOT NULL DEFAULT 'general',
+  ADD COLUMN certificate_id INT NULL,
+  ADD COLUMN prescription_id INT NULL;
+
+ALTER TABLE patient_documents
+  ADD CONSTRAINT fk_docs_certificate
+    FOREIGN KEY (certificate_id)
+    REFERENCES medical_certificates(certificate_id)
+    ON DELETE SET NULL;
+
+ALTER TABLE patient_documents
+  ADD CONSTRAINT fk_docs_prescription
+    FOREIGN KEY (prescription_id)
+    REFERENCES prescriptions(prescription_id)
+    ON DELETE SET NULL;
+CREATE INDEX idx_docs_document_type ON patient_documents(document_type);
+CREATE INDEX idx_docs_certificate_id ON patient_documents(certificate_id);
+CREATE INDEX idx_docs_prescription_id ON patient_documents(prescription_id);
+
+
 
 CREATE TABLE user_patient_favorites (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -398,4 +427,162 @@ CREATE TABLE audit_logs (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
   INDEX idx_audit_user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+
+
+--------
+CREATE TABLE medical_certificates (
+  certificate_id INT AUTO_INCREMENT PRIMARY KEY,
+
+  patient_id INT NOT NULL,
+  visit_id INT NULL,
+
+  doctor_id INT NOT NULL,
+  created_by INT NOT NULL,
+
+  certificate_number VARCHAR(50) NOT NULL UNIQUE,
+
+  template_type ENUM(
+    'medical_leave',
+    'fitness_certificate',
+    'travel_clearance',
+    'sports_participation',
+    'other'
+  ) NOT NULL DEFAULT 'medical_leave',
+
+  diagnosis VARCHAR(255) NOT NULL,
+  restriction_level ENUM(
+    'complete_rest',
+    'modified_duties',
+    'light_duty',
+    'no_restriction'
+  ) NOT NULL DEFAULT 'modified_duties',
+
+  leave_from DATE NOT NULL,
+  leave_to DATE NOT NULL,
+
+  additional_instructions TEXT NULL,
+  follow_up_date DATE NULL,
+
+  include_digital_stamp TINYINT(1) NOT NULL DEFAULT 1,
+  include_qr_code TINYINT(1) NOT NULL DEFAULT 1,
+
+  status ENUM('active','voided') NOT NULL DEFAULT 'active',
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_mc_patient
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_mc_visit
+    FOREIGN KEY (visit_id) REFERENCES patient_visits(visit_id)
+    ON DELETE SET NULL,
+
+  CONSTRAINT fk_mc_doctor
+    FOREIGN KEY (doctor_id) REFERENCES users(user_id)
+    ON DELETE RESTRICT,
+
+  CONSTRAINT fk_mc_created_by
+    FOREIGN KEY (created_by) REFERENCES users(user_id)
+    ON DELETE RESTRICT,
+
+  INDEX idx_mc_patient_id (patient_id),
+  INDEX idx_mc_doctor_id (doctor_id),
+  INDEX idx_mc_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE prescriptions (
+  prescription_id INT AUTO_INCREMENT PRIMARY KEY,
+
+  patient_id INT NOT NULL,
+  visit_id INT NULL,
+
+  doctor_id INT NOT NULL,
+  created_by INT NOT NULL,
+
+  prescription_number VARCHAR(50) NOT NULL UNIQUE,
+
+  allow_substitution TINYINT(1) NOT NULL DEFAULT 1,
+  special_instructions TEXT NULL,
+
+  status ENUM('active','dispensed','cancelled') NOT NULL DEFAULT 'active',
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_pres_patient
+    FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_pres_visit
+    FOREIGN KEY (visit_id) REFERENCES patient_visits(visit_id)
+    ON DELETE SET NULL,
+
+  CONSTRAINT fk_pres_doctor
+    FOREIGN KEY (doctor_id) REFERENCES users(user_id)
+    ON DELETE RESTRICT,
+
+  CONSTRAINT fk_pres_created_by
+    FOREIGN KEY (created_by) REFERENCES users(user_id)
+    ON DELETE RESTRICT,
+
+  INDEX idx_pres_patient_id (patient_id),
+  INDEX idx_pres_doctor_id (doctor_id),
+  INDEX idx_pres_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE prescription_items (
+  item_id INT AUTO_INCREMENT PRIMARY KEY,
+
+  prescription_id INT NOT NULL,
+  medicine_id INT NOT NULL,
+
+  dosage_amount DECIMAL(10,2) NOT NULL,
+  dosage_unit ENUM('mg','mcg','g','ml','units') NOT NULL,
+
+  frequency_template ENUM(
+    'once-daily',
+    'twice-daily',
+    'three-times',
+    'four-times',
+    'every-6h',
+    'every-8h',
+    'every-12h',
+    'as-needed',
+    'bedtime'
+  ) NOT NULL,
+
+  duration_amount INT NOT NULL,
+  duration_unit ENUM('days','weeks','months') NOT NULL,
+
+  route_admin ENUM(
+    'oral',
+    'sublingual',
+    'topical',
+    'inhalation',
+    'injection-im',
+    'injection-iv',
+    'injection-sc',
+    'rectal',
+    'ophthalmic',
+    'otic'
+  ) NOT NULL,
+
+  item_instructions TEXT NULL,
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_pres_item_prescription
+    FOREIGN KEY (prescription_id) REFERENCES prescriptions(prescription_id)
+    ON DELETE CASCADE,
+
+  CONSTRAINT fk_pres_item_medicine
+    FOREIGN KEY (medicine_id) REFERENCES medicine(id)
+    ON DELETE RESTRICT,
+
+  INDEX idx_pres_item_prescription_id (prescription_id),
+  INDEX idx_pres_item_medicine_id (medicine_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
