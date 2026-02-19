@@ -21,9 +21,11 @@ document.addEventListener("DOMContentLoaded", () => {
             const rowExpiry = new Date(row.dataset.expiry);
 
             // Category
-            if (catVal && rowCategory !== catVal) {
+            if (catVal && 
+                rowCategory.trim().toLowerCase() !== catVal.trim().toLowerCase()) {
                 show = false;
             }
+
 
             // Stock status
             if (stockVal && rowStatus !== stockVal) {

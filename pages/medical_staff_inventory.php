@@ -10,6 +10,15 @@ if (!empty($_SESSION['force_change_password'])) {
     header("Location: force_change_password.php");
     exit;
 }
+
+require "../backend/encoder_inventory_pagination.php";
+require "../backend/medical_staff_inventory_fetch.php";
+require "../backend/medical_staff_inventory_summary.php";
+
+$start = $offset + 1;
+$end   = min($offset + $limit, $totalRecords);
+
+
 ?>
 
 <!DOCTYPE html>
@@ -20,8 +29,42 @@ if (!empty($_SESSION['force_change_password'])) {
     <meta name="description" content="CAVMED Inventory Management System - Comprehensive pharmaceutical inventory tracking and supply chain management">
     <title>Inventory Management System - CAVMED Portal</title>
     <link rel="stylesheet" href="../css/main.css">
-  <script type="module" async src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Fcavmedporta6876back.builtwithrocket.new&_be=https%3A%2F%2Fapplication.rocket.new&_v=0.1.10"></script>
-  <script type="module" defer src="https://static.rocket.new/rocket-shot.js?v=0.0.1"></script>
+    <link rel="stylesheet" href="../css/encoder_inventory.css">
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+    <script defer src="../js/encoder_inventory_search.js"></script>
+    <script defer src="../js/encoder_inventory_sort.js"></script>
+    <script defer src="../js/encoder_inventory_filter.js"></script>
+    <script defer src="../js/encoder_inventory_rightpanel.js"></script>
+    <script defer src="../js/encoder_inventory_actions.js"></script>
+    <script defer src="../js/medical_staff_barcode_scanstate.js"></script>
+
+    <style>
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+.modal-container {
+    background: white;
+    border-radius: 12px;
+    width: auto;              /* ✅ change this */
+    max-width: 580px;         /* ✅ hard limit */
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+    </style>
+     
   </head>
 <body class="bg-background min-h-screen flex flex-col">
     <!-- Header Section -->
@@ -43,6 +86,7 @@ if (!empty($_SESSION['force_change_password'])) {
                 <!-- User Profile -->
                 <div class="flex items-center gap-4">   
                     <div class="flex items-center gap-3">
+
                         <!-- User Name & Role -->
                         <div class="text-right hidden md:block">
                             <p class="text-sm font-medium text-text-primary">
@@ -63,59 +107,129 @@ if (!empty($_SESSION['force_change_password'])) {
                 </div>
             </div>
         </div>
-    </header>
 
-    <nav class="bg-surface border-b border-border px-6 no-print">        
-        <div class="px-6">
-            <div class="flex items-center gap-1 overflow-x-auto scrollbar-thin">
-                
-                <a href="medical_staff_dashboard.html" class="nav-item">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                    </svg>
-                    Dashboard
-                </a>
+        <!-- Navigation Tabs -->
+        <nav class="bg-surface border-b border-border px-6 no-print">        
+            <div class="px-6">
+                <div class="flex items-center gap-1 overflow-x-auto scrollbar-thin">
+                    
+                    <a href="medical_staff_dashboard.php" class="nav-item">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        Dashboard
+                    </a>
 
-                <a href="medical_staff_prescription.html" class="nav-item">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                    </svg>
-                    <span>Dispensation</span>
-                </a>
+                    <a href="medical_staff_prescription.html" class="nav-item">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        <span>Dispensation</span>
+                    </a>
 
-                <a href="medical_staff_patient_registration.php" class="nav-item">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                    </svg>
-                    <span>Patient</span>
-                </a>
-                <a href="medical_staff_procedures.php" class="nav-item">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                    </svg>
-                    Procedures
-                </a>
-                <a href="medical_staff_inventory.php" class="nav-item nav-item-active whitespace-nowrap">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                    </svg>
-                    <span>Inventory List</span>
-                </a>
-                <a href="../backend/system_logout.php" class="nav-item whitespace-nowrap ml-auto">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                    </svg>
-                    Logout
-                </a>
+                    <a href="medical_staff_patient_registration.php" class="nav-item">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        <span>Patient</span>
+                    </a>
+                    <a href="medical_staff_procedures.php" class="nav-item">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        Procedures
+                    </a>
+                    <a href="medical_staff_inventory.php" class="nav-item nav-item-active whitespace-nowrap">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        <span>Inventory List</span>
+                    </a>
+                    <a href="../backend/system_logout.php" class="nav-item whitespace-nowrap ml-auto">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Inventory Summary Bar -->
+        <div class="bg-secondary-50 border-t border-border px-6 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-8">
+                    <!-- Total Items -->
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                        </svg>
+                        <div>
+                            <p class="text-xs text-text-secondary">Total Items</p>
+                            <p class="text-lg font-semibold text-text-primary">
+                                <?= number_format($totalItems); ?>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Low Stock Alerts -->
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-warning" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <p class="text-xs text-text-secondary">Critical</p>
+                            <p class="text-lg font-semibold text-warning">
+                                <?= number_format($criticalItems); ?>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Expiry Warnings -->
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-error" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <p class="text-xs text-text-secondary">Expiring Soon</p>
+                            <p class="text-lg font-semibold text-error">
+                                <?= number_format($expiringSoon); ?>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Total Value -->
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-success" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <p class="text-xs text-text-secondary">Total Value</p>
+                            <p class="text-lg font-semibold text-success">
+                                ₱<?= number_format($totalValue, 2); ?>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Last Updated -->
+                <div class="text-right">
+                    <p class="text-xs text-text-secondary">Last Updated</p>
+                    <p class="text-sm font-medium text-text-primary">
+                        <?= $lastUpdated ? date("M d, Y h:i A", strtotime($lastUpdated)) : "N/A"; ?>
+                    </p>
+                </div>
             </div>
         </div>
-    </nav>
+    </header>
+
 
     <!-- Main Content Area -->
-    <main class="flex-1 flex overflow-hidden">
+    <main class="flex h-full overflow-hidden">
         <!-- Left Panel - Inventory Grid (60%) -->
-        <div class="flex-1 flex flex-col border-r border-border bg-surface">
+        <div class="flex-1 min-w-0 flex flex-col border-r border-border bg-surface">
             <!-- Toolbar -->
             <div class="border-b border-border p-4 space-y-4">
                 <!-- Search & Actions Row -->
@@ -124,68 +238,83 @@ if (!empty($_SESSION['force_change_password'])) {
                     <div class="flex-1 relative">
                         <input type="text" id="inventorySearch" placeholder="Search by medicine name, category, or supplier..."
                                class="input pl-10 pr-4">
-                        <svg class="w-5 h-5 text-text-tertiary absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
                     </div>
+
+                    <!-- Quick Actions -->
+                    <button class="btn btn-primary" id="addNewItemBtn">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        Add New Item
+                    </button>
+                    
                 </div>
 
-                <!-- Filters Row -->
                 <div class="flex items-center gap-3">
-                    <!-- Category Filter -->
-                    <select class="input w-48" id="categoryFilter">
+                    <!-- Category -->
+                    <select id="filterCategory"  class="input w-48">
                         <option value="">All Categories</option>
                         <option value="antibiotics">Antibiotics</option>
                         <option value="analgesics">Analgesics</option>
-                        <option value="vitamins">Vitamins & Supplements</option>
+                        <option value="vitamins">Vitamins</option>
                         <option value="cardiovascular">Cardiovascular</option>
                         <option value="respiratory">Respiratory</option>
                         <option value="gastrointestinal">Gastrointestinal</option>
                     </select>
 
-                    <!-- Stock Status Filter -->
-                    <select class="input w-40" id="stockStatusFilter">
+                    <!-- Stock Status -->
+                    <select id="filterStock" class="input w-40">
                         <option value="">All Stock</option>
-                        <option value="in-stock">In Stock</option>
-                        <option value="low-stock">Low Stock</option>
-                        <option value="out-of-stock">Out of Stock</option>
+                        <option value="in_stock">In Stock</option>
+                        <option value="low_stock">Low Stock</option>
+                        <option value="out_of_stock">Out of Stock</option>
                     </select>
 
-                    <!-- Expiry Filter -->
-                    <select class="input w-44" id="expiryFilter">
-                        <option value="">All Expiry Dates</option>
+                    <!-- Expiry -->
+                    <select id="filterExpiry" class="input w-44">
+                        <option value="">All Expiry</option>
                         <option value="expired">Expired</option>
-                        <option value="30-days">Expiring in 30 Days</option>
-                        <option value="90-days">Expiring in 90 Days</option>
+                        <option value="30">Expiring in 30 Days</option>
+                        <option value="90">Expiring in 90 Days</option>
                         <option value="valid">Valid (>90 Days)</option>
                     </select>
 
-                    <!-- Supplier Filter -->
-                    <select class="input w-44" id="supplierFilter">
-                        <option value="">All Suppliers</option>
-                        <option value="medpharma">MedPharma Inc.</option>
-                        <option value="healthsupply">HealthSupply Corp.</option>
-                        <option value="pharmadist">PharmaDistributors</option>
-                        <option value="globalmed">GlobalMed Solutions</option>
-                    </select>
+                    <!-- Submit -->
+                    <button id="resetFilters" class="btn btn-primary">
+                        Reset
+                    </button>
                 </div>
-
                 <!-- Results Info -->
                 <div class="flex items-center justify-between text-sm">
                     <p class="text-text-secondary">
-                        Showing <span class="font-medium text-text-primary">1-25</span> of <span class="font-medium text-text-primary">1,247</span> items
+                        Showing
+                        <span class="font-medium text-text-primary">
+                            <?= $start ?>–<?= $end ?>
+                        </span>
+                        of
+                        <span class="font-medium text-text-primary">
+                            <?= number_format($totalRecords) ?>
+                        </span>
+                        items
                     </p>
+
                     <div class="flex items-center gap-2">
                         <label class="text-text-secondary">Sort by:</label>
-                        <select class="input py-1 text-sm w-40" id="sortBy">
-                            <option value="name-asc">Name (A-Z)</option>
-                            <option value="name-desc">Name (Z-A)</option>
-                            <option value="stock-low">Stock (Low to High)</option>
-                            <option value="stock-high">Stock (High to Low)</option>
-                            <option value="expiry-soon">Expiry (Soonest First)</option>
+
+                        <select id="sortBy" class="input py-1 text-sm w-40">
+                            <option value="name-asc">Name (A–Z)</option>
+                            <option value="name-desc">Name (Z–A)</option>
+                            <option value="stock-low">Stock (Low → High)</option>
+                            <option value="stock-high">Stock (High → Low)</option>
+                            <option value="expiry-soon">Expiry (Soonest)</option>
                             <option value="recently-added">Recently Added</option>
                         </select>
                     </div>
+
+
+                    <!-- Preserve pagination -->
+                    <input type="hidden" name="page" value="1">
+                    <input type="hidden" name="limit" value="<?= $limit ?>">
                 </div>
             </div>
 
@@ -197,208 +326,247 @@ if (!empty($_SESSION['force_change_password'])) {
                             <th class="px-4 py-3">Medicine Name</th>
                             <th class="px-4 py-3">Category</th>
                             <th class="px-4 py-3">Current Stock</th>
+                            <th class="px-4 py-3">Reorder Point</th>
+                            <th class="px-4 py-3">Manufacturing Date</th>
                             <th class="px-4 py-3">Expiry Date</th>
                             <th class="px-4 py-3">Supplier</th>
                             <th class="px-4 py-3">Status</th>
+                            <th class="px-4 py-3">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-border" id="inventoryTableBody">
-                        <!-- Row 1 -->
-                        <tr class="hover:bg-secondary-50 cursor-pointer inventory-row" data-item-id="1">
-                            <td class="px-4 py-3">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-primary-50 rounded flex items-center justify-center flex-shrink-0">
-                                        <svg class="w-6 h-6 text-primary" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p class="font-medium text-text-primary">Amoxicillin 500mg</p>
-                                        <p class="text-xs text-text-secondary">Capsule</p>
-                                    </div>
+
+                    <?php if ($result && $result->num_rows > 0): ?>
+                    <?php while ($row = $result->fetch_assoc()): ?>
+
+                    <?php
+                        // Status badge styles
+                        $statusClass = match ($row['status']) {
+                            'in_stock' => 'badge-success',
+                            'low_stock' => 'badge-warning',
+                            'out_of_stock' => 'badge-error',
+                            'expired' => 'badge-error',
+                            default => 'badge-secondary'
+                        };
+
+                        // Stock warning color
+                        $stockClass = ($row['current_stock'] <= $row['reorder_point'])
+                            ? 'text-warning'
+                            : 'text-text-primary';
+                    ?>
+
+                    <tr class="hover:bg-secondary-50 cursor-pointer inventory-row"
+                        data-id="<?= $row['id']; ?>"
+                        data-supplier-id="<?= $row['supplier_id']; ?>"
+                        data-name="<?= htmlspecialchars($row['medicine_name']); ?>"
+                        data-type="<?= ucfirst($row['medicine_type']); ?>"
+                        data-unit="<?= htmlspecialchars($row['unit_of_measure']); ?>"
+                        data-category="<?= htmlspecialchars($row['category']); ?>"
+                        data-status="<?= $row['status']; ?>"
+                        data-stock="<?= $row['current_stock']; ?>"
+                        data-reorder="<?= $row['reorder_point']; ?>"
+                        data-fundingsource="<?= $row['funding_source']; ?>"
+                        data-price="<?= $row['unit_price']; ?>"
+                        data-manufacturing="<?= $row['manufacturing_date']; ?>"
+                        data-expiry="<?= $row['expiry_date']; ?>"     
+                        data-supplier="<?= htmlspecialchars($row['supplier_name']); ?>"
+                        data-contact="<?= htmlspecialchars($row['contact_person']); ?>"
+                        data-barcode="<?= htmlspecialchars($row['barcode']); ?>"
+                        data-batch="<?= htmlspecialchars($row['batch_number']); ?>"
+                        data-notes="<?= htmlspecialchars($row['notes']); ?>"
+                        data-phone="<?= htmlspecialchars($row['contact_number']); ?>"
+                        data-suppliertype="<?= htmlspecialchars($row['supplier_type']); ?>"
+                        data-email="<?= htmlspecialchars($row['email']); ?>">
+
+
+
+                        <!-- Medicine Name -->
+                        <td class="px-4 py-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-primary-50 rounded flex items-center justify-center flex-shrink-0">
+                                    <!-- ICON (unchanged) -->
+                                    <svg class="w-6 h-6 text-primary" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd"
+                                            d="M10 2a1 1 0 011 1v1.323l3.954 1.582
+                                            1.599-.8a1 1 0 01.894 1.79l-1.233.616
+                                            1.738 5.42a1 1 0 01-.285 1.05A3.989
+                                            3.989 0 0115 15a3.989 3.989 0
+                                            01-2.667-1.019 1 1 0
+                                            01-.285-1.05l1.715-5.349
+                                            L11 6.477V16h2a1 1 0
+                                            110 2H7a1 1 0
+                                            110-2h2V6.477L6.237
+                                            7.582l1.715 5.349a1
+                                            1 0 01-.285 1.05A3.989
+                                            3.989 0 015 15a3.989
+                                            3.989 0 01-2.667-1.019
+                                            1 1 0 01-.285-1.05l1.738-5.42
+                                            -1.233-.617a1 1 0 01.894-1.788
+                                            l1.599.799L9 4.323V3a1 1 0 011-1z"
+                                            clip-rule="evenodd"/>
+                                    </svg>
                                 </div>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span class="badge badge-primary">Antibiotics</span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <p class="text-text-secondary">500 units</p>
-                            </td>
-                            <td class="px-4 py-3">
-                                <p class="text-text-primary">Mar 15, 2026</p>
-                            </td>
-                            <td class="px-4 py-3">
-                                <p class="text-text-secondary">MedPharma Inc.</p>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span class="badge badge-success">In Stock</span>
-                            </td>
-                        </tr>
 
-                        <!-- Row 2 -->
-                        <tr class="hover:bg-secondary-50 cursor-pointer inventory-row" data-item-id="2">
+                                <div>
+                                    
+                                    <!-- Medicine Name -->
+                                    <p class="font-medium text-text-primary">
+                                        <?= htmlspecialchars($row['medicine_name']); ?>
+                                    </p>
 
-                            <td class="px-4 py-3">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-warning-50 rounded flex items-center justify-center flex-shrink-0">
-                                        <svg class="w-6 h-6 text-warning" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p class="font-medium text-text-primary">Paracetamol 500mg</p>
-                                        <p class="text-xs text-text-secondary">Tablet</p>
-                                    </div>
+                                    <!-- Type + Unit -->
+                                    <p class="text-xs text-text-secondary">
+                                        <?= ucfirst($row['medicine_type']); ?> • <?= htmlspecialchars($row['unit_of_measure']); ?>
+                                    </p>
+
+                                    <!-- ACTUAL BARCODE -->
+                                    <svg class="barcode mt-2"
+                                        jsbarcode-format="CODE128"
+                                        jsbarcode-value="<?= preg_replace('/[^\x20-\x7E]/', '', $row['barcode']); ?>"
+                                        jsbarcode-width="2.5"
+                                        jsbarcode-height="60"
+                                        jsbarcode-margin="10"
+                                        jsbarcode-displayValue="true"
+                                        jsbarcode-fontSize="12">
+                                    </svg>
+
+
                                 </div>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span class="badge badge-secondary">Analgesics</span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <p class="font-medium text-warning">350 units</p>
-                            </td>
-                            <td class="px-4 py-3">
-                                <p class="text-text-primary">Jun 20, 2026</p>
-                            </td>
-                            <td class="px-4 py-3">
-                                <p class="text-text-secondary">HealthSupply Corp.</p>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span class="badge badge-warning">Critical</span>
-                            </td>
-                        </tr>
 
-                        <!-- Row 3 -->
-                        <tr class="hover:bg-secondary-50 cursor-pointer inventory-row" data-item-id="3">
-                            <td class="px-4 py-3">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-error-50 rounded flex items-center justify-center flex-shrink-0">
-                                        <svg class="w-6 h-6 text-error" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p class="font-medium text-text-primary">Ibuprofen 400mg</p>
-                                        <p class="text-xs text-text-secondary">Tablet</p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span class="badge badge-secondary">Analgesics</span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <p class="text-text-secondary">400 units</p>
-                            </td>
-                            <td class="px-4 py-3">
-                                <p class="text-error">Jan 10, 2026</p>
-                            </td>
-                            <td class="px-4 py-3">
-                                <p class="text-text-secondary">PharmaDistributors</p>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span class="badge badge-error">Expiring Soon</span>
-                            </td>
-                        </tr>
+                            </div>
+                        </td>
 
-                        <!-- Row 4 -->
-                        <tr class="hover:bg-secondary-50 cursor-pointer inventory-row" data-item-id="4">
-                            <td class="px-4 py-3">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-success-50 rounded flex items-center justify-center flex-shrink-0">
-                                        <svg class="w-6 h-6 text-success" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p class="font-medium text-text-primary">Vitamin C 1000mg</p>
-                                        <p class="text-xs text-text-secondary">Tablet</p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span class="badge badge-success">Vitamins</span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <p class="text-text-secondary">600 units</p>
-                            </td>
-                            <td class="px-4 py-3">
-                                <p class="text-text-primary">Sep 30, 2026</p>
-                            </td>
-                            <td class="px-4 py-3">
-                                <p class="text-text-secondary">GlobalMed Solutions</p>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span class="badge badge-success">In Stock</span>
-                            </td>
-                        </tr>
+                        <!-- Category -->
+                        <td class="px-4 py-3">
+                            <span class="badge badge-secondary">
+                                <?= htmlspecialchars($row['category']); ?>
+                            </span>
+                        </td>
 
-                        <!-- Row 5 -->
-                        <tr class="hover:bg-secondary-50 cursor-pointer inventory-row" data-item-id="5">
-                            <td class="px-4 py-3">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-primary-50 rounded flex items-center justify-center flex-shrink-0">
-                                        <svg class="w-6 h-6 text-primary" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p class="font-medium text-text-primary">Metformin 500mg</p>
-                                        <p class="text-xs text-text-secondary">Tablet</p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span class="badge badge-primary">Cardiovascular</span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <p class="text-text-secondary">450 units</p>
-                            </td>
-                            <td class="px-4 py-3">
-                                <p class="text-text-primary">Aug 12, 2026</p>
-                            </td>
-                            <td class="px-4 py-3">
-                                <p class="text-text-secondary">MedPharma Inc.</p>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span class="badge badge-success">In Stock</span>
-                            </td>
-                        </tr>
+                        <!-- Current Stock -->
+                        <td class="px-4 py-3">
+                            <p class="font-medium <?= $stockClass; ?>">
+                                <?= number_format($row['current_stock']); ?> units
+                            </p>
+                        </td>
 
-                        <!-- Additional rows would continue here... -->
+                        <!-- Reorder Point -->
+                        <td class="px-4 py-3">
+                            <p class="text-text-secondary">
+                                <?= number_format($row['reorder_point']); ?> units
+                            </p>
+                        </td>
+
+                        <!-- Manufacturing Date -->
+                        <td class="px-4 py-3">
+                            <p class="text-text-primary">
+                                <?= date("M d, Y", strtotime($row['manufacturing_date'])); ?>
+                            </p>
+                        </td>
+
+                        <!-- Expiry Date -->
+                        <td class="px-4 py-3">
+                            <p class="<?= ($row['status'] === 'expired') ? 'text-error' : 'text-text-primary'; ?>">
+                                <?= date("M d, Y", strtotime($row['expiry_date'])); ?>
+                            </p>
+                        </td>
+
+                        <!-- Supplier -->
+                        <td class="px-4 py-3">
+                            <p class="text-text-secondary">
+                                <?= htmlspecialchars($row['supplier_name']); ?>
+                            </p>
+                        </td>
+
+                        <!-- Status -->
+                        <td class="px-4 py-3">
+                            <span class="badge <?= $statusClass; ?>">
+                                <?= ucwords(str_replace('_', ' ', $row['status'])); ?>
+                            </span>
+                        </td>
+
+                        <!-- Actions -->
+                        <td class="px-4 py-3">
+                            <div class="flex items-center gap-3">
+
+                                <!-- Return Button -->
+                                <button 
+                                    type="button"
+                                    class="text-warning hover:text-orange-600 transition-colors addReturnStockBtn"
+                                    data-id="<?= $row['id']; ?>"
+                                    data-name="<?= htmlspecialchars($row['medicine_name']); ?>"
+                                    title="Return Stock">
+
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 7h18M5 7l1 12h12l1-12M9 11v4m6-4v4" />
+                                    </svg>
+
+                                </button>
+
+                            </div>
+                        </td>
+
+
+
+                    </tr>
+
+                    <?php endwhile; ?>
+                    <?php else: ?>
+                    <tr>
+                        <td colspan="8" class="text-center py-6 text-text-secondary">
+                            No medicines found.
+                        </td>
+                    </tr>
+                    <?php endif; ?>
+
                     </tbody>
+
                 </table>
             </div>
 
-            <!-- Pagination -->
-            <div class="border-t border-border p-4 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <label class="text-sm text-text-secondary">Rows per page:</label>
-                    <select class="input py-1 text-sm w-20">
-                        <option value="25">25</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                    </select>
-                </div>
 
-                <div class="flex items-center gap-2">
-                    <button class="btn btn-ghost p-2" disabled>
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                        </svg>
-                    </button>
-                    <span class="text-sm text-text-secondary">Page 1 of 50</span>
-                    <button class="btn btn-ghost p-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                        </svg>
-                    </button>
-                </div>
+        <div class="border-t border-border p-4 flex items-center justify-between">
+
+            <!-- Rows per page -->
+            <div class="flex items-center gap-2">
+                <label class="text-sm text-text-secondary">Rows per page:</label>
+                <form method="get">
+                    <select name="limit" class="input py-1 text-sm w-20"
+                            onchange="this.form.submit()">
+                        <?php foreach ([25,50,100] as $l): ?>
+                            <option value="<?= $l ?>" <?= ($limit == $l) ? 'selected' : '' ?>>
+                                <?= $l ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <input type="hidden" name="page" value="1">
+                </form>
+            </div>
+
+            <!-- Page controls -->
+            <div class="flex items-center gap-2">
+
+                <a href="?page=<?= max(1, $page-1) ?>&limit=<?= $limit ?>"
+                class="btn btn-ghost p-2 <?= ($page <= 1) ? 'pointer-events-none opacity-50' : '' ?>">
+                    ‹
+                </a>
+
+                <span class="text-sm text-text-secondary">
+                    Page <?= $page ?> of <?= $totalPages ?>
+                </span>
+
+                <a href="?page=<?= min($totalPages, $page+1) ?>&limit=<?= $limit ?>"
+                class="btn btn-ghost p-2 <?= ($page >= $totalPages) ? 'pointer-events-none opacity-50' : '' ?>">
+                    ›
+                </a>
+
             </div>
         </div>
+    </div>
 
         <!-- Right Panel - Detailed Item View (40%) -->
-        <div class="w-2/5 bg-surface flex flex-col" id="detailPanel">
-            <!-- Detail Panel Header -->
+    <div id="detailPanel" class="w-2/5 bg-surface flex flex-col border-l border-border hidden transition-transform duration-300 ease-in-out">
             <div class="border-b border-border p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-xl font-semibold text-text-primary">Item Details</h2>
@@ -417,11 +585,11 @@ if (!empty($_SESSION['force_change_password'])) {
                         </svg>
                     </div>
                     <div class="flex-1">
-                        <h3 class="text-lg font-semibold text-text-primary">Amoxicillin 500mg</h3>
-                        <p class="text-sm text-text-secondary">Capsule • SKU: AMX-500-001</p>
+                        <h3 id="detailName" class="text-lg font-semibold text-text-primary"></h3>
+                        <p id="detailMeta" class="text-sm text-text-secondary"></p>
                         <div class="flex items-center gap-2 mt-2">
-                            <span class="badge badge-primary">Antibiotics</span>
-                            <span class="badge badge-success">In Stock</span>
+                            <span id="detailCategory" class="badge badge-primary"></span>
+                            <span id="detailStatus" class="badge badge-success"></span>
                         </div>
                     </div>
                 </div>
@@ -429,6 +597,41 @@ if (!empty($_SESSION['force_change_password'])) {
 
             <!-- Detail Panel Content -->
             <div class="flex-1 overflow-auto scrollbar-thin p-6 space-y-6">
+                <!-- Stock Information -->
+                <div class="card">
+                    <h4 class="text-sm font-semibold text-text-primary mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                        </svg>
+                        Stock Information
+                    </h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-xs text-text-secondary mb-1">Current Stock</p>
+                            <p id="detailStock" class="text-lg font-semibold text-text-primary"></p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-text-secondary mb-1">Reorder Point</p>
+                            <p id="detailReorder" class="text-lg font-semibold text-text-primary"></p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-text-secondary mb-1">Unit Price</p>
+                            <p id="detailPrice" class="text-lg font-semibold text-text-primary"></p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-text-secondary mb-1">Total Value</p>
+                            <p id="detailTotalValue" class="text-lg font-semibold text-success"></p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-text-secondary mb-1">Manufacturing Date</p>
+                            <p id="detailManufacturing" class="text-lg font-semibold text-success"></p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-text-secondary mb-1">Expiry Date</p>
+                            <p id="detailExpiry" class="text-lg font-semibold text-success"></p>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Supplier Information -->
                 <div class="card">
@@ -441,31 +644,30 @@ if (!empty($_SESSION['force_change_password'])) {
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
                             <p class="text-sm text-text-secondary">Supplier Name</p>
-                            <p class="text-sm font-medium text-text-primary">MedPharma Inc.</p>
+                            <p id="detailSupplier" class="text-sm font-medium text-text-primary"></p>
                         </div>
                         <div class="flex items-center justify-between">
                             <p class="text-sm text-text-secondary">Contact Person</p>
-                            <p class="text-sm font-medium text-text-primary">John Reyes</p>
+                            <p id="detailContact" class="text-sm font-medium text-text-primary"></p>
                         </div>
                         <div class="flex items-center justify-between">
                             <p class="text-sm text-text-secondary">Phone</p>
-                            <p class="text-sm font-medium text-text-primary">(02) 8123-4567</p>
+                            <p id="detailPhone" class="text-sm font-medium text-text-primary"></p>
                         </div>
                         <div class="flex items-center justify-between">
                             <p class="text-sm text-text-secondary">Email</p>
-                            <p class="text-sm font-medium text-primary">orders@medpharma.ph</p>
+                            <p id="detailEmail" class="text-sm font-medium text-primary"></p>
                         </div>
                         <div class="flex items-center justify-between">
-                            <p class="text-sm text-text-secondary">Lead Time</p>
-                            <p class="text-sm font-medium text-text-primary">3-5 business days</p>
+                            <p class="text-sm text-text-secondary">Supplier Type</p>
+                            <p id="detailType" class="text-sm font-medium text-text-primary"></p>
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </main>
-    
+
     <!-- Footer -->
     <footer class="bg-surface border-t border-border py-6 px-6 mt-auto">
         <div class="max-w-7xl mx-auto">
@@ -482,6 +684,145 @@ if (!empty($_SESSION['force_change_password'])) {
         </div>
     </footer>
 
-<script id="dhws-dataInjector" src="../public/dhws-data-injector.js"></script>
+<div id="returnModal" class="modal-overlay">
+    <div class="modal-container p-4">
+
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-base font-semibold">Return Stock</h2>
+                <button id="closeReturnModal" class="text-gray-500 hover:text-black text-sm">✕</button>
+            </div>
+
+            <form id="returnForm" class="space-y-3">
+
+                <input type="hidden" name="medicine_id" id="returnMedicineId">
+
+                <!-- Medicine Name -->
+                <div>
+                    <label class="block text-xs mb-1">Medicine</label>
+                    <input type="text"
+                        id="returnMedicineName"
+                        class="input w-full bg-gray-100 text-sm py-1"
+                        readonly>
+                </div>
+
+                <!-- Quantity -->
+                <div>
+                    <label class="block text-xs mb-1">Quantity</label>
+                    <input type="number"
+                        name="quantity"
+                        min="1"
+                        required
+                        class="input w-full text-sm py-1">
+                </div>
+
+                <!-- Reason -->
+                <div>
+                    <label class="block text-xs mb-1">Reason</label>
+                    <textarea name="reason"
+                            rows="2"
+                            required
+                            class="input w-full text-sm py-1"></textarea>
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" id="cancelReturnBtn" class="btn btn-outline text-sm px-3 py-1">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-warning text-sm px-3 py-1">
+                        Confirm
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+
+
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        JsBarcode(".barcode").init();
+    });
+    </script>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+        const modal = document.getElementById("returnModal");
+        const closeBtn = document.getElementById("closeReturnModal");
+        const cancelBtn = document.getElementById("cancelReturnBtn");
+        const form = document.getElementById("returnForm");
+
+        const medIdInput = document.getElementById("returnMedicineId");
+        const medNameInput = document.getElementById("returnMedicineName");
+
+        /* =========================
+        OPEN MODAL
+        ========================= */
+        document.querySelectorAll(".addReturnStockBtn").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+
+                const medicineId = btn.dataset.id;
+                const medicineName = btn.dataset.name;
+
+                medIdInput.value = medicineId;
+                medNameInput.value = medicineName;
+
+                modal.classList.add("show");
+            });
+        });
+
+        /* =========================
+        CLOSE MODAL
+        ========================= */
+        function closeModal() {
+            modal.classList.remove("show");
+            form.reset();
+        }
+
+        closeBtn.addEventListener("click", closeModal);
+        cancelBtn.addEventListener("click", closeModal);
+
+        modal.addEventListener("click", (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        /* =========================
+        SUBMIT RETURN
+        ========================= */
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+
+            fetch("../backend/medical_staff_return_stock.php", {
+                method: "POST",
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+
+                if (data.success) {
+                    alert("Stock returned successfully.");
+                    window.location.reload();
+                } else {
+                    alert(data.message || "Return failed.");
+                }
+
+            })
+            .catch(() => {
+                alert("Server error.");
+            });
+        });
+
+    });
+    </script>
+
+
+
 </body>
 </html>

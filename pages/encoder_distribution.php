@@ -252,17 +252,12 @@ if (!empty($_SESSION['force_change_password'])) {
                     Distribute Medicine
                 </button>
 
-                <button type="button" id="viewHealthCenterBtn" class="btn btn-primary">
+                <button type="button" id="viewReturnBtn" class="btn btn-primary">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <!-- Building -->
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 21V7l8-4 8 4v14M9 21v-6h6v6" />
-                        
-                        <!-- Medical Cross -->
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 8v4m-2-2h4" />
+                            d="M9 14l-4-4m0 0l4-4m-4 4h11a4 4 0 010 8h-1" />
                     </svg>
-                    Health Center
+                    Returns
                 </button>
 
             </div>
@@ -723,6 +718,43 @@ if (!empty($_SESSION['force_change_password'])) {
     </div>
 
 
+    <div id="returnsModal" class="modal-overlay">
+        <div class="modal-container max-w-5xl p-6">
+
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold">Returned Stocks</h2>
+                <button id="closeReturnsModal" class="text-gray-500 hover:text-black">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-auto max-h-[70vh]">
+                <table class="w-full border-collapse">
+                    <thead class="bg-gray-100 text-sm">
+                        <tr>
+                            <th class="p-2 text-left">Medicine</th>
+                            <th class="p-2 text-left">Quantity</th>
+                            <th class="p-2 text-left">Reason</th>
+                            <th class="p-2 text-left">Returned By</th>
+                            <th class="p-2 text-left">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="returnsTableBody">
+                        <tr>
+                            <td colspan="5" class="p-4 text-center text-gray-500">
+                                Loading...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+
     <!-- Add / Edit Health Center Modal -->
     <div id="addHealthCenterModal" class="modal-overlay">
         <div class="modal-container max-w-md w-full flex flex-col">
@@ -819,6 +851,98 @@ if (!empty($_SESSION['force_change_password'])) {
         </div>
     </footer>
 
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    const viewBtn = document.getElementById("viewReturnBtn");
+    const modal = document.getElementById("returnsModal");
+    const closeBtn = document.getElementById("closeReturnsModal");
+    const tableBody = document.getElementById("returnsTableBody");
+
+    if (!viewBtn || !modal) return;
+
+    /* ===============================
+       OPEN MODAL
+    =============================== */
+    viewBtn.addEventListener("click", () => {
+
+        modal.classList.add("show");
+
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="p-4 text-center text-gray-500">
+                    Loading...
+                </td>
+            </tr>
+        `;
+
+        fetch("../backend/encoder_fetch_returns.php")
+            .then(res => res.json())
+            .then(data => {
+
+                if (!data.success) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="p-4 text-center text-red-500">
+                                Failed to load returns
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                if (data.returns.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="p-4 text-center text-gray-500">
+                                No returns found.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tableBody.innerHTML = "";
+
+                data.returns.forEach(item => {
+                    tableBody.innerHTML += `
+                        <tr class="border-b">
+                            <td class="p-2">${item.medicine_name}</td>
+                            <td class="p-2">${item.quantity}</td>
+                            <td class="p-2">${item.reason}</td>
+                            <td class="p-2">${item.returned_by}</td>
+                            <td class="p-2">${item.created_at}</td>
+                        </tr>
+                    `;
+                });
+
+            })
+            .catch(() => {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="p-4 text-center text-red-500">
+                            Server error
+                        </td>
+                    </tr>
+                `;
+            });
+    });
+
+    /* ===============================
+       CLOSE MODAL
+    =============================== */
+    closeBtn.addEventListener("click", () => {
+        modal.classList.remove("show");
+    });
+
+    modal.addEventListener("click", (e) => {
+        if (e.target === modal) {
+            modal.classList.remove("show");
+        }
+    });
+
+});
+</script>
 
 
 </body>

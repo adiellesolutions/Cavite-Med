@@ -14,6 +14,17 @@ if (!is_numeric($user_id)) {
     exit;
 }
 
+/* ===== Health Center Handling ===== */
+$health_center_id = isset($_POST['health_center_id']) && $_POST['health_center_id'] !== ''
+    ? (int) $_POST['health_center_id']
+    : null;
+
+/* Admin does not require health center */
+if ($_POST['role'] !== 'admin' && $health_center_id === null) {
+    echo json_encode(['success' => false, 'message' => 'Health center is required']);
+    exit;
+}
+
 /* ================================
    Handle Profile Picture (optional)
 ================================ */
@@ -48,6 +59,7 @@ if (!empty($_FILES['profile_picture']['name'])) {
    Build query dynamically
 ================================ */
 if ($profilePath) {
+
     $stmt = $conn->prepare("
         UPDATE users SET
             full_name = ?,
@@ -56,28 +68,28 @@ if ($profilePath) {
             role = ?,
             position = ?,
             contact_number = ?,
-            clinic = ?,
+            health_center_id = ?,
             status = ?,
             profile_picture = ?
         WHERE user_id = ? AND deleted_at IS NULL
     ");
 
     $stmt->bind_param(
-        "sssssssssi",
+        "ssssssissi",
         $_POST['full_name'],
         $_POST['username'],
         $_POST['email'],
         $_POST['role'],
         $_POST['position'],
         $_POST['contact_number'],
-        $_POST['clinic'],
+        $health_center_id,
         $_POST['status'],
         $profilePath,
         $user_id
     );
 
 } else {
-    // No profile update
+
     $stmt = $conn->prepare("
         UPDATE users SET
             full_name = ?,
@@ -86,20 +98,20 @@ if ($profilePath) {
             role = ?,
             position = ?,
             contact_number = ?,
-            clinic = ?,
+            health_center_id = ?,
             status = ?
         WHERE user_id = ? AND deleted_at IS NULL
     ");
 
     $stmt->bind_param(
-        "ssssssssi",
+        "ssssssisi",
         $_POST['full_name'],
         $_POST['username'],
         $_POST['email'],
         $_POST['role'],
         $_POST['position'],
         $_POST['contact_number'],
-        $_POST['clinic'],
+        $health_center_id,
         $_POST['status'],
         $user_id
     );
@@ -108,5 +120,8 @@ if ($profilePath) {
 if ($stmt->execute()) {
     echo json_encode(['success' => true]);
 } else {
-    echo json_encode(['success' => false, 'message' => 'Update failed']);
+    echo json_encode([
+        'success' => false,
+        'message' => $stmt->error
+    ]);
 }

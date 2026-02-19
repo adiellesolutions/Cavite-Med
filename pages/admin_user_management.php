@@ -1,9 +1,17 @@
 <?php
+session_start();
 
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    header("Location: system_login_portal.html");
+    exit;
+}
 
+if (!empty($_SESSION['force_change_password'])) {
+    header("Location: force_change_password.php");
+    exit;
+}
 
 require "../backend/admin_UM_fetch.php";
-require "../backend/admin_UM_pagination.php";
 require "../backend/admin_UM_stats.php";
 
 $profile = !empty($user['profile_picture'])
@@ -21,8 +29,6 @@ $profile = !empty($user['profile_picture'])
     <meta name="description" content="CAVMED User Management - Administer user accounts, roles, and permissions">
     <title>User Management - CAVMED Admin Portal</title>
     <link rel="stylesheet" href="../css/main.css">
-    <script type="module" async src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Fcavmedporta6876back.builtwithrocket.new&_be=https%3A%2F%2Fapplication.rocket.new&_v=0.1.10"></script>
-    <script type="module" defer src="https://static.rocket.new/rocket-shot.js?v=0.0.1"></script>
     <script defer src="../js/admin_UM_modal.js"></script>
     <script defer src="../js/admin_UM_adduser.js"></script>
     <script defer src="../js/admin_UM_deleteuser.js"></script>
@@ -299,7 +305,7 @@ $profile = !empty($user['profile_picture'])
                                         : 'Never'; ?>
                                 </p>
                                 <p class="text-sm text-text-secondary">
-                                    <?php echo htmlspecialchars($user['clinic']); ?>
+                                    <?php echo htmlspecialchars($user['center_name'] ?? 'N/A'); ?>
                                 </p>
                             </td>
 
@@ -550,14 +556,22 @@ $profile = !empty($user['profile_picture'])
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-text-primary mb-2">
-                                Clinic
+                                Health Center
                             </label>
-                            <input type="text" name="clinic"
-                                class="input w-full"
-                                placeholder="Main Clinic">
+                            <select name="health_center_id" class="input w-full">
+                                <option value="">Select Health Center</option>
+                                <?php
+                                $centers = $conn->query("SELECT id, center_name FROM health_centers WHERE is_archived = 0");
+                                while ($center = $centers->fetch_assoc()):
+                                ?>
+                                    <option value="<?php echo $center['id']; ?>">
+                                        <?php echo htmlspecialchars($center['center_name']); ?>
+                                    </option>
+                                <?php endwhile; ?>
+                            </select>
                         </div>
 
-                        
+        
                         <!-- Contact Number -->
                         <div>
                             <label class="block text-sm font-medium text-text-primary mb-2">

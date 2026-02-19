@@ -1,51 +1,18 @@
-INSERT INTO users 
-(full_name, username, role, email, contact_number, position, clinic)
+INSERT INTO health_centers 
+(center_name, center_type, address, contact_person, contact_number)
 VALUES
-(
-    'Juan Dela Cruz',
-    'admin_juan',
-    'admin',
-    'juan.delacruz@cavmed.com',
-    '09171234567',
-    'System Administrator',
-    'Main Clinic'
-),
-(
-    'Dr. Maria Santos',
-    'dr_maria',
-    'doctor',
-    'maria.santos@cavmed.com',
-    '09181234567',
-    'General Physician',
-    'Outpatient Department'
-),
-(
-    'Nurse Paul Garcia',
-    'nurse_paul',
-    'medical_staff',
-    'paul.garcia@cavmed.com',
-    '09191234567',
-    'Staff Nurse',
-    'Main Clinic'
-),
-(
-    'Ana Reyes',
-    'encoder_ana',
-    'encoder',
-    'ana.reyes@cavmed.com',
-    '09201234567',
-    'Medical Records Encoder',
-    'Clinic A'
-),
-(
-    'Dr. Luis Mendoza',
-    'dr_luis',
-    'doctor',
-    'luis.mendoza@cavmed.com',
-    '09211234567',
-    'Family Medicine Doctor',
-    'Clinic B'
-);
+('RHU Cavite City', 'rhu', 'Cavite City Proper', 'Dr. Maria Santos', '09171234567'),
+('Barangay 1 Health Center', 'barangay_health_center', 'Brgy. 1, Cavite City', 'Nurse Anna Cruz', '09181234567'),
+('Cavite District Hospital', 'hospital', 'San Roque, Cavite City', 'Dr. Juan Dela Cruz', '09191234567'),
+('City Clinic Cavite', 'clinic', 'Poblacion, Cavite City', 'Dr. Mark Reyes', '09201234567');
+
+INSERT INTO users 
+(full_name, username, password, role, email, contact_number, position, health_center_id)
+VALUES
+('System Administrator', 'admin', 'cavmed2025', 'admin', 'admin@cavmed.local', '09000000000', 'Administrator', NULL),
+('Encoder John Lee', 'encoderjohn', 'cavmed2025', 'encoder', 'john@cavmed.local', '09193334444', 'Inventory Encoder', NULL),
+('Dr. Maria Santos', 'drmaria', 'cavmed2025', 'doctor', 'maria@cavmed.local', '09171234567', 'Medical Officer', 1),
+('Nurse Anna Cruz', 'nurseanna', 'cavmed2025', 'medical_staff', 'anna@cavmed.local', '09181234567', 'Nurse', 2);
 
 
 INSERT INTO suppliers 
@@ -102,14 +69,6 @@ VALUES
 (3, 'deduct', 150, 'Dispensed to OPD', 1),
 
 (4, 'add', 3000, 'Donation received', 1);
-
-
-INSERT INTO health_centers
-(center_name, center_type, address, contact_person, contact_number)
-VALUES
-('San Pablo City RHU', 'rhu', 'San Pablo City, Laguna', 'Dr. Maria Santos', '09175551234'),
-('Brgy. Maligaya Health Center', 'barangay_health_center', 'Brgy. Maligaya, San Pablo', 'Nurse Ana Lopez', '09176662345'),
-('District Hospital', 'hospital', 'San Pablo City', 'Admin Office', '09178883456');
 
 
 INSERT INTO distribution

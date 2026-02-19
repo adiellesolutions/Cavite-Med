@@ -7,13 +7,14 @@ const addUserForm = document.getElementById("addUserForm");
 const roleSelect = document.getElementById("roleSelect");
 const editUserIdInput = document.getElementById("edit_user_id");
 
-
+/* ===============================
+   OPEN ADD USER MODAL
+=============================== */
 addUserBtn.addEventListener("click", () => {
     addUserForm.reset();
     editUserIdInput.value = "";
     roleSelect.value = "";
 
-    // ✅ RESET UI STATE
     document.getElementById("userModalTitle").textContent = "Add New User";
     document.getElementById("submitUserBtn").textContent = "Create User";
 
@@ -21,7 +22,9 @@ addUserBtn.addEventListener("click", () => {
     addUserModal.classList.add("flex");
 });
 
-
+/* ===============================
+   CLOSE MODAL FUNCTION
+=============================== */
 const closeModal = () => {
     addUserModal.classList.add("hidden");
     addUserModal.classList.remove("flex");
@@ -36,7 +39,9 @@ addUserModal.addEventListener("click", (e) => {
     }
 });
 
-
+/* ===============================
+   EDIT USER
+=============================== */
 document.addEventListener("click", function (e) {
     const btn = e.target.closest(".editUserBtn");
     if (!btn) return;
@@ -46,6 +51,7 @@ document.addEventListener("click", function (e) {
     fetch(`../backend/admin_UM_getuser.php?user_id=${userId}`)
         .then(res => res.json())
         .then(data => {
+
             if (!data.success) {
                 alert("Failed to load user data");
                 return;
@@ -53,28 +59,40 @@ document.addEventListener("click", function (e) {
 
             const user = data.user;
 
+            /* Open modal */
             addUserModal.classList.remove("hidden");
             addUserModal.classList.add("flex");
 
-            editUserIdInput.value = user.user_id;
-            document.querySelector("[name='full_name']").value = user.full_name;
-            document.querySelector("[name='username']").value = user.username;
+            /* Set form values */
+            editUserIdInput.value = user.user_id ?? "";
+
+            document.querySelector("[name='full_name']").value = user.full_name ?? "";
+            document.querySelector("[name='username']").value = user.username ?? "";
             document.querySelector("[name='email']").value = user.email ?? "";
             document.querySelector("[name='position']").value = user.position ?? "";
             document.querySelector("[name='contact_number']").value = user.contact_number ?? "";
-            document.querySelector("[name='clinic']").value = user.clinic ?? "";
-            document.querySelector("select[name='status']").value = user.status;
 
-            roleSelect.value = user.role;
+            /* Health Center (NEW FIELD) */
+            const healthCenterSelect = document.querySelector("[name='health_center_id']");
+            if (healthCenterSelect) {
+                healthCenterSelect.value = user.health_center_id ?? "";
+            }
 
+            /* Status */
+            const statusSelect = document.querySelector("select[name='status']");
+            if (statusSelect) {
+                statusSelect.value = user.status ?? "active";
+            }
 
-            // Add mode
-            document.getElementById("userModalTitle").textContent = "Add New User";
+            /* Role */
+            roleSelect.value = user.role ?? "";
 
-            // Edit mode
+            /* Update UI for Edit Mode */
             document.getElementById("userModalTitle").textContent = "Edit User";
+            document.getElementById("submitUserBtn").textContent = "Update User";
         })
-        .catch(() => {
+        .catch((error) => {
+            console.error("Edit fetch error:", error);
             alert("Server error while loading user");
         });
 });

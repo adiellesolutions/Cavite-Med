@@ -11,6 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+/* ===== REQUIRED FIELDS ===== */
 $full_name = trim($_POST['full_name'] ?? '');
 $username  = trim($_POST['username'] ?? '');
 $role      = $_POST['role'] ?? '';
@@ -21,11 +22,28 @@ if ($full_name === '' || $username === '' || $role === '') {
     exit;
 }
 
+/* ===== OPTIONAL FIELDS ===== */
 $email          = $_POST['email'] ?? null;
 $contact_number = $_POST['contact_number'] ?? null;
 $position       = $_POST['position'] ?? null;
-$clinic         = $_POST['clinic'] ?? null;
 
+/* ===== HEALTH CENTER ===== */
+$health_center_id = isset($_POST['health_center_id']) && $_POST['health_center_id'] !== ''
+    ? (int) $_POST['health_center_id']
+    : null;
+
+/* Admin does not require health center */
+if ($role !== 'admin' && empty($health_center_id)) {
+    echo json_encode(['success' => false, 'message' => 'Health center is required for this role']);
+    exit;
+}
+
+/* Convert empty string to NULL */
+if ($health_center_id === '' || $role === 'admin') {
+    $health_center_id = null;
+}
+
+/* ===== DEFAULT PASSWORD ===== */
 $password = password_hash("cavmed2025", PASSWORD_DEFAULT);
 
 /* ===== PROFILE UPLOAD ===== */
@@ -62,12 +80,12 @@ if (!empty($_FILES['profile_picture']['name'])) {
 /* ===== INSERT ===== */
 $stmt = $conn->prepare("
     INSERT INTO users
-    (full_name, username, password, role, email, contact_number, position, clinic, status, profile_picture)
+    (full_name, username, password, role, email, contact_number, position, health_center_id, status, profile_picture)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ");
 
 $stmt->bind_param(
-    "ssssssssss",
+    "sssssssiss",
     $full_name,
     $username,
     $password,
@@ -75,7 +93,7 @@ $stmt->bind_param(
     $email,
     $contact_number,
     $position,
-    $clinic,
+    $health_center_id,
     $status,
     $profilePath
 );

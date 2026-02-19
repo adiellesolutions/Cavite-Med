@@ -10,10 +10,22 @@ if (!is_numeric($user_id)) {
 }
 
 $stmt = $conn->prepare("
-    SELECT user_id, full_name, username, email, role, position,
-           contact_number, clinic, status
-    FROM users
-    WHERE user_id = ? AND deleted_at IS NULL
+    SELECT 
+        u.user_id,
+        u.full_name,
+        u.username,
+        u.email,
+        u.role,
+        u.position,
+        u.contact_number,
+        u.status,
+        u.health_center_id,
+        hc.center_name
+    FROM users u
+    LEFT JOIN health_centers hc 
+        ON u.health_center_id = hc.id
+    WHERE u.user_id = ? 
+    AND u.deleted_at IS NULL
 ");
 
 $stmt->bind_param("i", $user_id);

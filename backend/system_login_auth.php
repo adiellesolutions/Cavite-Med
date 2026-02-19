@@ -17,16 +17,29 @@ if ($usernameOrEmail === '' || $password === '') {
 }
 
 /* =========================
-   Fetch user
+   Fetch user (WITH HEALTH CENTER)
 ========================= */
 $stmt = $conn->prepare("
-    SELECT user_id, full_name, username, password, role, status,
-           failed_attempts, must_change_password, profile_picture
-    FROM users
-    WHERE (username = ? OR email = ?)
-      AND deleted_at IS NULL
+    SELECT 
+        u.user_id,
+        u.full_name,
+        u.username,
+        u.password,
+        u.role,
+        u.status,
+        u.failed_attempts,
+        u.must_change_password,
+        u.profile_picture,
+        u.health_center_id,
+        hc.center_name
+    FROM users u
+    LEFT JOIN health_centers hc 
+        ON u.health_center_id = hc.id
+    WHERE (u.username = ? OR u.email = ?)
+      AND u.deleted_at IS NULL
     LIMIT 1
 ");
+
 $stmt->bind_param("ss", $usernameOrEmail, $usernameOrEmail);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -81,6 +94,9 @@ $_SESSION['user_id'] = $user['user_id'];
 $_SESSION['role']    = $user['role'];
 $_SESSION['name']    = $user['full_name'];
 $_SESSION['profile_picture'] = $user['profile_picture'];
+
+$_SESSION['health_center_id'] = $user['health_center_id'];
+$_SESSION['health_center_name'] = $user['center_name'];
 
 /* =========================
    FORCE PASSWORD CHANGE
