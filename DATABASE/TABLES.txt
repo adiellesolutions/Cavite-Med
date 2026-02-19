@@ -577,6 +577,8 @@ CREATE TABLE prescriptions (
   INDEX idx_pres_doctor_id (doctor_id),
   INDEX idx_pres_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
 CREATE TABLE prescription_items (
   item_id INT AUTO_INCREMENT PRIMARY KEY,
 

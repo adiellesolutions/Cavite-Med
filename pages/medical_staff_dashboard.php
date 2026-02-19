@@ -14,7 +14,6 @@ if (!empty($_SESSION['force_change_password'])) {
 
 require_once "../backend/db/cavitemed_db.php";
 
-$user_id = $_SESSION['user_id'];
 
 // Get health center of logged-in staff
 $stmt = $conn->prepare("SELECT health_center_id FROM users WHERE user_id = ?");

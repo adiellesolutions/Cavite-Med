@@ -442,8 +442,8 @@ if (!empty($_SESSION['force_change_password'])) {
 
                     <div class="your-box" style="margin-top:20px;"></div>
 
-                    <div class="card">
-                        <h3 class="text-lg font-semibold text-text-primary mb-4">Certificate Information</h3>
+                   <!--      <div class="card">
+                         <h3 class="text-lg font-semibold text-text-primary mb-4">Certificate Information</h3>
                               
                         <div class="grid grid-cols-2 gap-4">
                             <div>
@@ -454,7 +454,7 @@ if (!empty($_SESSION['force_change_password'])) {
                                 <p class="text-sm text-text-secondary mb-1">Status</p>
                                 <span class="badge badge-success" id="infoStatus">Active</span>
                             </div>
-                           <!-- <div>
+                           <div>
                                 <p class="text-sm text-text-secondary mb-1">Date Created</p>
                                 <p class="font-medium text-text-primary" id="infoCreatedAt">--</p>
                             </div>

@@ -59,10 +59,19 @@ if ((int)$row['created_by'] !== $doctor_id) {
 }
 
 // ✅ resolve absolute file path safely
-$relative = ltrim($row['file_path'], "/"); // ex: uploads/documents/medical_certificates/MC-....
-$abs = realpath(__DIR__ . "/../" . $relative);
+// remove starting slash
+$relative = ltrim($row['file_path'], "/");  
+// result: uploads/medical_certificates/MC-2026-0001.pdf
 
-$base = realpath(__DIR__ . "/../uploads");
+// project root = cavite-med
+$projectRoot = realpath(__DIR__ . "/../"); 
+
+// absolute file path
+$abs = $projectRoot . "/" . $relative;
+
+// base uploads folder (for security check)
+$base = realpath($projectRoot . "/uploads");
+
 if (!$abs || !$base || strpos($abs, $base) !== 0 || !file_exists($abs)) {
   http_response_code(404);
   exit("File not found");

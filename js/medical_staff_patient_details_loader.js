@@ -332,7 +332,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
                 ${d.file_path ? `
                 <a class="btn btn-outline btn-sm"
-                   href="/CAVITE-MED/${esc(d.file_path.replace(/^pages\//, ''))}"
+                   href="${esc(d.file_path.replace(/^pages\//, ''))}"
                    target="_blank"
                    rel="noopener">
                   View
