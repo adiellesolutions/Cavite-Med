@@ -44,11 +44,11 @@ if (!empty($_SESSION['force_change_password'])) {
             <!-- Advanced Search Bar -->
             <div class="flex-1 max-w-2xl mx-8">
                 <div class="relative">
-                    <input type="text" 
-                           id="globalSearch" 
-                           placeholder="Search by patient name, ID, phone, or MRN..."
-                           class="input pl-10 pr-32 w-full"
-                           autocomplete="off">
+                <input type="text"
+         id="globalSearch"
+         placeholder="Search by patient name, ID, phone, or MRN..."
+         class="input pl-10 pr-32 w-full"
+         autocomplete="off">
                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                         <svg class="w-5 h-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -170,20 +170,19 @@ if (!empty($_SESSION['force_change_password'])) {
 
                 </div>
 
-                <!-- Favorites Section -->
+                <!-- Favorites Section
                 <div>
                     <div class="flex items-center justify-between mb-3">
                      <h3 class="text-sm font-semibold text-text-primary">Favorites</h3>
-                        <!--   <button type="button" class="text-xs text-primary hover:text-primary-700">
+                        <button type="button" class="text-xs text-primary hover:text-primary-700">
                             Manage
-                        </button>-->
-                    </div>
+                        </button>
                     <div class="space-y-2" id="favoritesList">
                 <div class="text-xs text-text-secondary">Loading favorites...</div>
                 </div>
                 </div>
 
-                <div class="divider"></div>
+                <div class="divider"></div> -->
 
                 <!-- Recent Patients -->
                 <div>

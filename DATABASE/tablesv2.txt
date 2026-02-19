@@ -243,14 +243,14 @@ CREATE TABLE patient_visits (
   patient_id INT NOT NULL,
 
   visit_type VARCHAR(120) NOT NULL,
-  visit_datetime DATETIME NOT NULL,
+  visit_datetime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   doctor_id INT NULL,
   created_by INT NOT NULL,
 
   reason_for_visit TEXT NULL,
   priority ENUM('low', 'medium', 'high') DEFAULT 'medium',
-  status ENUM('waiting', 'in_progress', 'completed', 'for_dispense') DEFAULT 'waiting',
+  status ENUM('waiting','in_progress','for_consultation','completed','for_dispense') DEFAULT 'waiting',
   notes TEXT NULL,
 
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -303,6 +303,9 @@ CREATE TABLE patient_vitals (
   CONSTRAINT fk_vitals_recorded_by
     FOREIGN KEY (recorded_by) REFERENCES users(user_id)
     ON DELETE RESTRICT,
+
+UNIQUE KEY uq_patient_vitals_visit (visit_id),
+UNIQUE KEY uq_vitals_visit (visit_id);
 
   INDEX idx_vitals_recorded_by (recorded_by)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

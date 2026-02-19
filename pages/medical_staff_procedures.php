@@ -274,11 +274,11 @@ if (!empty($_SESSION['force_change_password'])) {
                 <div>
                 </div>
                 <div class="flex items-center gap-3">
-                    <div class="workflow-progress w-48">
+                <!--    <div class="workflow-progress w-48">
                         <div id="workflowProgress" class="workflow-progress-bar" style="width: 33%"></div>
-                    </div>
-                    <span id="workflowStepText" class="text-sm text-text-secondary">Step 1 of 2</span>
-                </div>
+                    </div>-->
+                    <span id="workflowStepText" class="text-sm text-text-secondary"> </span>
+                </div> 
             </div>
 
             <!-- Main Workflow Grid -->
@@ -291,7 +291,7 @@ if (!empty($_SESSION['force_change_password'])) {
         <div>
             <h3 class="text-lg font-semibold text-text-primary">Active Patient</h3>
             <p class="text-xs text-text-secondary">
-                today’s visit queue:
+                Today’s Visit Queue:
                 <span id="queueCount" class="font-semibold text-text-primary">0</span>
             </p>
         </div>
@@ -300,7 +300,7 @@ if (!empty($_SESSION['force_change_password'])) {
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
-            <span>new patient</span>
+            <span>New Patient</span>
         </button>
     </div>
 
@@ -312,215 +312,210 @@ if (!empty($_SESSION['force_change_password'])) {
             </div>
 
             <div class="flex-1">
-                <p id="activePatientName" class="font-medium text-text-primary">no active patient</p>
+                <p id="activePatientName" class="font-medium text-text-primary">No Active Patient</p>
                 <p id="activePatientStatusText" class="text-xs text-text-secondary">
-                    select a patient from the queue
+                    Select a patient from the queue.
                 </p>
             </div>
 
-            <span id="activePatientBadge" class="badge badge-waiting hidden">waiting</span>
+            <span id="activePatientBadge" class="badge badge-waiting hidden">Waiting</span>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
             <div>
-                <p class="text-xs text-text-secondary">age</p>
+                <p class="text-xs text-text-secondary">Age</p>
                 <p id="activePatientAge" class="text-sm font-medium text-text-primary">--</p>
             </div>
 
             <div>
-                <p class="text-xs text-text-secondary">gender</p>
+                <p class="text-xs text-text-secondary">Gender</p>
                 <p id="activePatientGender" class="text-sm font-medium text-text-primary">--</p>
             </div>
 
             <div>
-                <p class="text-xs text-text-secondary">arrival time</p>
+                <p class="text-xs text-text-secondary">Arrival Time</p>
                 <p id="activePatientArrival" class="text-sm font-medium text-text-primary">--</p>
             </div>
 
             <div>
-                <p class="text-xs text-text-secondary">visit type</p>
+                <p class="text-xs text-text-secondary">Visit Type</p>
                 <p id="activePatientVisitType" class="text-sm font-medium text-text-primary">--</p>
             </div>
         </div>
     </div>
 
-    <!-- ACTION BUTTONS -->
-    <div class="flex gap-2 mb-4">
-        <button type="button" id="skipPatientBtn" class="btn btn-outline flex-1" disabled>
-            skip
-        </button>
-        <button type="button" id="nextStepBtn" class="btn btn-primary flex-1" disabled>
-            next step →
-        </button>
-    </div>
+   <!-- ACTION BUTTONS -->
+<div class="flex gap-2 mb-4">
 
-    <!-- QUEUE LIST (DYNAMIC POPULATE) -->
-    <div>
-        <h4 class="text-sm font-semibold text-text-primary mb-2">queue</h4>
 
-        <!-- JS will populate this -->
-        <div id="patientQueue" class="space-y-2">
-            <div class="bg-secondary-50 rounded-base p-4 border border-border">
-                <p class="text-sm text-text-secondary text-center">
-                    no patients in queue
-                </p>
-            </div>
-        </div>
+  <!-- next step: starts workflow + opens vitals -->
+  <button type="button" id="nextStepBtn" class="btn btn-primary flex-1" disabled>
+    next step →
+  </button>
+</div>
+
+<!-- QUEUE LIST (DYNAMIC POPULATE) -->
+<div>
+  <h4 class="text-sm font-semibold text-text-primary mb-2">Queue</h4>
+
+  <div id="patientQueue" class="space-y-2">
+    <div class="bg-secondary-50 rounded-base p-4 border border-border">
+      <p class="text-sm text-text-secondary text-center">no patients in queue</p>
     </div>
+  </div>
+
+<!-- FOR CONSULTATION QUEUE -->
+<div class="mt-6">
+  <h4 class="text-sm font-semibold text-text-primary mb-2">For Consultation</h4>
+
+  <div id="consultationQueue" class="space-y-2">
+    <div class="bg-secondary-50 rounded-base p-4 border border-border">
+      <p class="text-sm text-text-secondary text-center">no patients for consultation</p>
+    </div>
+  </div>
+</div>
+
+</div>
+</div>
+
 </div>
 
 
-                </div>
+<!-- =========================
+     WORKFLOW: VITAL SIGNS STEP
+     (shown when "next step" is clicked)
+========================= -->
+<div class="lg:col-span-2 space-y-6">
+<div id="patientWorkflowCard" class="card">
 
-                <!-- Right Column: Workflow Steps -->
-                <div class="lg:col-span-2">
-                    <!-- Workflow Steps -->
-                    <div class="card mb-6">
-                        <h3 class="text-lg font-semibold text-text-primary mb-4">Patient Workflow</h3>
-                        
-                        <div class="space-y-4">
-                            
-                            
-                            <!-- Step 2: Vital Signs -->
-                            <div class="workflow-step p-4 rounded-base border border-border">
-                                <div class="flex items-center justify-between mb-3">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-secondary-200 text-text-secondary flex items-center justify-center font-semibold">
-                                            2
-                                        </div>
-                                        <h4 class="font-medium text-text-secondary">Vital Signs Collection</h4>
-                                    </div>
-                                    <span class="badge badge-waiting">Pending</span>
-                                </div>
-                                
-                                <div id="vitalSignsForm" class="hidden space-y-4">
-                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-text-primary mb-2">
-                                                Blood Pressure
-                                            </label>
-                                            <input type="text" id="bloodPressure" class="vital-sign-input" placeholder="120/80">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-text-primary mb-2">
-                                                Heart Rate
-                                            </label>
-                                            <input type="number" id="heartRate" class="vital-sign-input" placeholder="0">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-text-primary mb-2">
-                                                Temperature (°C)
-                                            </label>
-                                            <input type="number" id="temperature" class="vital-sign-input" placeholder="98.6" step="0.1">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-text-primary mb-2">
-                                                SpO2 (%)
-                                            </label>
-                                            <input type="number" id="spo2" class="vital-sign-input" placeholder="98" min="0" max="100">
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        
-                                        <div>
-                                            <label class="block text-sm font-medium text-text-primary mb-2">
-                                                Blood Glucose (mg/dL)
-                                            </label>
-                                            <input type="number" id="temperature" class="vital-sign-input" placeholder="98.6" step="0.1">
-                                        </div>
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <h3 class="text-lg font-semibold text-text-primary">Patient Workflow</h3>
+      <p class="text-xs text-text-secondary">
+        Current Patient:
+        <span id="workflowPatientName" class="font-semibold text-text-primary">--</span>
+        <span class="mx-2 text-text-tertiary">•</span>
+        Status:
+        <span id="workflowPatientStatus" class="badge badge-waiting">Waiting</span>
+      </p>
+    </div>
 
-                                        
-                                        <div>
-                                            <label class="block text-sm font-medium text-text-primary mb-2">
-                                                Weight (kg)
-                                            </label>
-                                            <input type="number" id="temperature" class="vital-sign-input" placeholder="98.6" step="0.1">
-                                        </div>
+    <div class="flex gap-2">
+      
+    </div>
+  </div>
 
-                                        <div>
-                                            <label class="block text-sm font-medium text-text-primary mb-2">
-                                                Respiratory Rate
-                                            </label>
-                                            <input type="number" id="respiratoryRate" class="vital-sign-input" placeholder="16">
-                                        </div>
+  <div class="space-y-4">
 
-                                    </div>
+    <!-- step 1: start session (auto when next step) -->
+    <div class="workflow-step p-4 rounded-base border border-border">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-semibold">
+            1
+          </div>
+          <div>
+            <h4 class="font-medium text-text-primary">Start Visit</h4>
+            <p class="text-xs text-text-secondary">Set patient to in progress.</p>
+          </div>
+        </div>
 
-                                    
-                                    <div>
-                                        <label class="block text-sm font-medium text-text-primary mb-2">
-                                            Notes
-                                        </label>
-                                        <textarea id="vitalNotes" class="vital-sign-input" rows="2" placeholder="Additional observations...">Patient appears fatigued, skin is warm to touch</textarea>
-                                    </div>
-                                    
-                                    <div class="flex gap-3 pt-4 border-t border-border">
-                                        <button type="button" id="saveVitalsBtn" class="btn btn-primary">
-                                            Save Vital Signs
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                        </div>
-                    </div>
-                    
-                    <!-- Vital Signs Monitor -->
-                    <div class="card">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold text-text-primary">Vital Signs Monitor</h3>
-                            <button type="button" id="autoFillBtn" class="btn btn-outline btn-sm">
-                                Auto-fill Normal Values
-                            </button>
-                        </div>
-                        
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div class="vital-sign-card p-4 rounded-base border border-border">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-sm font-medium text-text-primary">Blood Pressure</span>
-                                    <span class="text-xs text-warning-600">Not Taken</span>
-                                </div>
-                                <p class="text-2xl font-bold text-text-secondary">--/--</p>
-                                <p class="text-xs text-text-secondary mt-1">Normal: 120/80</p>
-                            </div>
-                            <div class="vital-sign-card p-4 rounded-base border border-border">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-sm font-medium text-text-primary">Heart Rate</span>
-                                    <span class="text-xs text-warning-600">Not Taken</span>
-                                </div>
-                                <p class="text-2xl font-bold text-text-secondary">--</p>
-                                <p class="text-xs text-text-secondary mt-1">Normal: 60-100 bpm</p>
-                            </div>
-                            <div class="vital-sign-card p-4 rounded-base border border-border">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-sm font-medium text-text-primary">Temperature</span>
-                                    <span class="text-xs text-warning-600">Not Taken</span>
-                                </div>
-                                <p class="text-2xl font-bold text-text-secondary">--°C</p>
-                                <p class="text-xs text-text-secondary mt-1">Normal: 35-37.2°C</p>
-                            </div>
-                            <div class="vital-sign-card p-4 rounded-base border border-border">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-sm font-medium text-text-primary">SpO2</span>
-                                    <span class="text-xs text-warning-600">Not Taken</span>
-                                </div>
-                                <p class="text-2xl font-bold text-text-secondary">--%</p>
-                                <p class="text-xs text-text-secondary mt-1">Normal: 95-100%</p>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-6">
-                            <h4 class="font-medium text-text-primary mb-3">Recent Vital Signs History</h4>
-                            <div class="bg-secondary-50 rounded-base p-4">
-                                <p class="text-sm text-text-secondary text-center">
-                                    No vital signs recorded for this patient yet
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <span id="step1Badge" class="badge badge-waiting">Pending</span>
+      </div>
+
+      <div id="step1Meta" class="hidden mt-3 text-xs text-text-secondary">
+        <span>Visit ID:</span>
+        <span id="workflowVisitId" class="font-semibold text-text-primary">--</span>
+        <span class="mx-2 text-text-tertiary">•</span>
+        <span>Started:</span>
+        <span id="workflowStartTime" class="font-semibold text-text-primary">--</span>
+      </div>
+    </div>
+
+    <!-- step 2: vital signs -->
+    <div class="workflow-step p-4 rounded-base border border-border">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-secondary-200 text-text-secondary flex items-center justify-center font-semibold">
+            2
+          </div>
+          <div>
+            <h4 class="font-medium text-text-primary">Vital Signs Collection</h4>
+            <p class="text-xs text-text-secondary">Record Vitals for the Active Patient</p>
+          </div>
+        </div>
+
+        <span id="step2Badge" class="badge badge-waiting">Pending</span>
+      </div>
+
+      <!-- hidden until next step clicked -->
+      <div id="vitalSignsForm" class="hidden space-y-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-text-primary mb-2">Blood Pressure</label>
+            <input type="text" id="bloodPressure" class="vital-sign-input" placeholder="120/80">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-text-primary mb-2">Heart Rate</label>
+            <input type="number" id="heartRate" class="vital-sign-input" placeholder="0" min="0">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-text-primary mb-2">Temperature (°c)</label>
+            <input type="number" id="temperature" class="vital-sign-input" placeholder="36.8" step="0.1">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-text-primary mb-2">spo2 (%)</label>
+            <input type="number" id="spo2" class="vital-sign-input" placeholder="98" min="0" max="100">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-text-primary mb-2">Blood Glucose (mg/dl)</label>
+            <input type="number" id="bloodGlucose" class="vital-sign-input" placeholder="90" min="0">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-text-primary mb-2">Weight (kg)</label>
+            <input type="number" id="weightKg" class="vital-sign-input" placeholder="0" step="0.1" min="0">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-text-primary mb-2">Respiratory Rate</label>
+            <input type="number" id="respiratoryRate" class="vital-sign-input" placeholder="16" min="0">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-text-primary mb-2">Height (cm)</label>
+            <input type="number" id="heightCm" class="vital-sign-input" placeholder="0" step="0.1" min="0">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-text-primary mb-2">Notes</label>
+          <textarea id="vitalNotes" class="vital-sign-input" rows="2" placeholder="additional observations..."></textarea>
+        </div>
+
+        <div class="flex gap-3 pt-4 border-t border-border">
+          <!-- will POST vitals + keep status in_progress -->
+          <button type="button" id="saveVitalsBtn" class="btn btn-primary">
+            Save Vital Signs
+          </button>
+
+         
+        </div>
+
+        <!-- inline message area -->
+        <div id="vitalsMsg" class="hidden text-xs mt-2"></div>
+      </div>
+    </div>
+
+<!-- hidden fields for JS (store active visit/patient) -->
+<input type="hidden" id="activeVisitId" value="">
+<input type="hidden" id="activePatientId" value="">
 
            
         </div>

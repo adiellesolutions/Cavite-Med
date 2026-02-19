@@ -1,6 +1,6 @@
 <?php
 session_start();
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
 
 if (!isset($_SESSION['user_id'])) {
   http_response_code(401);
@@ -10,6 +10,14 @@ if (!isset($_SESSION['user_id'])) {
 
 require_once __DIR__ . "/db/cavitemed_db.php";
 
+// use mysqli connection
+$mysqli = $mysqli ?? $conn ?? null;
+if (!($mysqli instanceof mysqli)) {
+  http_response_code(500);
+  echo json_encode(["ok" => false, "error" => "DB connection failed"]);
+  exit;
+}
+
 $q = isset($_GET['q']) ? trim($_GET['q']) : '';
 if ($q === '' || mb_strlen($q) < 2) {
   echo json_encode(["ok" => true, "results" => []]);
@@ -17,9 +25,9 @@ if ($q === '' || mb_strlen($q) < 2) {
 }
 
 $limit = 10;
+$like = "%{$q}%";
 
 try {
-  // Adjust these column names if your table is different.
   $sql = "
     SELECT 
       patient_id,
@@ -30,24 +38,33 @@ try {
       CONCAT(first_name, ' ', last_name) AS full_name
     FROM patients
     WHERE
-      CONCAT(first_name, ' ', last_name) LIKE :q
-      OR mrn LIKE :q2
-      OR phone LIKE :q2
-      OR CAST(patient_id AS CHAR) LIKE :q2
+      CONCAT(first_name, ' ', last_name) LIKE ?
+      OR mrn LIKE ?
+      OR phone LIKE ?
+      OR CAST(patient_id AS CHAR) LIKE ?
     ORDER BY last_name ASC, first_name ASC
     LIMIT $limit
   ";
 
-  $stmt = $pdo->prepare($sql);
-  $stmt->execute([
-    ":q"  => "%{$q}%",
-    ":q2" => "%{$q}%"
-  ]);
+  $stmt = $mysqli->prepare($sql);
+  if (!$stmt) throw new Exception("Prepare failed: " . $mysqli->error);
 
-  $rows = $stmt->fetchAll();
+  $stmt->bind_param("ssss", $like, $like, $like, $like);
 
+  if (!$stmt->execute()) throw new Exception("Execute failed: " . $stmt->error);
+
+  $result = $stmt->get_result();
+  $rows = [];
+  while ($row = $result->fetch_assoc()) {
+    $rows[] = $row;
+  }
+
+  $stmt->close();
   echo json_encode(["ok" => true, "results" => $rows]);
+  exit;
+
 } catch (Exception $e) {
   http_response_code(500);
-  echo json_encode(["ok" => false, "error" => "Server error"]);
+  echo json_encode(["ok" => false, "error" => $e->getMessage()]);
+  exit;
 }

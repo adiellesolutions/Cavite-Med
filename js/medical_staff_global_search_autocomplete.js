@@ -22,10 +22,24 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await fetch(`../backend/medical_staff_patient_autocomplete.php?q=${encodeURIComponent(query)}`, {
         credentials: "same-origin",
       });
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error || "Autocomplete failed");
+    
+      const text = await res.text();
+      let data;
+    
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        console.error("Autocomplete returned non-JSON:", text);
+        throw new Error("Server returned invalid JSON (check PHP error).");
+      }
+    
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+    
       return data.results || [];
     }
+    
   
     // OPTIONAL: when you click a result, fetch full patient info
     async function apiGetPatient(patientId) {

@@ -20,6 +20,13 @@ if (!($mysqli instanceof mysqli)) {
 }
 
 /**
+ * ✅ Ensure DB timezone is correct (PH = +08:00)
+ * This helps CURRENT_TIMESTAMP / NOW() match your local time.
+ * Safe even if your DB already has correct timezone.
+ */
+$mysqli->query("SET time_zone = '+08:00'");
+
+/**
  * Optional: simple auth (adjust if you want)
  */
 if (!isset($_SESSION['user_id'])) {
@@ -143,15 +150,18 @@ if ($method === 'POST') {
     }
     $check->close();
 
-    $visit_datetime = date('Y-m-d H:i:s');
     $created_by = (int)$_SESSION['user_id']; // ✅ from session
 
-    // created_at has default CURRENT_TIMESTAMP, so no need to insert it
+    /**
+     * ✅ IMPORTANT FIX:
+     * Do NOT pass visit_datetime from PHP.
+     * Let MySQL DEFAULT CURRENT_TIMESTAMP handle it (accurate + consistent).
+     */
     $sql = "
         INSERT INTO patient_visits
-            (patient_id, visit_type, visit_datetime, doctor_id, created_by, reason_for_visit, priority, status, notes)
+            (patient_id, visit_type, doctor_id, created_by, reason_for_visit, priority, status, notes)
         VALUES
-            (?, ?, ?, NULL, ?, ?, ?, ?, NULL)
+            (?, ?, NULL, ?, ?, ?, ?, NULL)
     ";
 
     $stmt = $mysqli->prepare($sql);
@@ -161,7 +171,8 @@ if ($method === 'POST') {
         exit;
     }
 
-    $stmt->bind_param("ississs", $patient_id, $visit_type, $visit_datetime, $created_by, $visit_reason, $priority, $status);
+    // patient_id(i), visit_type(s), created_by(i), visit_reason(s), priority(s), status(s)
+    $stmt->bind_param("isisss", $patient_id, $visit_type, $created_by, $visit_reason, $priority, $status);
 
     if (!$stmt->execute()) {
         http_response_code(500);
@@ -177,11 +188,24 @@ if ($method === 'POST') {
     $visit_id = $stmt->insert_id;
     $stmt->close();
 
+    // Optional: return the actual DB timestamp so you can confirm it
+    $visit_datetime = null;
+    $get = $mysqli->prepare("SELECT visit_datetime FROM patient_visits WHERE visit_id = ? LIMIT 1");
+    if ($get) {
+        $get->bind_param("i", $visit_id);
+        if ($get->execute()) {
+            $row = $get->get_result()->fetch_assoc();
+            $visit_datetime = $row['visit_datetime'] ?? null;
+        }
+        $get->close();
+    }
+
     echo json_encode([
         "success" => true,
         "visit_id" => $visit_id,
         "patient_id" => $patient_id,
-        "status" => $status
+        "status" => $status,
+        "visit_datetime" => $visit_datetime
     ]);
     exit;
 }

@@ -57,7 +57,7 @@ if ($action === 'getActivePatient') {
 
     // ✅ list queue
     $sql = $baseSelect . "
-        AND v.status IN ('waiting','in_progress','completed','for_dispense')
+        AND v.status IN ('waiting','in_progress','completed','for_dispense', 'for_consultation')
         ORDER BY
             FIELD(v.status, 'in_progress', 'waiting', 'for_dispense', 'completed'),
             FIELD(v.priority, 'high', 'medium', 'low'),
