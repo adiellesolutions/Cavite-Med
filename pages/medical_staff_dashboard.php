@@ -467,16 +467,7 @@ $stmt->close();
                         </div>
                         
                         <!-- In Queue -->
-                        <div class="p-4 rounded-base border-2 border-warning-100">
-                            <p class="text-3xl font-bold text-warning-600 mb-1">6</p>
-                            <p class="text-sm text-text-secondary">In Queue</p>
-                        </div>
-                        
-                        <!-- Average Time -->
-                        <div class="p-4 rounded-base border-2 border-accent-100">
-                            <p class="text-3xl font-bold text-accent-600 mb-1">7.2</p>
-                            <p class="text-sm text-text-secondary">Avg Time/Patient</p>
-                        </div>
+                     
                     </div>
                 </div>
                 

@@ -14,15 +14,23 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'medical_staff
   out(401, ["ok"=>false,"error"=>"Unauthorized"]);
 }
 
+if (!isset($conn) || !($conn instanceof mysqli)) {
+  out(500, ["ok"=>false,"error"=>"DB connection failed"]);
+}
+
 $user_id = (int)$_SESSION['user_id'];
 
 // get staff health_center_id
 $st = $conn->prepare("SELECT health_center_id FROM users WHERE user_id=? LIMIT 1");
+if (!$st) out(500, ["ok"=>false,"error"=>"Prepare user center failed: ".$conn->error]);
+
 $st->bind_param("i", $user_id);
 $st->execute();
 $st->bind_result($health_center_id);
 $st->fetch();
 $st->close();
+
+$health_center_id = $health_center_id ? (int)$health_center_id : 0;
 
 if (!$health_center_id) {
   out(200, [
@@ -41,7 +49,7 @@ if (!$health_center_id) {
 
 try {
   // =========================
-  // STATS (single query, consistent)
+  // STATS (scope by patient health_center_id)
   // =========================
   $st = $conn->prepare("
     SELECT
@@ -49,9 +57,11 @@ try {
       SUM(CASE WHEN v.status='completed' AND DATE(v.visit_datetime)=CURDATE() THEN 1 ELSE 0 END) AS completed_today,
       SUM(CASE WHEN v.priority='high' AND v.status IN ('waiting','in_progress','for_consultation','for_dispense') THEN 1 ELSE 0 END) AS requiring_attention
     FROM patient_visits v
-    JOIN users u ON u.user_id = v.created_by
-    WHERE u.health_center_id = ?
+    JOIN patients p ON p.patient_id = v.patient_id
+    WHERE p.health_center_id = ?
   ");
+  if (!$st) out(500, ["ok"=>false,"error"=>"Prepare stats failed: ".$conn->error]);
+
   $st->bind_param("i", $health_center_id);
   $st->execute();
   $rs = $st->get_result();
@@ -63,14 +73,15 @@ try {
   $requiring_attention = (int)($statsRow['requiring_attention'] ?? 0);
 
   // =========================
-  // TOTAL PATIENTS (health center via created_by)
+  // TOTAL PATIENTS (by patient center)
   // =========================
   $st = $conn->prepare("
     SELECT COUNT(*)
     FROM patients p
-    JOIN users u ON u.user_id = p.created_by
-    WHERE u.health_center_id = ?
+    WHERE p.health_center_id = ?
   ");
+  if (!$st) out(500, ["ok"=>false,"error"=>"Prepare total patients failed: ".$conn->error]);
+
   $st->bind_param("i", $health_center_id);
   $st->execute();
   $st->bind_result($total_patients);
@@ -79,15 +90,16 @@ try {
   $total_patients = (int)$total_patients;
 
   // =========================
-  // PATIENTS REGISTERED TODAY
+  // PATIENTS REGISTERED TODAY (by patient center)
   // =========================
   $st = $conn->prepare("
     SELECT COUNT(*)
     FROM patients p
-    JOIN users u ON u.user_id = p.created_by
-    WHERE u.health_center_id = ?
+    WHERE p.health_center_id = ?
       AND DATE(p.created_at) = CURDATE()
   ");
+  if (!$st) out(500, ["ok"=>false,"error"=>"Prepare patients today failed: ".$conn->error]);
+
   $st->bind_param("i", $health_center_id);
   $st->execute();
   $st->bind_result($patients_today);
@@ -96,15 +108,17 @@ try {
   $patients_today = (int)$patients_today;
 
   // =========================
-  // VITALS TODAY
+  // VITALS TODAY (scope by patient center)
   // =========================
   $st = $conn->prepare("
     SELECT COUNT(*)
     FROM patient_vitals pv
-    JOIN users u ON u.user_id = pv.recorded_by
-    WHERE u.health_center_id = ?
+    JOIN patients p ON p.patient_id = pv.patient_id
+    WHERE p.health_center_id = ?
       AND DATE(pv.recorded_at) = CURDATE()
   ");
+  if (!$st) out(500, ["ok"=>false,"error"=>"Prepare vitals today failed: ".$conn->error]);
+
   $st->bind_param("i", $health_center_id);
   $st->execute();
   $st->bind_result($vitals_today);
@@ -113,7 +127,7 @@ try {
   $vitals_today = (int)$vitals_today;
 
   // =========================
-  // RECENT ACTIVITY (registered + vitals)
+  // RECENT ACTIVITY (registered + vitals) scoped by patient center
   // =========================
   $recent = [];
   $q = "
@@ -123,8 +137,7 @@ try {
         'registered' AS type,
         p.created_at AS activity_time
       FROM patients p
-      JOIN users u ON u.user_id = p.created_by
-      WHERE u.health_center_id = ?
+      WHERE p.health_center_id = ?
       ORDER BY p.created_at DESC
       LIMIT 3
     )
@@ -136,8 +149,7 @@ try {
         pv.recorded_at AS activity_time
       FROM patient_vitals pv
       JOIN patients p ON p.patient_id = pv.patient_id
-      JOIN users u ON u.user_id = pv.recorded_by
-      WHERE u.health_center_id = ?
+      WHERE p.health_center_id = ?
       ORDER BY pv.recorded_at DESC
       LIMIT 3
     )
@@ -146,6 +158,8 @@ try {
   ";
 
   $st = $conn->prepare($q);
+  if (!$st) out(500, ["ok"=>false,"error"=>"Prepare recent activity failed: ".$conn->error]);
+
   $st->bind_param("ii", $health_center_id, $health_center_id);
   $st->execute();
   $rs = $st->get_result();

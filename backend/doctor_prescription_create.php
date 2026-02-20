@@ -305,14 +305,21 @@ try {
     $patient_id = (int)$meta['patient_id'];
     $visit_id   = $meta['visit_id']; // may be null
 
-    // ✅ filesystem path (real folder on disk)
-$absoluteDir = realpath(__DIR__ . "/..") . "/uploads/documents/prescriptions/{$patient_id}";
+// ✅ filesystem path (real folder on disk) — SAVES TO uploads/documents/prescriptions/
+$projectRoot = realpath(__DIR__ . "/..");
+if ($projectRoot === false) {
+  throw new Exception("Project root not found");
+}
 
-// ✅ web path / saved path in DB (what browser will use)
-$relativeDir = "/CAVITE-MED/uploads/documents/prescriptions/{$patient_id}";
+$absoluteDir = $projectRoot . "/uploads/documents/prescriptions";
 
+// ✅ web path saved in DB (hosting-safe, no /Cavite-Med hardcode)
+// ✅ base URL path (hosting-safe): "" if hosted at domain root, "/Cavite-Med" if in subfolder
+$baseUrl = rtrim(dirname($_SERVER['SCRIPT_NAME']), "/\\"); 
+// If your PHP is inside /Cavite-Med/backend, this becomes "/Cavite-Med/backend"
+$baseUrl = preg_replace('#/backend$#', '', $baseUrl); // remove /backend if present
 
-    if (!is_dir($absoluteDir)) {
+$relativeDir = $baseUrl . "/uploads/documents/prescriptions";    if (!is_dir($absoluteDir)) {
       if (!mkdir($absoluteDir, 0775, true)) {
         throw new Exception("Failed to create directory for pdf");
       }

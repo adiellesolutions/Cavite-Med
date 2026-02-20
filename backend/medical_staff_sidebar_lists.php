@@ -20,6 +20,26 @@ $user_id = (int)$_SESSION['user_id'];
 
 try {
   // -------------------------
+  // Get user's health_center_id
+  // -------------------------
+  $st = $conn->prepare("SELECT health_center_id FROM users WHERE user_id=? LIMIT 1");
+  if (!$st) throw new Exception("Prepare user center failed: " . $conn->error);
+
+  $st->bind_param("i", $user_id);
+  $st->execute();
+  $st->bind_result($health_center_id);
+  $st->fetch();
+  $st->close();
+
+  $health_center_id = $health_center_id ? (int)$health_center_id : null;
+
+  if (!$health_center_id) {
+    http_response_code(403);
+    echo json_encode(["ok" => false, "error" => "User is not assigned to a health center."]);
+    exit;
+  }
+
+  // -------------------------
   // FAVORITES (top 10)
   // includes last visit details
   // -------------------------
@@ -47,9 +67,10 @@ try {
      )
 
     LEFT JOIN users d ON d.user_id = v.doctor_id
-    LEFT JOIN health_centers hc ON hc.id = v.health_center_id
+    LEFT JOIN health_centers hc ON hc.id = p.health_center_id
 
     WHERE f.user_id = ?
+      AND p.health_center_id = ?
     ORDER BY f.created_at DESC
     LIMIT 10
   ";
@@ -57,7 +78,7 @@ try {
   $stmtFav = $conn->prepare($sqlFav);
   if (!$stmtFav) throw new Exception("Prepare favorites failed: " . $conn->error);
 
-  $stmtFav->bind_param("i", $user_id);
+  $stmtFav->bind_param("ii", $user_id, $health_center_id);
   $stmtFav->execute();
   $resFav = $stmtFav->get_result();
   $favorites = $resFav ? $resFav->fetch_all(MYSQLI_ASSOC) : [];
@@ -67,7 +88,6 @@ try {
   // -------------------------
   // "RECENTS" (TOP 10 sidebar)
   // NOW: ALL PATIENTS sorted by most recent visit
-  // - last_viewed_at removed (not using user_patient_recent anymore)
   // - alias last_visit_date AS last_viewed_at so your JS timeAgo() still works
   // -------------------------
   $sqlRec = "
@@ -94,7 +114,9 @@ try {
      )
 
     LEFT JOIN users d ON d.user_id = v.doctor_id
-    LEFT JOIN health_centers hc ON hc.id = v.health_center_id
+    LEFT JOIN health_centers hc ON hc.id = p.health_center_id
+
+    WHERE p.health_center_id = ?
 
     ORDER BY
       v.visit_datetime IS NULL ASC,   -- patients with visits first
@@ -106,6 +128,7 @@ try {
   $stmtRec = $conn->prepare($sqlRec);
   if (!$stmtRec) throw new Exception("Prepare recent patients failed: " . $conn->error);
 
+  $stmtRec->bind_param("i", $health_center_id);
   $stmtRec->execute();
   $resRec = $stmtRec->get_result();
   $recent = $resRec ? $resRec->fetch_all(MYSQLI_ASSOC) : [];

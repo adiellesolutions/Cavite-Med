@@ -21,8 +21,6 @@ if (!($mysqli instanceof mysqli)) {
 
 /**
  * ✅ Ensure DB timezone is correct (PH = +08:00)
- * This helps CURRENT_TIMESTAMP / NOW() match your local time.
- * Safe even if your DB already has correct timezone.
  */
 $mysqli->query("SET time_zone = '+08:00'");
 
@@ -32,6 +30,33 @@ $mysqli->query("SET time_zone = '+08:00'");
 if (!isset($_SESSION['user_id'])) {
     http_response_code(401);
     echo json_encode(["success" => false, "message" => "Unauthorized"]);
+    exit;
+}
+
+$user_id = (int)$_SESSION['user_id'];
+
+/**
+ * -------------------------
+ * Get user's health_center_id (scope)
+ * -------------------------
+ */
+$st = $mysqli->prepare("SELECT health_center_id FROM users WHERE user_id=? LIMIT 1");
+if (!$st) {
+    http_response_code(500);
+    echo json_encode(["success" => false, "message" => "Prepare user center failed", "error" => $mysqli->error]);
+    exit;
+}
+$st->bind_param("i", $user_id);
+$st->execute();
+$st->bind_result($user_health_center_id);
+$st->fetch();
+$st->close();
+
+$user_health_center_id = $user_health_center_id ? (int)$user_health_center_id : null;
+
+if (!$user_health_center_id) {
+    http_response_code(403);
+    echo json_encode(["success" => false, "message" => "User is not assigned to a health center."]);
     exit;
 }
 
@@ -51,11 +76,12 @@ if ($method === 'GET' && isset($_GET['query'])) {
         exit;
     }
 
-    // limit results para di mabigat
+    // ✅ limit results + scoped to health center
     $sql = "
         SELECT patient_id, first_name, last_name, mrn
         FROM patients
         WHERE status = 'active'
+          AND health_center_id = ?
           AND (
             first_name LIKE ?
             OR last_name LIKE ?
@@ -74,7 +100,7 @@ if ($method === 'GET' && isset($_GET['query'])) {
     }
 
     $like = "%{$searchTerm}%";
-    $stmt->bind_param("ssss", $like, $like, $like, $like);
+    $stmt->bind_param("issss", $user_health_center_id, $like, $like, $like, $like);
 
     if (!$stmt->execute()) {
         http_response_code(500);
@@ -132,19 +158,25 @@ if ($method === 'POST') {
     $allowedStatus = ['waiting', 'in_progress', 'completed', 'for_dispense'];
     if (!in_array($status, $allowedStatus, true)) $status = 'waiting';
 
-    // Ensure patient exists (prevents FK fail)
-    $check = $mysqli->prepare("SELECT patient_id FROM patients WHERE patient_id = ? LIMIT 1");
+    // ✅ Ensure patient exists AND belongs to same health center (prevents cross-center access)
+    $check = $mysqli->prepare("
+        SELECT patient_id
+        FROM patients
+        WHERE patient_id = ?
+          AND health_center_id = ?
+        LIMIT 1
+    ");
     if (!$check) {
         http_response_code(500);
         echo json_encode(["success" => false, "message" => "Prepare failed", "error" => $mysqli->error]);
         exit;
     }
-    $check->bind_param("i", $patient_id);
+    $check->bind_param("ii", $patient_id, $user_health_center_id);
     $check->execute();
     $checkRes = $check->get_result();
     if ($checkRes->num_rows === 0) {
         http_response_code(404);
-        echo json_encode(["success" => false, "message" => "Patient not found"]);
+        echo json_encode(["success" => false, "message" => "Patient not found in your health center"]);
         $check->close();
         exit;
     }
@@ -153,9 +185,7 @@ if ($method === 'POST') {
     $created_by = (int)$_SESSION['user_id']; // ✅ from session
 
     /**
-     * ✅ IMPORTANT FIX:
-     * Do NOT pass visit_datetime from PHP.
-     * Let MySQL DEFAULT CURRENT_TIMESTAMP handle it (accurate + consistent).
+     * Let MySQL DEFAULT CURRENT_TIMESTAMP handle visit_datetime
      */
     $sql = "
         INSERT INTO patient_visits
