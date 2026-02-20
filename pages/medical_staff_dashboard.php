@@ -11,8 +11,6 @@ if (!empty($_SESSION['force_change_password'])) {
     exit;
 }
 
-<<<<<<< HEAD
-=======
 
 require_once "../backend/db/cavitemed_db.php";
 
@@ -103,7 +101,6 @@ $stmt->close();
 
 
 
->>>>>>> 5a755c7c6e5a5a9949f28867f82bb1192403c7fe
 ?>
 
 <!DOCTYPE html>
@@ -436,44 +433,6 @@ $stmt->close();
                 <div class="card lg:col-span-2">
                     <h3 class="text-lg font-semibold text-text-primary mb-4">Recent Activity</h3>
                     <div class="space-y-3">
-<<<<<<< HEAD
-                        <div class="flex items-center gap-3 p-3 bg-secondary-50 rounded-base">
-                            <div class="w-8 h-8 rounded-full bg-success-100 flex items-center justify-center">
-                                <svg class="w-4 h-4 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                            </div>
-                            <div class="flex-1">
-                                <p class="text-sm text-text-primary">Robert Chen placed in Cardiology queue</p>
-                                <p class="text-xs text-text-secondary">09:15 AM</p>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center gap-3 p-3 bg-secondary-50 rounded-base">
-                            <div class="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
-                                <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                            </div>
-                            <div class="flex-1">
-                                <p class="text-sm text-text-primary">Maria Johnson - Critical vitals detected</p>
-                                <p class="text-xs text-text-secondary">09:10 AM</p>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center gap-3 p-3 bg-secondary-50 rounded-base">
-                            <div class="w-8 h-8 rounded-full bg-accent-100 flex items-center justify-center">
-                                <svg class="w-4 h-4 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                                </svg>
-                            </div>
-                            <div class="flex-1">
-                                <p class="text-sm text-text-primary">New patient registered: Sarah Thompson</p>
-                                <p class="text-xs text-text-secondary">08:50 AM</p>
-                            </div>
-                        </div>
-                        
-=======
 
                     <div id="recentActivityList" class="space-y-3"></div>
 <p id="recentActivityEmpty" class="text-sm text-text-secondary hidden">No recent activity.</p>
@@ -484,7 +443,6 @@ $stmt->close();
                             <p class="text-sm text-text-secondary">No recent activity.</p>
                         <?php endif; ?>
 
->>>>>>> 5a755c7c6e5a5a9949f28867f82bb1192403c7fe
                     </div>
                 </div>
 
@@ -494,25 +452,17 @@ $stmt->close();
                     <div class="grid grid-cols-2 gap-3">
                         <!-- Patients Registered -->
                         <div class="p-4 rounded-base border-2 border-primary-100">
-<<<<<<< HEAD
-                            <p class="text-3xl font-bold text-primary-600 mb-1">8</p>
-=======
                             <p class="text-3xl font-bold text-primary-600 mb-1">
                             <p id="statPatientsToday" class="text-3xl font-bold text-primary-600 mb-1">0</p>
                             </p>
->>>>>>> 5a755c7c6e5a5a9949f28867f82bb1192403c7fe
                             <p class="text-sm text-text-secondary">Patients Registered</p>
                         </div>
                         
                         <!-- Vitals Taken -->
                         <div class="p-4 rounded-base border-2 border-success-100">
-<<<<<<< HEAD
-                            <p class="text-3xl font-bold text-success-600 mb-1">12</p>
-=======
                             <p class="text-3xl font-bold text-success-600 mb-1">
                             <p id="statVitalsToday" class="text-3xl font-bold text-success-600 mb-1">0</p>
                             </p>
->>>>>>> 5a755c7c6e5a5a9949f28867f82bb1192403c7fe
                             <p class="text-sm text-text-secondary">Vitals Taken</p>
                         </div>
                         
