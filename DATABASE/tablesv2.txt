@@ -254,15 +254,22 @@ CREATE TABLE patients (
 
   status ENUM('active','inactive') DEFAULT 'active',
 
+  health_center_id INT NULL,          -- ✅ NEW: patient scope per center
   created_by INT NOT NULL,
+
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
   INDEX idx_patients_created_by (created_by),
+  INDEX idx_patients_health_center (health_center_id),  -- ✅ NEW
 
   CONSTRAINT fk_patients_created_by
     FOREIGN KEY (created_by) REFERENCES users(user_id)
-    ON DELETE RESTRICT
+    ON DELETE RESTRICT,
+
+  CONSTRAINT fk_patients_health_center       -- ✅ NEW
+    FOREIGN KEY (health_center_id) REFERENCES health_centers(id)
+    ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------

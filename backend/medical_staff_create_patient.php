@@ -90,6 +90,25 @@ if (!in_array($status, $allowed_status, true)) {
     respond(false, "Invalid status value.");
 }
 
+
+// ---------- Get staff health_center_id ----------
+$st = $conn->prepare("SELECT health_center_id FROM users WHERE user_id=? LIMIT 1");
+if (!$st) respond(false, "Prepare failed: " . $conn->error);
+
+$st->bind_param("i", $created_by);
+if (!$st->execute()) respond(false, "Execute failed: " . $st->error);
+
+$st->bind_result($health_center_id);
+$st->fetch();
+$st->close();
+
+$health_center_id = $health_center_id ? (int)$health_center_id : null;
+
+if (!$health_center_id) {
+    respond(false, "Your account is not assigned to any health center. Please contact admin.");
+}
+
+
 // ---------- Generate MRN (simple example) ----------
 // Format: YYYY-000001 (resets per year)
 // You can change this to your preferred MRN format.
@@ -136,6 +155,7 @@ $sql = "INSERT INTO patients (
     phone, email,
     address_line, city, state, zip_code,
     status,
+    health_center_id,
     created_by
 ) VALUES (
     ?, ?, ?, ?, ?,
@@ -143,6 +163,7 @@ $sql = "INSERT INTO patients (
     ?, ?, ?,
     ?, ?,
     ?, ?, ?, ?,
+    ?,
     ?,
     ?
 )";
@@ -154,7 +175,7 @@ if (!$stmt) {
 }
 
 $stmt->bind_param(
-    "ssssssssssssssssssi",
+    "ssssssssssssssssssii",
     $mrn,
     $first_name, $last_name, $middle_name, $preferred_name,
     $marital_status, $occupation, $preferred_language,
@@ -162,6 +183,7 @@ $stmt->bind_param(
     $phone, $email,
     $address_line, $city, $state, $zip_code,
     $status,
+    $health_center_id,
     $created_by
 );
 
