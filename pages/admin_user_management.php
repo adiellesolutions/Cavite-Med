@@ -91,23 +91,23 @@ $profile = !empty($user['profile_picture'])
                         </svg>
                         Dashboard
                     </a>
-                    <a href="admin_analytics_and_reporting.html" class="nav-item whitespace-nowrap">
+                    <a href="admin_analytics_and_reporting.php" class="nav-item whitespace-nowrap">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
-                        Analytics
+                        Analytics and Reports
                     </a>
-                    <a href="admin_audit_log.html" class="nav-item whitespace-nowrap">
+                    <a href="admin_audit_log.php" class="nav-item whitespace-nowrap">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                         Audit Logs
                     </a>
-                    <a href="admin_reports.html" class="nav-item whitespace-nowrap">
+                    <a href="admin_user_management.php" class="nav-item whitespace-nowrap">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
-                        Reports
+                        User Management
                     </a>
                     <a href="../backend/system_logout.php" class="nav-item whitespace-nowrap ml-auto">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -448,22 +448,6 @@ $profile = !empty($user['profile_picture'])
 
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-surface border-t border-border py-6 px-6 mt-auto">
-        <div class="max-w-7xl mx-auto">
-            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-                <!-- Compliance Certifications -->
-                <div class="flex items-center gap-4 flex-wrap justify-center">
-                </div>
-
-                <!-- Copyright -->
-                <div class="text-sm text-text-secondary text-center md:text-right">
-                    <p>© 2025 CAVMED Portal. All Rights Reserved.</p>
-                </div>
-            </div>
-        </div>
-    </footer>
-
     <!-- Add User Modal (Hidden by default) -->
     <div id="addUserModal"
         class="fixed inset-0 z-modal hidden items-center justify-center p-4"
@@ -625,5 +609,21 @@ $profile = !empty($user['profile_picture'])
         </div>
     </div>
 
+    <!-- Footer -->
+    <footer class="bg-surface border-t border-border py-6 px-6 mt-auto">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <!-- Compliance Certifications -->
+                <div class="flex items-center gap-4 flex-wrap justify-center">
+                </div>
+
+                <!-- Copyright -->
+                <div class="text-sm text-text-secondary text-center md:text-right">
+                    <p>© 2025 CAVMED Portal. All Rights Reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
 </body>
 </html>

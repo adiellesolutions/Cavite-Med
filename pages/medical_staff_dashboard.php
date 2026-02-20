@@ -11,97 +11,6 @@ if (!empty($_SESSION['force_change_password'])) {
     exit;
 }
 
-
-require_once "../backend/db/cavitemed_db.php";
-
-$user_id = $_SESSION['user_id'];
-
-// Get health center of logged-in staff
-$stmt = $conn->prepare("SELECT health_center_id FROM users WHERE user_id = ?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$stmt->bind_result($health_center_id);
-$stmt->fetch();
-$stmt->close();
-
-/* ===========================
-   TODAY'S STATISTICS
-=========================== */
-
-// Patients Registered Today (same health center)
-$stmt = $conn->prepare("
-    SELECT COUNT(*) 
-    FROM patients 
-    WHERE DATE(created_at) = CURDATE()
-");
-$stmt->execute();
-$stmt->bind_result($patients_today);
-$stmt->fetch();
-$stmt->close();
-
-// Vitals Taken Today (same health center staff only)
-$stmt = $conn->prepare("
-    SELECT COUNT(*) 
-    FROM patient_vitals pv
-    JOIN users u ON pv.recorded_by = u.user_id
-    WHERE DATE(pv.recorded_at) = CURDATE()
-    AND u.health_center_id = ?
-");
-$stmt->bind_param("i", $health_center_id);
-$stmt->execute();
-$stmt->bind_result($vitals_today);
-$stmt->fetch();
-$stmt->close();
-
-/* ===========================
-   RECENT ACTIVITY
-=========================== */
-
-$recent_activity = [];
-
-$query = "
-(
-    SELECT 
-        CONCAT(p.first_name, ' ', p.last_name) AS name,
-        'registered' AS type,
-        p.created_at AS activity_time
-    FROM patients p
-    ORDER BY p.created_at DESC
-    LIMIT 3
-)
-
-UNION ALL
-
-(
-    SELECT 
-        CONCAT(p.first_name, ' ', p.last_name) AS name,
-        'vitals' AS type,
-        pv.recorded_at AS activity_time
-    FROM patient_vitals pv
-    JOIN patients p ON pv.patient_id = p.patient_id
-    JOIN users u ON pv.recorded_by = u.user_id
-    WHERE u.health_center_id = ?
-    ORDER BY pv.recorded_at DESC
-    LIMIT 3
-)
-
-ORDER BY activity_time DESC
-LIMIT 5
-";
-
-$stmt = $conn->prepare($query);
-$stmt->bind_param("i", $health_center_id);
-$stmt->execute();
-$result = $stmt->get_result();
-
-while ($row = $result->fetch_assoc()) {
-    $recent_activity[] = $row;
-}
-
-$stmt->close();
-
-
-
 ?>
 
 <!DOCTYPE html>
@@ -112,7 +21,146 @@ $stmt->close();
     <meta name="description" content="Nurse Vital Signs & Patient Queue System - CAVMED Portal">
     <title>Nurse Workflow - CAVMED Portal</title>
     <link rel="stylesheet" href="../css/main.css">
-
+    <style>
+        .workflow-step {
+            border-left: 4px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .workflow-step.active {
+            border-left-color: #059669;
+            background-color: #f0fdf4;
+        }
+        
+        .workflow-step.completed {
+            border-left-color: #10b981;
+        }
+        
+        .patient-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .queue-item {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .queue-item:hover {
+            background-color: #f8fafc;
+            transform: translateX(4px);
+        }
+        
+        .queue-item.active {
+            background-color: #ecfdf5;
+            border-left: 4px solid #10b981;
+        }
+        
+        .vital-sign-input {
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 0.75rem;
+            width: 100%;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+        
+        .vital-sign-input:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+        }
+        
+        .vital-sign-card {
+            transition: all 0.3s ease;
+        }
+        
+        .vital-sign-card.critical {
+            animation: pulse 2s infinite;
+            border-color: #ef4444;
+        }
+        
+        .vital-sign-card.warning {
+            border-color: #f59e0b;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 4px;
+        }
+        
+        .status-waiting { background-color: #f59e0b; }
+        .status-in-progress { background-color: #3b82f6; }
+        .status-completed { background-color: #10b981; }
+        .status-critical { background-color: #ef4444; animation: pulse 2s infinite; }
+        
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .badge-waiting { background-color: #fef3c7; color: #92400e; }
+        .badge-in-progress { background-color: #dbeafe; color: #1e40af; }
+        .badge-completed { background-color: #d1fae5; color: #065f46; }
+        .badge-critical { background-color: #fee2e2; color: #991b1b; }
+        
+        .priority-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        
+        .priority-high { background-color: #ef4444; }
+        .priority-medium { background-color: #f59e0b; }
+        .priority-low { background-color: #10b981; }
+        
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.2s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .workflow-progress {
+            height: 4px;
+            background-color: #e2e8f0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .workflow-progress-bar {
+            height: 100%;
+            background-color: #10b981;
+            transition: width 0.3s ease;
+        }
+    </style>
 </head>
 <body class="bg-background min-h-screen flex flex-col">
     <!-- Header Section -->
@@ -286,81 +334,84 @@ $stmt->close();
             </div>
 
         
+
             <!-- Statistics & Recent Activity -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
+                <!-- Recent Activity -->
                 <div class="card lg:col-span-2">
                     <h3 class="text-lg font-semibold text-text-primary mb-4">Recent Activity</h3>
                     <div class="space-y-3">
-
-                        <?php foreach ($recent_activity as $activity): ?>
-
-                            <?php
-                            $time = date("h:i A", strtotime($activity['activity_time']));
-                            ?>
-
-                            <div class="flex items-center gap-3 p-3 bg-secondary-50 rounded-base">
-                                <div class="w-8 h-8 rounded-full 
-                                    <?= $activity['type'] === 'registered' ? 'bg-accent-100' : 'bg-success-100' ?> 
-                                    flex items-center justify-center">
-
-                                    <?php if ($activity['type'] === 'registered'): ?>
-                                        <svg class="w-4 h-4 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                                        </svg>
-                                    <?php else: ?>
-                                        <svg class="w-4 h-4 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                        </svg>
-                                    <?php endif; ?>
-                                </div>
-
-                                <div class="flex-1">
-                                    <p class="text-sm text-text-primary">
-                                        <?= htmlspecialchars($activity['name']) ?>
-                                        <?= $activity['type'] === 'registered'
-                                            ? 'registered as new patient'
-                                            : 'vitals recorded' ?>
-                                    </p>
-                                    <p class="text-xs text-text-secondary"><?= $time ?></p>
-                                </div>
+                        <div class="flex items-center gap-3 p-3 bg-secondary-50 rounded-base">
+                            <div class="w-8 h-8 rounded-full bg-success-100 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
                             </div>
-
-                        <?php endforeach; ?>
-
-                        <?php if (empty($recent_activity)): ?>
-                            <p class="text-sm text-text-secondary">No recent activity.</p>
-                        <?php endif; ?>
-
+                            <div class="flex-1">
+                                <p class="text-sm text-text-primary">Robert Chen placed in Cardiology queue</p>
+                                <p class="text-xs text-text-secondary">09:15 AM</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-3 p-3 bg-secondary-50 rounded-base">
+                            <div class="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm text-text-primary">Maria Johnson - Critical vitals detected</p>
+                                <p class="text-xs text-text-secondary">09:10 AM</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-3 p-3 bg-secondary-50 rounded-base">
+                            <div class="w-8 h-8 rounded-full bg-accent-100 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm text-text-primary">New patient registered: Sarah Thompson</p>
+                                <p class="text-xs text-text-secondary">08:50 AM</p>
+                            </div>
+                        </div>
+                        
                     </div>
                 </div>
 
+                <!-- Today's Statistics -->
                 <div class="card">
                     <h3 class="text-lg font-semibold text-text-primary mb-4">Today's Statistics</h3>
                     <div class="grid grid-cols-2 gap-3">
-
+                        <!-- Patients Registered -->
                         <div class="p-4 rounded-base border-2 border-primary-100">
-                            <p class="text-3xl font-bold text-primary-600 mb-1">
-                                <?= $patients_today ?>
-                            </p>
+                            <p class="text-3xl font-bold text-primary-600 mb-1">8</p>
                             <p class="text-sm text-text-secondary">Patients Registered</p>
                         </div>
-
+                        
+                        <!-- Vitals Taken -->
                         <div class="p-4 rounded-base border-2 border-success-100">
-                            <p class="text-3xl font-bold text-success-600 mb-1">
-                                <?= $vitals_today ?>
-                            </p>
+                            <p class="text-3xl font-bold text-success-600 mb-1">12</p>
                             <p class="text-sm text-text-secondary">Vitals Taken</p>
                         </div>
-
+                        
+                        <!-- In Queue -->
+                        <div class="p-4 rounded-base border-2 border-warning-100">
+                            <p class="text-3xl font-bold text-warning-600 mb-1">6</p>
+                            <p class="text-sm text-text-secondary">In Queue</p>
+                        </div>
+                        
+                        <!-- Average Time -->
+                        <div class="p-4 rounded-base border-2 border-accent-100">
+                            <p class="text-3xl font-bold text-accent-600 mb-1">7.2</p>
+                            <p class="text-sm text-text-secondary">Avg Time/Patient</p>
+                        </div>
                     </div>
                 </div>
-       
                 
             </div>
-
         </div>
     </main>
 
