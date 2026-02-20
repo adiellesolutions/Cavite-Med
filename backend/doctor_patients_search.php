@@ -47,8 +47,8 @@ try {
     GROUP BY patient_id
   ) lv ON lv.patient_id = p.patient_id
   INNER JOIN patient_visits v ON v.visit_id = lv.last_visit_id
-  WHERE v.status = 'completed'
-    AND (p.first_name LIKE ? OR p.last_name LIKE ? OR p.mrn LIKE ?)
+  WHERE v.status IN ('for_dispense', 'completed')
+  AND (p.first_name LIKE ? OR p.last_name LIKE ? OR p.mrn LIKE ?)
   ORDER BY v.visit_datetime DESC, p.last_name, p.first_name
   LIMIT 50
 ";

@@ -518,7 +518,7 @@ try {
 
   $size_kb = (int)ceil(filesize($abs_path) / 1024);
 
-  $rel_path = "uploads/documents/medical_certificates/" . $filename;
+  $rel_path = "/Cavite-Med/uploads/documents/medical_certificates/" . $filename;
 
   // Insert into patient_documents
   $doc_sql = "INSERT INTO patient_documents
@@ -553,7 +553,7 @@ try {
 
   $conn->commit();
 
-  $download_url = "/CAVITE-MED/" . $rel_path;
+  $download_url = "" . $rel_path;
 
   json_out([
     "ok" => true,

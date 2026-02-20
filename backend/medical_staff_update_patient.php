@@ -142,39 +142,74 @@ try {
   /* =========================
      2️⃣ MEDICAL (CONDITIONAL)
   ========================= */
-  $hasMedical =
-    $allergies !== null ||
-    $chronic_conditions !== null ||
-    $current_medications !== null ||
-    $immunization_status !== "unknown";
+  /* =========================
+   2️⃣ MEDICAL (CONDITIONAL) ✅ FIXED updated_by
+========================= */
+$hasMedical =
+$allergies !== null ||
+$chronic_conditions !== null ||
+$current_medications !== null ||
+($immunization_status ?? "unknown") !== "unknown";
 
-  if ($hasMedical) {
+if ($hasMedical) {
 
-    $stmt = $conn->prepare("SELECT patient_id FROM patient_medical_profile WHERE patient_id = ? LIMIT 1");
-    $stmt->bind_param("i", $patient_id);
-    $stmt->execute();
-    $exists = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
+$stmt = $conn->prepare("SELECT patient_id FROM patient_medical_profile WHERE patient_id = ? LIMIT 1");
+if (!$stmt) throw new Exception("Prepare failed: " . $conn->error);
 
-    if ($exists) {
-      $stmt = $conn->prepare("
-        UPDATE patient_medical_profile
-        SET allergies = ?, chronic_conditions = ?, current_medications = ?, immunization_status = ?
-        WHERE patient_id = ?
-      ");
-      $stmt->bind_param("ssssi", $allergies, $chronic_conditions, $current_medications, $immunization_status, $patient_id);
-    } else {
-      $stmt = $conn->prepare("
-        INSERT INTO patient_medical_profile
-        (patient_id, allergies, chronic_conditions, current_medications, immunization_status)
-        VALUES (?, ?, ?, ?, ?)
-      ");
-      $stmt->bind_param("issss", $patient_id, $allergies, $chronic_conditions, $current_medications, $immunization_status);
-    }
+$stmt->bind_param("i", $patient_id);
+$stmt->execute();
+$exists = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 
-    $stmt->execute();
-    $stmt->close();
-  }
+if ($exists) {
+  // ✅ include updated_by and updated_at
+  $stmt = $conn->prepare("
+    UPDATE patient_medical_profile
+    SET
+      allergies = ?,
+      chronic_conditions = ?,
+      current_medications = ?,
+      immunization_status = ?,
+      updated_by = ?,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE patient_id = ?
+    LIMIT 1
+  ");
+  if (!$stmt) throw new Exception("Prepare failed: " . $conn->error);
+
+  $stmt->bind_param(
+    "ssssii",
+    $allergies,
+    $chronic_conditions,
+    $current_medications,
+    $immunization_status,
+    $created_by,
+    $patient_id
+  );
+} else {
+  // ✅ include updated_by (NOT NULL FK)
+  $stmt = $conn->prepare("
+    INSERT INTO patient_medical_profile
+      (patient_id, allergies, chronic_conditions, current_medications, immunization_status, updated_by)
+    VALUES (?, ?, ?, ?, ?, ?)
+  ");
+  if (!$stmt) throw new Exception("Prepare failed: " . $conn->error);
+
+  $stmt->bind_param(
+    "issssi",
+    $patient_id,
+    $allergies,
+    $chronic_conditions,
+    $current_medications,
+    $immunization_status,
+    $created_by
+  );
+}
+
+$stmt->execute();
+$stmt->close();
+}
+
 
   /* =========================
      3️⃣ INSURANCE (CONDITIONAL)

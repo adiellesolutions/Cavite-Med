@@ -27,8 +27,7 @@ if (!empty($_SESSION['force_change_password'])) {
     <meta name="description" content="Electronic Prescription Management - Digital prescribing platform with drug databases and interaction checking">
     <title>Electronic Prescription Management - CAVMED Portal</title>
     <link rel="stylesheet" href="../css/main.css">
-  <script type="module" async src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Fcavmedporta6876back.builtwithrocket.new&_be=https%3A%2F%2Fapplication.rocket.new&_v=0.1.10"></script>
-  <script type="module" defer src="https://static.rocket.new/rocket-shot.js?v=0.0.1"></script>
+ 
   </head>
 <body class="bg-background min-h-screen flex flex-col">
     <!-- Header Section -->
@@ -151,30 +150,13 @@ if (!empty($_SESSION['force_change_password'])) {
                         </svg>
                         <span>History</span>
                     </button>
-                    <button type="button" id="newPrescriptionBtn" class="btn btn-primary">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                        </svg>
-                        <span>New Prescription</span>
-                    </button>
+                   
                 </div>
             </div>
 
             <!-- Quick Stats -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div class="card">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-text-secondary">Medicine Dispensed Today</p>
-                            <p class="text-2xl font-semibold text-text-primary mt-1">47</p>
-                        </div>
-                        <div class="w-12 h-12 rounded-lg bg-success-100 flex items-center justify-center">
-                            <svg class="w-6 h-6 text-success-600" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
+                
             </div>
 
             <!-- Dual Panel Layout -->
@@ -194,25 +176,25 @@ if (!empty($_SESSION['force_change_password'])) {
                         </div>
 
                         <div id="selectedPatientInfo" class="hidden">
-                            <div class="flex items-start gap-4 p-4 bg-secondary-50 rounded-base">
-                                <div class="w-16 h-16 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-semibold text-xl flex-shrink-0">
-                                    MJ
-                                </div>
-                                <div class="flex-1">
-                                    <h4 class="font-semibold text-text-primary">Maria Johnson</h4>
-                                    <p class="text-sm text-text-secondary">Patient ID: P-2024-1547</p>
-                                    <div class="flex items-center gap-4 mt-2 text-sm">
-                                        <span class="text-text-secondary">Age: 45</span>
-                                        <span class="text-text-secondary">Gender: Female</span>
-                                        <span class="text-text-secondary">Blood Type: O+</span>
-                                    </div>
-                                    <div class="mt-2">
-                                        <span class="badge badge-warning">Penicillin Allergy</span>
-                                        <span class="badge badge-error ml-2">Diabetes Type 2</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+  <div class="flex items-start gap-4 p-4 bg-secondary-50 rounded-base">
+    <div id="patientInitials"
+      class="w-16 h-16 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-semibold text-xl flex-shrink-0">
+      PT
+    </div>
+
+    <div class="flex-1">
+      <h4 id="patientFullName" class="font-semibold text-text-primary">---</h4>
+      <p id="patientMeta" class="text-sm text-text-secondary">Patient ID: ---</p>
+
+      <div class="flex items-center gap-4 mt-2 text-sm">
+        <span class="text-text-secondary">Age: <b id="patientAge">--</b></span>
+        <span class="text-text-secondary">Gender: <b id="patientGender">--</b></span>
+        <span class="text-text-secondary">Blood Type: <b id="patientBloodType">--</b></span>
+      </div>
+    </div>
+  </div>
+</div>
+
 
                         <div id="noPatientSelected" class="text-center py-8">
                             <svg class="w-16 h-16 mx-auto text-text-tertiary mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -223,9 +205,61 @@ if (!empty($_SESSION['force_change_password'])) {
                         </div>
                     </div>
 
-                    <!-- Prescription Form -->
+              <!-- Clinical Decision Support Alerts -->
+              <div id="clinicalAlerts" class="hidden space-y-3">
+  <div id="alertsContainer" class="space-y-3"></div>
+
+
+                    </div>
+
+                    <!-- Favorites List 
                     <div class="card">
-                        <h3 class="text-lg font-semibold text-text-primary mb-4">Prescription Details</h3>
+                        <h3 class="text-lg font-semibold text-text-primary mb-4">Frequently Prescribed</h3>
+                        <div class="space-y-2">
+                            <button type="button" class="w-full text-left p-3 rounded-base hover:bg-secondary-50 transition-colors border border-border">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="font-medium text-text-primary">Amoxicillin 500mg</p>
+                                        <p class="text-sm text-text-secondary">TID × 7 days</p>
+                                    </div>
+                                    <svg class="w-5 h-5 text-warning-500" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                                    </svg>
+                                </div>
+                            </button>
+                            <button type="button" class="w-full text-left p-3 rounded-base hover:bg-secondary-50 transition-colors border border-border">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="font-medium text-text-primary">Metformin 850mg</p>
+                                        <p class="text-sm text-text-secondary">BID × 30 days</p>
+                                    </div>
+                                    <svg class="w-5 h-5 text-warning-500" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                                    </svg>
+                                </div>
+                            </button>
+                            <button type="button" class="w-full text-left p-3 rounded-base hover:bg-secondary-50 transition-colors border border-border">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="font-medium text-text-primary">Lisinopril 10mg</p>
+                                        <p class="text-sm text-text-secondary">Once daily × 30 days</p>
+                                    </div>
+                                    <svg class="w-5 h-5 text-warning-500" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                                    </svg>
+                                </div>
+                            </button>
+                        </div>
+                    </div>-->
+                </div>
+
+                <!-- Right Panel - Medication Information & Clinical Support (60%) -->
+                <div class="lg:col-span-3">
+                    
+
+                    <!-- Medication Information Card -->
+                    <div class="card">
+                    <h3 class="text-lg font-semibold text-text-primary mb-4">Prescription Details</h3>
                         
                         <form id="prescriptionForm" class="space-y-4">
                             <!-- Medication Selection -->
@@ -234,16 +268,9 @@ if (!empty($_SESSION['force_change_password'])) {
                                     Medication *
                                 </label>
                                 <select id="medicationSelect" required class="input">
-                                    <option value="">Select medication...</option>
-                                    <option value="amoxicillin">Amoxicillin 500mg - Antibiotic</option>
-                                    <option value="metformin">Metformin 850mg - Antidiabetic</option>
-                                    <option value="lisinopril">Lisinopril 10mg - ACE Inhibitor</option>
-                                    <option value="atorvastatin">Atorvastatin 20mg - Statin</option>
-                                    <option value="omeprazole">Omeprazole 20mg - PPI</option>
-                                    <option value="amlodipine">Amlodipine 5mg - Calcium Channel Blocker</option>
-                                    <option value="levothyroxine">Levothyroxine 50mcg - Thyroid Hormone</option>
-                                    <option value="albuterol">Albuterol Inhaler - Bronchodilator</option>
-                                </select>
+  <option value="">Select medication...</option>
+</select>
+
                             </div>
 
                             <!-- Dosage Calculator -->
@@ -344,6 +371,44 @@ if (!empty($_SESSION['force_change_password'])) {
                                     <span class="text-sm text-text-primary">Allow generic substitution</span>
                                 </label>
                             </div>
+<!-- Added Medicines List -->
+<div class="border border-border rounded-base p-3">
+  <div class="flex items-center justify-between mb-2">
+    <p class="font-medium text-text-primary">Medicines Added</p>
+    <span id="itemsCount" class="text-sm text-text-secondary">0 item(s)</span>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="text-text-secondary">
+        <tr class="border-b border-border">
+          <th class="py-2 text-left">Medicine</th>
+          <th class="py-2 text-left">Dosage</th>
+          <th class="py-2 text-left">Intake</th>
+          <th class="py-2 text-left">Duration</th>
+          <th class="py-2 text-left">Route</th>
+          <th class="py-2 text-right">Action</th>
+        </tr>
+      </thead>
+      <tbody id="itemsTbody">
+        <tr>
+          <td colspan="6" class="py-3 text-center text-text-tertiary">
+            no medicine added yet
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="flex gap-2 mt-3">
+    <button type="button" id="addItemBtn" class="btn btn-outline flex-1">
+      + Add Medicine
+    </button>
+    <button type="button" id="clearItemsBtn" class="btn btn-outline">
+      Clear
+    </button>
+  </div>
+</div>
 
                             <!-- Action Buttons -->
                             <div class="flex gap-3 pt-4 border-t border-border">
@@ -355,227 +420,6 @@ if (!empty($_SESSION['force_change_password'])) {
                                 </button>
                             </div>
                         </form>
-                    </div>
-
-                    <!-- Favorites List -->
-                    <div class="card">
-                        <h3 class="text-lg font-semibold text-text-primary mb-4">Frequently Prescribed</h3>
-                        <div class="space-y-2">
-                            <button type="button" class="w-full text-left p-3 rounded-base hover:bg-secondary-50 transition-colors border border-border">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="font-medium text-text-primary">Amoxicillin 500mg</p>
-                                        <p class="text-sm text-text-secondary">TID × 7 days</p>
-                                    </div>
-                                    <svg class="w-5 h-5 text-warning-500" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-                                    </svg>
-                                </div>
-                            </button>
-                            <button type="button" class="w-full text-left p-3 rounded-base hover:bg-secondary-50 transition-colors border border-border">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="font-medium text-text-primary">Metformin 850mg</p>
-                                        <p class="text-sm text-text-secondary">BID × 30 days</p>
-                                    </div>
-                                    <svg class="w-5 h-5 text-warning-500" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-                                    </svg>
-                                </div>
-                            </button>
-                            <button type="button" class="w-full text-left p-3 rounded-base hover:bg-secondary-50 transition-colors border border-border">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="font-medium text-text-primary">Lisinopril 10mg</p>
-                                        <p class="text-sm text-text-secondary">Once daily × 30 days</p>
-                                    </div>
-                                    <svg class="w-5 h-5 text-warning-500" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-                                    </svg>
-                                </div>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right Panel - Medication Information & Clinical Support (60%) -->
-                <div class="lg:col-span-3">
-                    <!-- Clinical Decision Support Alerts -->
-                    <div id="clinicalAlerts" class="hidden space-y-3">
-                        <div class="alert alert-error">
-                            <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                            </svg>
-                            <div>
-                                <p class="font-medium">Drug Allergy Alert</p>
-                                <p class="text-sm mt-1">Patient has documented allergy to Penicillin. Selected medication contains similar compounds.</p>
-                            </div>
-                        </div>
-
-                        <div class="alert alert-warning">
-                            <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                            </svg>
-                            <div>
-                                <p class="font-medium">Drug Interaction Warning</p>
-                                <p class="text-sm mt-1">Potential interaction with current medication: Metformin. Monitor blood glucose levels closely.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Medication Information Card -->
-                    <div class="card">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold text-text-primary">Medication Information</h3>
-                            <div class="flex items-center gap-2">
-                                <button type="button" class="btn btn-ghost btn-sm">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
-                                    </svg>
-                                    <span>Print</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div id="medicationDetails" class="space-y-6">
-                            <!-- Drug Overview -->
-                            <div>
-                                <div class="flex items-start gap-4">
-                                    <div class="w-20 h-20 rounded-lg bg-primary-100 flex items-center justify-center flex-shrink-0">
-                                        <svg class="w-10 h-10 text-primary-600" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3"/>
-                                        </svg>
-                                    </div>
-                                    <div class="flex-1">
-                                        <h4 class="text-xl font-semibold text-text-primary">Amoxicillin</h4>
-                                        <p class="text-text-secondary mt-1">Generic Name: Amoxicillin Trihydrate</p>
-                                        <div class="flex items-center gap-2 mt-2">
-                                            <span class="badge badge-primary">Antibiotic</span>
-                                            <span class="badge badge-secondary">Penicillin Class</span>
-                                            <span class="badge badge-success">In Stock</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Tabs -->
-                            <div class="border-b border-border">
-                                <div class="flex gap-1">
-                                    <button type="button" class="px-4 py-2 text-sm font-medium text-primary border-b-2 border-primary">
-                                        Overview
-                                    </button>
-                                    <button type="button" class="px-4 py-2 text-sm font-medium text-text-secondary hover:text-text-primary">
-                                        Contraindications
-                                    </button>
-                                    <button type="button" class="px-4 py-2 text-sm font-medium text-text-secondary hover:text-text-primary">
-                                        Side Effects
-                                    </button>
-                                    <button type="button" class="px-4 py-2 text-sm font-medium text-text-secondary hover:text-text-primary">
-                                        Interactions
-                                    </button>
-                                    <button type="button" class="px-4 py-2 text-sm font-medium text-text-secondary hover:text-text-primary">
-                                        Dosing
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Tab Content -->
-                            <div class="space-y-4">
-                                <!-- Indications -->
-                                <div>
-                                    <h5 class="font-semibold text-text-primary mb-2">Indications</h5>
-                                    <ul class="list-disc list-inside space-y-1 text-text-secondary">
-                                        <li>Treatment of bacterial infections including respiratory tract infections</li>
-                                        <li>Ear, nose, and throat infections</li>
-                                        <li>Urinary tract infections</li>
-                                        <li>Skin and soft tissue infections</li>
-                                        <li>Dental infections</li>
-                                    </ul>
-                                </div>
-
-                                <!-- Mechanism of Action -->
-                                <div>
-                                    <h5 class="font-semibold text-text-primary mb-2">Mechanism of Action</h5>
-                                    <p class="text-text-secondary">Amoxicillin is a beta-lactam antibiotic that inhibits bacterial cell wall synthesis by binding to penicillin-binding proteins, leading to cell lysis and death. It is effective against gram-positive and some gram-negative bacteria.</p>
-                                </div>
-
-                                <!-- Dosage Information -->
-                                <div>
-                                    <h5 class="font-semibold text-text-primary mb-2">Standard Dosing</h5>
-                                    <div class="bg-secondary-50 rounded-base p-4 space-y-2">
-                                        <div class="flex justify-between">
-                                            <span class="text-text-secondary">Adults:</span>
-                                            <span class="font-medium text-text-primary">250-500mg every 8 hours</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-text-secondary">Severe infections:</span>
-                                            <span class="font-medium text-text-primary">500-875mg every 12 hours</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-text-secondary">Maximum daily dose:</span>
-                                            <span class="font-medium text-text-primary">4000mg</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Contraindications -->
-                                <div>
-                                    <h5 class="font-semibold text-text-primary mb-2">Contraindications</h5>
-                                    <div class="space-y-2">
-                                        <div class="flex items-start gap-2">
-                                            <svg class="w-5 h-5 text-error-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                                            </svg>
-                                            <span class="text-text-secondary">Hypersensitivity to penicillins or cephalosporins</span>
-                                        </div>
-                                        <div class="flex items-start gap-2">
-                                            <svg class="w-5 h-5 text-error-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                                            </svg>
-                                            <span class="text-text-secondary">History of cholestatic jaundice/hepatic dysfunction</span>
-                                        </div>
-                                        <div class="flex items-start gap-2">
-                                            <svg class="w-5 h-5 text-warning-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                            </svg>
-                                            <span class="text-text-secondary">Use with caution in renal impairment</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Common Side Effects -->
-                                <div>
-                                    <h5 class="font-semibold text-text-primary mb-2">Common Side Effects</h5>
-                                    <div class="grid grid-cols-2 gap-2">
-                                        <div class="flex items-center gap-2 text-sm text-text-secondary">
-                                            <div class="w-2 h-2 rounded-full bg-warning-500"></div>
-                                            <span>Nausea</span>
-                                        </div>
-                                        <div class="flex items-center gap-2 text-sm text-text-secondary">
-                                            <div class="w-2 h-2 rounded-full bg-warning-500"></div>
-                                            <span>Diarrhea</span>
-                                        </div>
-                                        <div class="flex items-center gap-2 text-sm text-text-secondary">
-                                            <div class="w-2 h-2 rounded-full bg-warning-500"></div>
-                                            <span>Skin rash</span>
-                                        </div>
-                                        <div class="flex items-center gap-2 text-sm text-text-secondary">
-                                            <div class="w-2 h-2 rounded-full bg-warning-500"></div>
-                                            <span>Vomiting</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- No Medication Selected State -->
-                        <div id="noMedicationSelected" class="text-center py-12">
-                            <svg class="w-20 h-20 mx-auto text-text-tertiary mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3"/>
-                            </svg>
-                            <p class="text-text-secondary text-lg">No medication selected</p>
-                            <p class="text-sm text-text-tertiary mt-2">Select a medication to view detailed information</p>
-                        </div>
                     </div>
 
                 </div>
@@ -613,242 +457,31 @@ if (!empty($_SESSION['force_change_password'])) {
     </footer>
 
     <!-- Patient Selection Modal -->
-    <div id="patientSelectionModal" class="hidden fixed inset-0 bg-secondary-900 bg-opacity-50 z-modal flex items-center justify-center p-4">
-        <div class="card max-w-2xl w-full animate-slide-in max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-semibold text-text-primary">Select Patient</h3>
-                <button type="button" id="closePatientModal" class="text-text-tertiary hover:text-text-primary transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-
-            <div class="mb-4">
-                <input type="text" id="patientSearchInput" placeholder="Search by name or patient ID..."
-                       class="input">
-            </div>
-
-            <div class="space-y-2">
-                <button type="button" class="patient-select-btn w-full text-left p-4 rounded-base hover:bg-secondary-50 transition-colors border border-border">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-semibold flex-shrink-0">
-                            MJ
-                        </div>
-                        <div class="flex-1">
-                            <p class="font-medium text-text-primary">Maria Johnson</p>
-                            <p class="text-sm text-text-secondary">ID: P-2024-1547 • Age: 45 • Female</p>
-                            <div class="flex gap-2 mt-1">
-                                <span class="badge badge-warning text-xs">Penicillin Allergy</span>
-                                <span class="badge badge-error text-xs">Diabetes Type 2</span>
-                            </div>
-                        </div>
-                    </div>
-                </button>
-
-                <button type="button" class="patient-select-btn w-full text-left p-4 rounded-base hover:bg-secondary-50 transition-colors border border-border">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-full bg-accent-100 text-accent-700 flex items-center justify-center font-semibold flex-shrink-0">
-                            RS
-                        </div>
-                        <div class="flex-1">
-                            <p class="font-medium text-text-primary">Robert Smith</p>
-                            <p class="text-sm text-text-secondary">ID: P-2024-1892 • Age: 62 • Male</p>
-                            <div class="flex gap-2 mt-1">
-                                <span class="badge badge-error text-xs">Hypertension</span>
-                                <span class="badge badge-warning text-xs">High Cholesterol</span>
-                            </div>
-                        </div>
-                    </div>
-                </button>
-
-                <button type="button" class="patient-select-btn w-full text-left p-4 rounded-base hover:bg-secondary-50 transition-colors border border-border">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-full bg-success-100 text-success-700 flex items-center justify-center font-semibold flex-shrink-0">
-                            EC
-                        </div>
-                        <div class="flex-1">
-                            <p class="font-medium text-text-primary">Emily Chen</p>
-                            <p class="text-sm text-text-secondary">ID: P-2024-2103 • Age: 28 • Female</p>
-                            <div class="flex gap-2 mt-1">
-                                <span class="badge badge-success text-xs">No Known Allergies</span>
-                            </div>
-                        </div>
-                    </div>
-                </button>
-            </div>
-        </div>
+<div id="patientSelectionModal" class="hidden fixed inset-0 bg-secondary-900 bg-opacity-50 z-modal flex items-center justify-center p-4">
+  <div class="card max-w-2xl w-full animate-slide-in max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-xl font-semibold text-text-primary">Select Patient</h3>
+      <button type="button" id="closePatientModal" class="text-text-tertiary hover:text-text-primary transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
     </div>
 
-    <script>
-        // Global Medication Search
-        const globalSearchInput = document.getElementById('globalMedicationSearch');
-        const globalSearchResults = document.getElementById('globalSearchResults');
-        const clearGlobalSearch = document.getElementById('clearGlobalSearch');
+    <div class="mb-4">
+      <input type="text" id="patientSearchInput" placeholder="Search by name or patient ID..." class="input">
+    </div>
 
-        const medications = [
-            { name: 'Amoxicillin 500mg', category: 'Antibiotic', generic: 'Amoxicillin Trihydrate' },
-            { name: 'Metformin 850mg', category: 'Antidiabetic', generic: 'Metformin Hydrochloride' },
-            { name: 'Lisinopril 10mg', category: 'ACE Inhibitor', generic: 'Lisinopril' },
-            { name: 'Atorvastatin 20mg', category: 'Statin', generic: 'Atorvastatin Calcium' },
-            { name: 'Omeprazole 20mg', category: 'PPI', generic: 'Omeprazole' },
-            { name: 'Amlodipine 5mg', category: 'Calcium Channel Blocker', generic: 'Amlodipine Besylate' },
-            { name: 'Levothyroxine 50mcg', category: 'Thyroid Hormone', generic: 'Levothyroxine Sodium' },
-            { name: 'Albuterol Inhaler', category: 'Bronchodilator', generic: 'Albuterol Sulfate' }
-        ];
+    <!-- ✅ IMPORTANT: dynamic list container -->
+    <div id="patientList" class="space-y-2">
+      <div class="p-3 text-text-secondary">loading...</div>
+    </div>
+  </div>
+</div>
 
-        globalSearchInput.addEventListener('input', function() {
-            const query = this.value.toLowerCase();
-            
-            if (query.length > 0) {
-                clearGlobalSearch.classList.remove('hidden');
-                const filtered = medications.filter(med => 
-                    med.name.toLowerCase().includes(query) || 
-                    med.generic.toLowerCase().includes(query) ||
-                    med.category.toLowerCase().includes(query)
-                );
 
-                if (filtered.length > 0) {
-                    globalSearchResults.innerHTML = filtered.map(med => `
-                        <button type="button" class="medication-result w-full text-left p-3 hover:bg-secondary-50 transition-colors border-b border-border last:border-b-0">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="font-medium text-text-primary">${med.name}</p>
-                                    <p class="text-sm text-text-secondary">${med.generic} • ${med.category}</p>
-                                </div>
-                                <svg class="w-5 h-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                                </svg>
-                            </div>
-                        </button>
-                    `).join('');
-                    globalSearchResults.classList.remove('hidden');
-                } else {
-                    globalSearchResults.innerHTML = '<div class="p-4 text-center text-text-secondary">No medications found</div>';
-                    globalSearchResults.classList.remove('hidden');
-                }
-            } else {
-                clearGlobalSearch.classList.add('hidden');
-                globalSearchResults.classList.add('hidden');
-            }
-        });
+    <script src="../js/doctor_prescription.js"></script>
+    <script src="../js/doctor_prescription_alerts.js"></script>
 
-        clearGlobalSearch.addEventListener('click', function() {
-            globalSearchInput.value = '';
-            clearGlobalSearch.classList.add('hidden');
-            globalSearchResults.classList.add('hidden');
-        });
-
-        // Close search results when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!globalSearchInput.contains(e.target) && !globalSearchResults.contains(e.target)) {
-                globalSearchResults.classList.add('hidden');
-            }
-        });
-
-        // Patient Selection Modal
-        const selectPatientBtn = document.getElementById('selectPatientBtn');
-        const patientSelectionModal = document.getElementById('patientSelectionModal');
-        const closePatientModal = document.getElementById('closePatientModal');
-        const patientSelectBtns = document.querySelectorAll('.patient-select-btn');
-        const selectedPatientInfo = document.getElementById('selectedPatientInfo');
-        const noPatientSelected = document.getElementById('noPatientSelected');
-
-        selectPatientBtn.addEventListener('click', function() {
-            patientSelectionModal.classList.remove('hidden');
-        });
-
-        closePatientModal.addEventListener('click', function() {
-            patientSelectionModal.classList.add('hidden');
-        });
-
-        patientSelectionModal.addEventListener('click', function(e) {
-            if (e.target === patientSelectionModal) {
-                patientSelectionModal.classList.add('hidden');
-            }
-        });
-
-        patientSelectBtns.forEach(btn => {
-            btn.addEventListener('click', function() {
-                selectedPatientInfo.classList.remove('hidden');
-                noPatientSelected.classList.add('hidden');
-                patientSelectionModal.classList.add('hidden');
-                
-                // Show clinical alerts
-                document.getElementById('clinicalAlerts').classList.remove('hidden');
-            });
-        });
-
-        // Prescription Form Submission
-        const prescriptionForm = document.getElementById('prescriptionForm');
-        prescriptionForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Validate patient selection
-            if (noPatientSelected.classList.contains('hidden') === false) {
-                alert('Please select a patient first');
-                return;
-            }
-
-            // Show success message
-            alert('Prescription created successfully and sent to pharmacy queue!');
-            
-            // Reset form
-            prescriptionForm.reset();
-        });
-
-        // Medication Selection - Show Details
-        const medicationSelect = document.getElementById('medicationSelect');
-        const medicationDetails = document.getElementById('medicationDetails');
-        const noMedicationSelected = document.getElementById('noMedicationSelected');
-
-        medicationSelect.addEventListener('change', function() {
-            if (this.value) {
-                medicationDetails.classList.remove('hidden');
-                noMedicationSelected.classList.add('hidden');
-            } else {
-                medicationDetails.classList.add('hidden');
-                noMedicationSelected.classList.remove('hidden');
-            }
-        });
-
-        // Keyboard Shortcuts
-        document.addEventListener('keydown', function(e) {
-            // Ctrl + K - Search medication
-            if (e.ctrlKey && e.key === 'k') {
-                e.preventDefault();
-                globalSearchInput.focus();
-            }
-            
-            // Ctrl + N - New prescription
-            if (e.ctrlKey && e.key === 'n') {
-                e.preventDefault();
-                document.getElementById('newPrescriptionBtn').click();
-            }
-            
-            // Ctrl + Enter - Submit prescription
-            if (e.ctrlKey && e.key === 'Enter') {
-                e.preventDefault();
-                prescriptionForm.dispatchEvent(new Event('submit'));
-            }
-        });
-
-        // New Prescription Button
-        document.getElementById('newPrescriptionBtn').addEventListener('click', function() {
-            prescriptionForm.reset();
-            selectedPatientInfo.classList.add('hidden');
-            noPatientSelected.classList.remove('hidden');
-            document.getElementById('clinicalAlerts').classList.add('hidden');
-        });
-
-        // View History Button
-        document.getElementById('viewHistoryBtn').addEventListener('click', function() {
-            alert('Prescription history feature coming soon!');
-        });
-
-        // Initialize - Hide medication details on load
-        medicationDetails.classList.add('hidden');
-    </script>
-<script id="dhws-dataInjector" src="../public/dhws-data-injector.js"></script>
 </body>
 </html>
