@@ -518,7 +518,7 @@ try {
 
   $size_kb = (int)ceil(filesize($abs_path) / 1024);
 
-  $rel_path = "/Cavite-Med/uploads/documents/medical_certificates/" . $filename;
+  $rel_path = "/HIMS/uploads/documents/medical_certificates/" . $filename;
 
   // Insert into patient_documents
   $doc_sql = "INSERT INTO patient_documents

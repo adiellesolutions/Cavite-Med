@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function () {
      FETCH ACTIVE PATIENT
   ============================== */
   function fetchActivePatient() {
-    fetch('/CAVITE-MED/backend/medical_staff_get_visit_queue.php?action=getActivePatient')
+    fetch('/HIMS/backend/medical_staff_get_visit_queue.php?action=getActivePatient')
       .then(safeJson)
       .then(data => {
 
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function () {
      If backend still returns all statuses, we filter on frontend.
   ============================== */
   function fetchQueueList() {
-    fetch('/CAVITE-MED/backend/medical_staff_get_visit_queue.php')
+    fetch('/HIMS/backend/medical_staff_get_visit_queue.php')
       .then(safeJson)
       .then(data => {
 
@@ -205,7 +205,7 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    fetch('/CAVITE-MED/backend/medical_staff_visit_workflow.php', {
+    fetch('/HIMS/backend/medical_staff_visit_workflow.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'start_visit', visit_id: currentVisitId })
@@ -273,7 +273,7 @@ if ($('finishVitalsBtnTop')) $('finishVitalsBtnTop').classList.remove('hidden');
     };
 
     // 1) save vitals
-    fetch('/CAVITE-MED/backend/medical_staff_save_vitals.php', {
+    fetch('/HIMS/backend/medical_staff_save_vitals.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(vitalsPayload)
@@ -287,7 +287,7 @@ if ($('finishVitalsBtnTop')) $('finishVitalsBtnTop').classList.remove('hidden');
         }
 
         // 2) after saving vitals, set visit status = for_consultation
-        return fetch('/CAVITE-MED/backend/medical_staff_visit_workflow.php', {
+        return fetch('/HIMS/backend/medical_staff_visit_workflow.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -343,7 +343,7 @@ setNoActivePatient(); // resets the left active card + disables buttons
      FETCH CONSULTATION QUEUE (for_consultation)
   ============================== */
   function fetchConsultationQueueList() {
-    fetch('/CAVITE-MED/backend/medical_staff_get_visit_queue.php')
+    fetch('/HIMS/backend/medical_staff_get_visit_queue.php')
       .then(safeJson)
       .then(data => {
         const container = $('consultationQueue');

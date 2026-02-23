@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once __DIR__ . "/../backend/get_assigned_health_center.php";
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'medical_staff') {
     header("Location: system_login_portal.html");
@@ -266,6 +267,9 @@ $stmt->close();
                     </svg>
                     <div>
                         <h1 class="text-xl font-semibold text-text-primary">CAVMED Portal</h1>
+                        <p class="text-xs text-text-secondary">
+    <?php echo htmlspecialchars($assigned_health_center_name ?: 'Health Center'); ?>
+</p>  
                     </div>
                 </a>
             </div>
@@ -287,10 +291,10 @@ $stmt->close();
 
                         <!-- Profile Picture -->
                         <img
-  src="/CAVITE-MED/<?php echo $_SESSION['profile_picture'] ?: 'uploads/profile/default.png'; ?>"
+  src="/HIMS/<?php echo $_SESSION['profile_picture'] ?: 'uploads/profile/default.png'; ?>"
   alt="User profile picture"
   class="w-10 h-10 rounded-full object-cover border-2 border-primary"
-  onerror="this.src='/CAVITE-MED/uploads/profile/default.png'; this.onerror=null;">
+  onerror="this.src='/HIMS/uploads/profile/default.png'; this.onerror=null;">
 
                     </div>
                 </div>
@@ -417,11 +421,7 @@ $stmt->close();
             <div class="flex items-center justify-between mb-6">
                 <div>
                 </div>
-                <div class="flex items-center gap-3">
-                    <div class="workflow-progress w-48">
-                        <div id="workflowProgress" class="workflow-progress-bar" style="width: 33%"></div>
-                    </div>
-                </div>
+               
             </div>
 
         

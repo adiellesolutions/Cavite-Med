@@ -1,6 +1,6 @@
 <?php
 session_start();
-
+require_once __DIR__ . "/../backend/get_assigned_health_center.php";
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'medical_staff') {
     header("Location: system_login_portal.html");
     exit;
@@ -38,29 +38,15 @@ if (!empty($_SESSION['force_change_password'])) {
                     </svg>
                     <div>
                         <h1 class="text-xl font-semibold text-text-primary">CAVMED Portal</h1>
-                        <p class="text-xs text-text-secondary">Nurse e-Prescription Records</p>
-                    </div>
+<p class="text-xs text-text-secondary">
+    <?php echo htmlspecialchars($assigned_health_center_name ?: 'Health Center'); ?>
+</p>                    </div>
                 </a>
             </div>
 
             <!-- Search Bar - Persistent -->
             <div class="flex-1 max-w-2xl mx-8">
-                <div class="relative">
-                    <input type="text" id="globalPatientSearch" 
-                           placeholder="Search patients by name or prescription ID..."
-                           class="input pl-10 pr-10 w-full"
-                           autocomplete="off">
-                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <svg class="w-5 h-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
-                    </div>
-                    <button type="button" id="clearGlobalSearch" class="hidden absolute inset-y-0 right-0 flex items-center pr-3 text-text-tertiary hover:text-text-primary">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
-                </div>
+                
             </div>
 
             <!-- User Info & Actions -->
@@ -81,10 +67,10 @@ if (!empty($_SESSION['force_change_password'])) {
 
                         <!-- Profile Picture -->
                         <img
-                            src="/CAVITE-MED/<?php echo $_SESSION['profile_picture'] ?: 'uploads/profile/default.png'; ?>"
+                            src="/HIMS/<?php echo $_SESSION['profile_picture'] ?: 'uploads/profile/default.png'; ?>"
                             alt="User profile picture"
                             class="w-10 h-10 rounded-full object-cover border-2 border-primary"
-                            onerror="this.src='/CAVITE-MED/uploads/profile/default.png'; this.onerror=null;">
+                            onerror="this.src='/HIMS/uploads/profile/default.png'; this.onerror=null;">
                     </div>
                 </div>
             </div>

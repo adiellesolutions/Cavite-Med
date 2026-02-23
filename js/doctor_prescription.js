@@ -5,7 +5,9 @@ let prescriptionItems = [];
 let currentDraftId = null;
 
 const el = (id) => document.getElementById(id);
-
+const searchInput = el("medicationSearch");
+const resultsBox = el("medicineResults");
+const selectedMedicineId = el("selectedMedicineId");
 function toast(msg) {
   alert(msg);
 }
@@ -215,43 +217,113 @@ async function loadPatients(q) {
 }
 
 // ------------------------------
-// MEDICINE SELECT (DB driven)
+// MEDICATION SEARCH (FIXED)
 // ------------------------------
-const medicationSelect = el("medicationSelect");
+document.addEventListener("DOMContentLoaded", () => {
 
-async function loadMedicines(q = "") {
-  if (!medicationSelect) return;
 
-  let res;
-  try {
-    res = await fetch(
-      `../backend/doctor_medicines_search.php?q=${encodeURIComponent(q)}`
-    );
-  } catch {
-    toast("network error loading medicines");
+
+  if (!searchInput || !resultsBox || !selectedMedicineId) {
+    console.warn("Medication search elements missing");
     return;
   }
 
-  const data = await safeJson(res);
+  let debounceTimer = null;
+  let lastQuery = "";
 
-  if (!data.ok) {
-    toast(data.error || "failed to load medicines");
-    return;
+  // Clear selected ID if user types again
+  searchInput.addEventListener("input", function () {
+
+    selectedMedicineId.value = "";
+
+    const query = this.value.trim();
+
+    clearTimeout(debounceTimer);
+
+    if (query.length < 2) {
+      resultsBox.classList.add("hidden");
+      resultsBox.innerHTML = "";
+      return;
+    }
+
+    debounceTimer = setTimeout(() => {
+      searchMedicines(query);
+    }, 300);
+  });
+
+  async function searchMedicines(q) {
+
+    lastQuery = q;
+
+    let res;
+
+    try {
+      res = await fetch(
+        `/HIMS/backend/doctor_medicines_search.php?q=${encodeURIComponent(q)}`
+      );
+    } catch (err) {
+      resultsBox.classList.remove("hidden");
+      resultsBox.innerHTML =
+        `<div class="p-2 text-red-500">Network error</div>`;
+      return;
+    }
+
+    const data = await safeJson(res);
+
+    if (!data.ok) {
+      resultsBox.classList.remove("hidden");
+      resultsBox.innerHTML =
+        `<div class="p-2 text-red-500">${data.error || "Search failed"}</div>`;
+      return;
+    }
+
+    const meds = Array.isArray(data.medicines) ? data.medicines : [];
+
+    if (searchInput.value.trim() !== lastQuery) return;
+
+    if (meds.length === 0) {
+      resultsBox.classList.remove("hidden");
+      resultsBox.innerHTML =
+        `<div class="p-2 text-gray-500">No results found</div>`;
+      return;
+    }
+
+    resultsBox.innerHTML = meds.map(m => `
+      <div 
+        class="p-2 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
+        data-id="${m.id}"
+        data-name="${m.medicine_name}"
+      >
+        <div class="font-medium">${m.medicine_name}</div>
+        <div class="text-xs text-gray-500">
+          ${m.category} • Stock: ${m.current_stock ?? "-"}
+        </div>
+      </div>
+    `).join("");
+
+    resultsBox.classList.remove("hidden");
   }
 
-  const meds = Array.isArray(data.medicines) ? data.medicines : [];
+  // Click result
+  resultsBox.addEventListener("click", (e) => {
+    const item = e.target.closest("[data-id]");
+    if (!item) return;
 
-  medicationSelect.innerHTML =
-    `<option value="">Select medication...</option>` +
-    meds
-      .map(
-        (m) =>
-          `<option value="${m.id}">${m.medicine_name} (${m.category})</option>`
-      )
-      .join("");
-}
+    selectedMedicineId.value = item.dataset.id;
+    searchInput.value = item.dataset.name;
 
-loadMedicines("");
+    resultsBox.classList.add("hidden");
+  });
+
+  // Close dropdown on outside click
+  document.addEventListener("click", (e) => {
+    if (!searchInput.contains(e.target) &&
+        !resultsBox.contains(e.target)) {
+      resultsBox.classList.add("hidden");
+    }
+  });
+
+});
 
 // Global search dropdown (optional)
 const globalSearchInput = el("globalMedicationSearch");
@@ -270,7 +342,7 @@ globalSearchInput?.addEventListener("input", () => {
     let res;
     try {
       res = await fetch(
-        `../backend/doctor_medicines_search.php?q=${encodeURIComponent(q)}`
+        `/HIMS/backend/doctor_medicines_search.php?q=${encodeURIComponent(q)}`
       );
     } catch {
       if (globalSearchResults) {
@@ -327,7 +399,8 @@ globalSearchInput?.addEventListener("input", () => {
       .querySelectorAll(".medication-result")
       .forEach((btn) => {
         btn.addEventListener("click", () => {
-          if (medicationSelect) medicationSelect.value = btn.dataset.id;
+selectedMedicineId.value = btn.dataset.id;
+searchInput.value = btn.querySelector(".font-medium")?.textContent || "";
           globalSearchResults.classList.add("hidden");
         });
       });
@@ -399,10 +472,11 @@ function renderItems() {
 }
 
 addItemBtn?.addEventListener("click", async () => {
-    if (!medicationSelect) return toast("medication select not found");
 
-  const medicine_id = medicationSelect.value;
+  const medicine_id = selectedMedicineId?.value;
   if (!medicine_id) return toast("select medication first");
+
+  const medicine_label = searchInput?.value || "medicine";
 
   const dosage_amount = el("dosageAmount")?.value;
   const dosage_unit = el("dosageUnit")?.value;
@@ -410,47 +484,43 @@ addItemBtn?.addEventListener("click", async () => {
   const duration_amount = el("durationAmount")?.value;
   const duration_unit = el("durationUnit")?.value;
   const route_admin = el("routeAdmin")?.value;
-
   const item_instructions = el("specialInstructions")?.value || "";
 
+  if (!currentDraftId) {
+    return toast("No draft prescription created yet");
+  }
 
+  try {
+    const res = await fetch("../backend/doctor_prescription_create.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "add_item",
+        prescription_id: currentDraftId,
+        medicine_id: Number(medicine_id),
+        dosage_amount: Number(dosage_amount),
+        dosage_unit,
+        frequency_template,
+        duration_amount: Number(duration_amount),
+        duration_unit,
+        route_admin,
+        item_instructions
+      })
+    });
 
-  
-  const medicine_label =
-    medicationSelect.options[medicationSelect.selectedIndex]?.text || "medicine";
+    const data = await safeJson(res);
+    if (!data.ok) {
+      return toast(data.error || "Failed to add item");
+    }
 
-    if (!currentDraftId) {
-        return toast("No draft prescription created yet");
-      }
-      
-      try {
-        const res = await fetch("../backend/doctor_prescription_create.php", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "add_item",
-            prescription_id: currentDraftId,
-            medicine_id: Number(medicine_id),
-            dosage_amount: Number(dosage_amount),
-            dosage_unit,
-            frequency_template,
-            duration_amount: Number(duration_amount),
-            duration_unit,
-            route_admin,
-            item_instructions
-          })
-        });
-      
-        const data = await res.json();
-        if (!data.ok) {
-          return toast(data.error || "Failed to add item");
-        }
-        window.PrescriptionAlerts?.checkMedicineAlerts(selectedPatient?.patient_id, Number(medicine_id));
+    window.PrescriptionAlerts?.checkMedicineAlerts(
+      selectedPatient?.patient_id,
+      Number(medicine_id)
+    );
 
-      } catch (err) {
-        return toast("Network error adding item");
-      }
-      
+  } catch (err) {
+    return toast("Network error adding item");
+  }
 
   prescriptionItems.push({
     medicine_id: Number(medicine_id),
@@ -464,21 +534,15 @@ addItemBtn?.addEventListener("click", async () => {
     item_instructions,
   });
 
-  // reset medicine inputs only
-  medicationSelect.value = "";
+  // Reset medicine search
+  if (searchInput) searchInput.value = "";
+  if (selectedMedicineId) selectedMedicineId.value = "";
+
   if (el("dosageAmount")) el("dosageAmount").value = "";
   if (el("frequencyTemplate")) el("frequencyTemplate").value = "";
   if (el("durationAmount")) el("durationAmount").value = "";
   if (el("routeAdmin")) el("routeAdmin").value = "";
 
-  // NOTE: keep specialInstructions because you also use it for prescription-level.
-  // if you want separate prescription notes field, add new textarea in HTML.
-
-  renderItems();
-});
-
-clearItemsBtn?.addEventListener("click", () => {
-  prescriptionItems = [];
   renderItems();
 });
 

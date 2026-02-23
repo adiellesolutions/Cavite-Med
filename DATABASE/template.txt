@@ -1,0 +1,1233 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1
+-- Generation Time: Feb 23, 2026 at 04:10 AM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `cavitemed`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `audit_logs`
+--
+
+CREATE TABLE `audit_logs` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `action` varchar(120) NOT NULL,
+  `entity_type` varchar(60) NOT NULL,
+  `entity_id` int(11) DEFAULT NULL,
+  `ip_address` varchar(60) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `audit_logs`
+--
+
+INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `entity_type`, `entity_id`, `ip_address`, `created_at`) VALUES
+(1, 1, 'Created Medicine', 'medicine', 1, '127.0.0.1', '2026-02-20 11:52:15'),
+(2, 2, 'Created Prescription', 'prescriptions', 1, '127.0.0.1', '2026-02-20 11:52:15'),
+(3, 3, 'Recorded Vitals', 'patient_vitals', 1, '127.0.0.1', '2026-02-20 11:52:15'),
+(4, 4, 'Registered Patient', 'patients', 1, '127.0.0.1', '2026-02-20 11:52:15'),
+(5, 5, 'Login', 'users', 5, '127.0.0.1', '2026-02-20 11:52:15');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `disposal_records`
+--
+
+CREATE TABLE `disposal_records` (
+  `id` int(11) NOT NULL,
+  `medicine_id` int(11) NOT NULL,
+  `batch_number` varchar(100) NOT NULL,
+  `expiry_date` date NOT NULL,
+  `quantity` int(11) NOT NULL CHECK (`quantity` > 0),
+  `total_value` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `disposal_method` enum('incinerated','returned','destroyed','donated','other') NOT NULL,
+  `disposal_date` date NOT NULL,
+  `created_by` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `notes` text DEFAULT NULL,
+  `is_archived` tinyint(1) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `disposal_records`
+--
+
+INSERT INTO `disposal_records` (`id`, `medicine_id`, `batch_number`, `expiry_date`, `quantity`, `total_value`, `disposal_method`, `disposal_date`, `created_by`, `created_at`, `updated_at`, `notes`, `is_archived`) VALUES
+(5, 6, 'CAVMED-123-12-1', '2026-03-27', 20, 400.00, 'returned', '2026-02-20', 4, '2026-02-20 14:18:56', '2026-02-20 14:18:56', 'q', 0),
+(6, 5, 'B005', '2026-11-30', 20, 70.00, 'returned', '2026-02-20', 4, '2026-02-20 14:19:45', '2026-02-20 14:19:45', '1', 0),
+(7, 4, 'B004', '2026-09-30', 12, 48.00, 'returned', '2026-02-21', 15, '2026-02-21 11:11:20', '2026-02-21 11:11:20', 'q', 0);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `distribution`
+--
+
+CREATE TABLE `distribution` (
+  `id` int(11) NOT NULL,
+  `health_center_id` int(11) NOT NULL,
+  `medicine_id` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `status` enum('pending','distributed','cancelled','returned') DEFAULT 'pending',
+  `remarks` text DEFAULT NULL,
+  `created_by` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `distribution`
+--
+
+INSERT INTO `distribution` (`id`, `health_center_id`, `medicine_id`, `quantity`, `status`, `remarks`, `created_by`, `created_at`) VALUES
+(3, 3, 6, 1, 'distributed', '1', 4, '2026-02-20 14:29:41'),
+(4, 3, 4, 12, 'distributed', 'q', 15, '2026-02-21 11:13:48');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `health_centers`
+--
+
+CREATE TABLE `health_centers` (
+  `id` int(11) NOT NULL,
+  `center_name` varchar(255) NOT NULL,
+  `center_type` enum('rhu','barangay_health_center','hospital','clinic','other') NOT NULL,
+  `address` text DEFAULT NULL,
+  `contact_person` varchar(255) DEFAULT NULL,
+  `contact_number` varchar(100) DEFAULT NULL,
+  `is_archived` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `health_centers`
+--
+
+INSERT INTO `health_centers` (`id`, `center_name`, `center_type`, `address`, `contact_person`, `contact_number`, `is_archived`, `created_at`) VALUES
+(1, 'Sta. Cruz Health Center', 'rhu', 'Cavite City Proper', 'Dr. Maria Santos', '09170000001', 0, '2026-02-20 11:52:14'),
+(2, 'Caridad Health Center', 'barangay_health_center', 'Brgy 5 Cavite City', 'Nurse Ana Cruz', '09170000002', 0, '2026-02-20 11:52:14'),
+(3, 'San Roque Health Center', 'hospital', 'San Roque Cavite', 'Dr. John Reyes', '09170000003', 0, '2026-02-20 11:52:14'),
+(4, 'San Antonio Health Center', 'clinic', 'Rosario Cavite', 'Dr. Paul Ramos', '09170000004', 0, '2026-02-20 11:52:14'),
+(5, 'Dalahican Health Center', 'rhu', 'Bacoor Cavite', 'Dr. Lea Martinez', '09170000005', 0, '2026-02-20 11:52:14');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `health_center_inventory`
+--
+
+CREATE TABLE `health_center_inventory` (
+  `id` int(11) NOT NULL,
+  `health_center_id` int(11) NOT NULL,
+  `medicine_id` int(11) NOT NULL,
+  `current_stock` int(11) NOT NULL DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `health_center_inventory`
+--
+
+INSERT INTO `health_center_inventory` (`id`, `health_center_id`, `medicine_id`, `current_stock`, `created_at`, `updated_at`) VALUES
+(1, 3, 6, 1, '2026-02-20 14:31:58', '2026-02-20 14:31:58'),
+(2, 3, 4, 8, '2026-02-21 11:15:04', '2026-02-21 11:32:00');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `inventory_transactions`
+--
+
+CREATE TABLE `inventory_transactions` (
+  `id` int(11) NOT NULL,
+  `medicine_id` int(11) NOT NULL,
+  `transaction_type` enum('add','deduct','dispose','distribute','adjustment','expired') NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `remarks` varchar(255) DEFAULT NULL,
+  `performed_by` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `inventory_transactions`
+--
+
+INSERT INTO `inventory_transactions` (`id`, `medicine_id`, `transaction_type`, `quantity`, `remarks`, `performed_by`, `created_at`) VALUES
+(1, 1, 'add', 500, 'Initial stock', 1, '2026-02-20 11:52:14'),
+(2, 2, 'add', 300, 'Initial stock', 1, '2026-02-20 11:52:14'),
+(3, 3, 'add', 200, 'Donation received', 1, '2026-02-20 11:52:14'),
+(4, 4, 'add', 150, 'Initial stock', 1, '2026-02-20 11:52:14'),
+(5, 5, 'add', 250, 'Initial stock', 1, '2026-02-20 11:52:14'),
+(6, 2, 'deduct', 1, 'Dispensed via prescription', 3, '2026-02-20 12:19:51'),
+(7, 2, 'deduct', 14, 'Dispensed via prescription', 3, '2026-02-20 12:20:01'),
+(8, 2, 'expired', 1, 'Disposed 1 units (Batch: B002)', 4, '2026-02-20 14:00:04'),
+(9, 2, 'expired', 1, 'Disposed 1 units (Batch: B002)', 4, '2026-02-20 14:00:04'),
+(10, 2, 'expired', 2, 'Disposed 2 units (Batch: B002)', 4, '2026-02-20 14:06:07'),
+(11, 2, 'expired', 2, 'Disposed 2 units (Batch: B002)', 4, '2026-02-20 14:06:07'),
+(12, 6, 'expired', 20, 'Disposed 20 units (Batch: CAVMED-123-12-1)', 4, '2026-02-20 14:18:56'),
+(13, 5, 'expired', 20, 'Disposed 20 units (Batch: B005)', 4, '2026-02-20 14:19:45'),
+(14, 8, 'distribute', 10, 'w', 4, '2026-02-20 14:23:39'),
+(15, 6, 'distribute', 10, '1', 4, '2026-02-20 14:28:27'),
+(16, 6, 'distribute', 1, '1', 4, '2026-02-20 14:29:41'),
+(17, 4, 'expired', 12, 'Disposed 12 units (Batch: B004)', 15, '2026-02-21 11:11:20'),
+(18, 4, 'distribute', 12, 'q', 15, '2026-02-21 11:13:48');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `medical_certificates`
+--
+
+CREATE TABLE `medical_certificates` (
+  `certificate_id` int(11) NOT NULL,
+  `patient_id` int(11) NOT NULL,
+  `visit_id` int(11) DEFAULT NULL,
+  `doctor_id` int(11) NOT NULL,
+  `created_by` int(11) NOT NULL,
+  `certificate_number` varchar(50) NOT NULL,
+  `template_type` enum('medical_leave','fitness_certificate','travel_clearance','sports_participation','other') NOT NULL DEFAULT 'medical_leave',
+  `diagnosis` varchar(255) NOT NULL,
+  `restriction_level` enum('complete_rest','modified_duties','light_duty','no_restriction') NOT NULL DEFAULT 'modified_duties',
+  `leave_from` date NOT NULL,
+  `leave_to` date NOT NULL,
+  `additional_instructions` text DEFAULT NULL,
+  `follow_up_date` date DEFAULT NULL,
+  `include_digital_stamp` tinyint(1) NOT NULL DEFAULT 1,
+  `include_qr_code` tinyint(1) NOT NULL DEFAULT 1,
+  `status` enum('active','voided') NOT NULL DEFAULT 'active',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `medical_certificates`
+--
+
+INSERT INTO `medical_certificates` (`certificate_id`, `patient_id`, `visit_id`, `doctor_id`, `created_by`, `certificate_number`, `template_type`, `diagnosis`, `restriction_level`, `leave_from`, `leave_to`, `additional_instructions`, `follow_up_date`, `include_digital_stamp`, `include_qr_code`, `status`, `created_at`, `updated_at`) VALUES
+(1, 6, NULL, 2, 2, 'MC-2026-59679', 'fitness_certificate', 'Influenza-like Illness', 'modified_duties', '2026-02-20', '2026-02-20', 'test', NULL, 0, 1, 'active', '2026-02-20 12:18:19', '2026-02-20 12:18:19');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `medicine`
+--
+
+CREATE TABLE `medicine` (
+  `id` int(11) NOT NULL,
+  `supplier_id` int(11) NOT NULL,
+  `barcode` varchar(100) NOT NULL,
+  `medicine_name` varchar(255) NOT NULL,
+  `medicine_type` enum('generic','branded') NOT NULL,
+  `category` varchar(100) NOT NULL,
+  `funding_source` enum('donation','city_health','mixed') NOT NULL,
+  `batch_number` varchar(100) NOT NULL,
+  `expiry_date` date NOT NULL,
+  `unit_of_measure` enum('bottle','tablet','capsule','other') NOT NULL,
+  `manufacturing_date` date NOT NULL,
+  `current_stock` int(11) NOT NULL DEFAULT 0,
+  `reorder_point` int(11) NOT NULL DEFAULT 0,
+  `unit_price` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `notes` text DEFAULT NULL,
+  `status` enum('in_stock','low_stock','out_of_stock','expired') DEFAULT 'in_stock',
+  `is_archived` tinyint(1) DEFAULT 0,
+  `created_by` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `medicine`
+--
+
+INSERT INTO `medicine` (`id`, `supplier_id`, `barcode`, `medicine_name`, `medicine_type`, `category`, `funding_source`, `batch_number`, `expiry_date`, `unit_of_measure`, `manufacturing_date`, `current_stock`, `reorder_point`, `unit_price`, `notes`, `status`, `is_archived`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 1, 'MED001', 'Paracetamol 500mg', 'generic', 'Analgesic', 'city_health', 'B001', '2026-12-31', 'tablet', '2024-01-01', 500, 100, 2.50, NULL, 'in_stock', 0, 1, '2026-02-20 11:52:14', '2026-02-20 11:52:14'),
+(2, 2, 'MED002', 'Amoxicillin 500mg', 'generic', 'Antibiotic', 'city_health', 'B002', '2026-10-31', 'capsule', '2024-02-01', 279, 50, 5.00, NULL, 'in_stock', 0, 1, '2026-02-20 11:52:14', '2026-02-20 14:22:34'),
+(3, 3, 'MED003', 'Vitamin C 500mg', 'branded', 'Supplement', 'donation', 'B003', '2026-08-31', 'tablet', '2024-03-01', 200, 50, 3.00, NULL, 'in_stock', 0, 1, '2026-02-20 11:52:14', '2026-02-20 11:52:14'),
+(4, 4, '4801981097227', 'Losartan 50mg', 'generic', 'Antihypertensive', 'city_health', 'B004', '2026-09-30', 'tablet', '2024-02-15', 130, 30, 4.00, NULL, 'in_stock', 0, 1, '2026-02-20 11:52:14', '2026-02-21 11:32:00'),
+(5, 5, '4801981116645', 'Metformin 500mg', 'generic', 'Antidiabetic', 'city_health', 'B005', '2026-11-30', 'tablet', '2024-01-20', 230, 50, 3.50, NULL, 'in_stock', 0, 1, '2026-02-20 11:52:14', '2026-02-20 14:19:45'),
+(6, 2, '4803925130328', 'Test', 'generic', 'Test', 'donation', 'CAVMED-123-12-1', '2026-03-27', 'tablet', '2026-01-16', 369, 100, 20.00, '', 'in_stock', 0, 4, '2026-02-20 13:44:05', '2026-02-20 14:29:41'),
+(8, 2, '1111111111111', 'Ibuprofen 400mg', 'generic', 'Antihistamine', 'mixed', '12345', '2026-03-06', 'tablet', '2026-01-09', 590, 20, 12.00, '1', 'in_stock', 1, 4, '2026-02-20 13:45:36', '2026-02-21 11:12:50');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `mrn_counter`
+--
+
+CREATE TABLE `mrn_counter` (
+  `year` int(11) NOT NULL,
+  `last_number` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `mrn_counter`
+--
+
+INSERT INTO `mrn_counter` (`year`, `last_number`) VALUES
+(2026, 2);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `patients`
+--
+
+CREATE TABLE `patients` (
+  `patient_id` int(11) NOT NULL,
+  `mrn` varchar(30) NOT NULL,
+  `first_name` varchar(100) NOT NULL,
+  `last_name` varchar(100) NOT NULL,
+  `middle_name` varchar(100) DEFAULT NULL,
+  `preferred_name` varchar(100) DEFAULT NULL,
+  `marital_status` varchar(50) DEFAULT NULL,
+  `occupation` varchar(120) DEFAULT NULL,
+  `preferred_language` varchar(120) DEFAULT NULL,
+  `date_of_birth` date NOT NULL,
+  `gender` enum('male','female','other') NOT NULL,
+  `blood_type` enum('A+','A-','B+','B-','AB+','AB-','O+','O-') DEFAULT NULL,
+  `phone` varchar(30) NOT NULL,
+  `email` varchar(150) DEFAULT NULL,
+  `address_line` varchar(255) NOT NULL,
+  `city` varchar(100) NOT NULL,
+  `state` varchar(100) NOT NULL,
+  `zip_code` varchar(20) NOT NULL,
+  `status` enum('active','inactive') DEFAULT 'active',
+  `health_center_id` int(11) DEFAULT NULL,
+  `created_by` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `patients`
+--
+
+INSERT INTO `patients` (`patient_id`, `mrn`, `first_name`, `last_name`, `middle_name`, `preferred_name`, `marital_status`, `occupation`, `preferred_language`, `date_of_birth`, `gender`, `blood_type`, `phone`, `email`, `address_line`, `city`, `state`, `zip_code`, `status`, `health_center_id`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, '2026-0001', 'Juan', 'Dela Cruz', NULL, NULL, NULL, NULL, NULL, '1990-05-10', 'male', NULL, '09170010001', NULL, '123 Mabini St', 'Cavite City', 'Cavite', '4100', 'active', 1, 4, '2026-02-20 11:52:14', '2026-02-20 11:52:14'),
+(2, '2026-0002', 'Maria', 'Lopez', NULL, NULL, NULL, NULL, NULL, '1985-03-15', 'female', NULL, '09170010002', NULL, '456 Rizal St', 'Cavite City', 'Cavite', '4100', 'active', 1, 4, '2026-02-20 11:52:14', '2026-02-20 11:52:14'),
+(3, '2026-0003', 'Pedro', 'Santos', NULL, NULL, NULL, NULL, NULL, '1978-07-20', 'male', NULL, '09170010003', NULL, '789 Bonifacio St', 'Bacoor', 'Cavite', '4102', 'active', 5, 4, '2026-02-20 11:52:14', '2026-02-20 11:52:14'),
+(4, '2026-0004', 'Ana', 'Garcia', NULL, NULL, NULL, NULL, NULL, '1995-11-05', 'female', NULL, '09170010004', NULL, '321 Aguinaldo Hwy', 'Rosario', 'Cavite', '4106', 'active', 4, 4, '2026-02-20 11:52:14', '2026-02-20 11:52:14'),
+(5, '2026-0005', 'Luis', 'Torres', NULL, NULL, NULL, NULL, NULL, '2000-01-12', 'male', NULL, '09170010005', NULL, '654 Luna St', 'Cavite City', 'Cavite', '4100', 'active', 1, 4, '2026-02-20 11:52:14', '2026-02-20 11:52:14'),
+(6, '2026-000006', 'test1', 'test1', 'test1', 'test1', 'test1', 'test1', 'test1', '2026-02-06', 'male', NULL, '09109328091', 'test1@gmail.com', 'test1', 'test1', 'test1', 'test1', 'active', 3, 3, '2026-02-20 12:00:03', '2026-02-20 12:09:34'),
+(39, '2026-000001', 'test2', 'test2', 'test2', 'test2', 'test2', 'test2', 'test2', '2026-01-31', 'female', 'B+', '23789489', 'test2@gmail.com', 'test2', 'test2', 'test2', 'test2', 'active', 3, 3, '2026-02-21 09:17:17', '2026-02-21 09:17:17'),
+(40, '2026-000002', 'test3', 'test3', 'test3', 'test3', 'test3', 'test3', 'test3', '2026-01-31', 'female', 'A-', '834712890', 'test3@gmail.com', 'test3', 'test3', 'test3', 'test3', 'active', 2, 13, '2026-02-21 10:07:26', '2026-02-21 10:07:26');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `patient_documents`
+--
+
+CREATE TABLE `patient_documents` (
+  `document_id` int(11) NOT NULL,
+  `patient_id` int(11) NOT NULL,
+  `visit_id` int(11) DEFAULT NULL,
+  `document_title` varchar(200) NOT NULL,
+  `file_type` varchar(30) NOT NULL,
+  `file_size_kb` int(11) DEFAULT NULL,
+  `file_path` varchar(255) NOT NULL,
+  `document_type` enum('general','medical_certificate','prescription','lab_result','imaging','other') NOT NULL DEFAULT 'general',
+  `certificate_id` int(11) DEFAULT NULL,
+  `prescription_id` int(11) DEFAULT NULL,
+  `uploaded_by` int(11) NOT NULL,
+  `uploaded_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `patient_documents`
+--
+
+INSERT INTO `patient_documents` (`document_id`, `patient_id`, `visit_id`, `document_title`, `file_type`, `file_size_kb`, `file_path`, `document_type`, `certificate_id`, `prescription_id`, `uploaded_by`, `uploaded_at`) VALUES
+(1, 6, 6, 'Prescription RX-20260220-985121', 'pdf', 27, '/HIMS/uploads/documents/prescriptions/prescription_7_20260220_131727.pdf', 'prescription', NULL, NULL, 2, '2026-02-20 20:17:30'),
+(2, 6, NULL, 'FITNESS CERTIFICATE MC-2026-59679', 'pdf', 32, '/HIMS/uploads/documents/medical_certificates/MC-2026-59679.pdf', 'medical_certificate', 1, NULL, 2, '2026-02-20 13:18:19'),
+(3, 6, 6, 'Prescription RX-20260220-215562', 'pdf', 27, '/HIMS/uploads/documents/prescriptions/prescription_14_20260220_140820.pdf', 'prescription', NULL, 14, 2, '2026-02-20 21:08:20');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `patient_emergency_contacts`
+--
+
+CREATE TABLE `patient_emergency_contacts` (
+  `contact_id` int(11) NOT NULL,
+  `patient_id` int(11) NOT NULL,
+  `full_name` varchar(150) NOT NULL,
+  `relationship` varchar(60) NOT NULL,
+  `phone` varchar(30) NOT NULL,
+  `email` varchar(150) DEFAULT NULL,
+  `address` varchar(255) DEFAULT NULL,
+  `is_primary` tinyint(1) DEFAULT 0,
+  `created_by` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `patient_emergency_contacts`
+--
+
+INSERT INTO `patient_emergency_contacts` (`contact_id`, `patient_id`, `full_name`, `relationship`, `phone`, `email`, `address`, `is_primary`, `created_by`, `created_at`) VALUES
+(1, 6, 'test1', 'test1', 'test1', 'test@gmsil.com', 'test1', 1, 3, '2026-02-20 12:09:13'),
+(2, 6, 'test1', 'test', 'test', 'test1@gsfd', 'tst', 0, 3, '2026-02-20 12:09:34');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `patient_insurance`
+--
+
+CREATE TABLE `patient_insurance` (
+  `insurance_id` int(11) NOT NULL,
+  `patient_id` int(11) NOT NULL,
+  `coverage_type` enum('primary','secondary') NOT NULL DEFAULT 'primary',
+  `provider_name` varchar(150) NOT NULL,
+  `policy_number` varchar(80) NOT NULL,
+  `group_number` varchar(80) DEFAULT NULL,
+  `effective_date` date DEFAULT NULL,
+  `subscriber_name` varchar(150) DEFAULT NULL,
+  `relationship` enum('self','spouse','child','parent','other') DEFAULT 'self',
+  `verified_status` enum('verified','unverified') DEFAULT 'unverified',
+  `verified_at` datetime DEFAULT NULL,
+  `verified_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `patient_insurance`
+--
+
+INSERT INTO `patient_insurance` (`insurance_id`, `patient_id`, `coverage_type`, `provider_name`, `policy_number`, `group_number`, `effective_date`, `subscriber_name`, `relationship`, `verified_status`, `verified_at`, `verified_by`, `created_at`) VALUES
+(1, 6, 'primary', 'test1', 'test1', 'test1', '2026-02-06', 'test1', 'self', 'verified', NULL, NULL, '2026-02-20 12:08:54');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `patient_medical_profile`
+--
+
+CREATE TABLE `patient_medical_profile` (
+  `id` int(11) NOT NULL,
+  `patient_id` int(11) NOT NULL,
+  `allergies` text DEFAULT NULL,
+  `chronic_conditions` text DEFAULT NULL,
+  `current_medications` text DEFAULT NULL,
+  `immunization_status` enum('up_to_date','not_up_to_date','unknown') DEFAULT 'unknown',
+  `updated_by` int(11) NOT NULL,
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `patient_medical_profile`
+--
+
+INSERT INTO `patient_medical_profile` (`id`, `patient_id`, `allergies`, `chronic_conditions`, `current_medications`, `immunization_status`, `updated_by`, `updated_at`) VALUES
+(1, 6, 'test1', 'test1', 'test1', 'up_to_date', 3, '2026-02-20 12:09:34'),
+(2, 39, NULL, NULL, NULL, 'unknown', 3, '2026-02-21 09:17:17'),
+(3, 40, NULL, NULL, NULL, 'unknown', 13, '2026-02-21 10:07:26');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `patient_visits`
+--
+
+CREATE TABLE `patient_visits` (
+  `visit_id` int(11) NOT NULL,
+  `patient_id` int(11) NOT NULL,
+  `health_center_id` int(11) DEFAULT NULL,
+  `visit_type` varchar(120) NOT NULL,
+  `visit_datetime` datetime NOT NULL DEFAULT current_timestamp(),
+  `doctor_id` int(11) DEFAULT NULL,
+  `created_by` int(11) NOT NULL,
+  `reason_for_visit` text DEFAULT NULL,
+  `priority` enum('low','medium','high') DEFAULT 'medium',
+  `status` enum('waiting','in_progress','for_consultation','completed','for_dispense') DEFAULT 'waiting',
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `patient_visits`
+--
+
+INSERT INTO `patient_visits` (`visit_id`, `patient_id`, `health_center_id`, `visit_type`, `visit_datetime`, `doctor_id`, `created_by`, `reason_for_visit`, `priority`, `status`, `notes`, `created_at`) VALUES
+(1, 1, NULL, 'Consultation', '2026-02-20 19:52:15', 2, 4, 'Fever', 'medium', 'completed', NULL, '2026-02-20 11:52:15'),
+(2, 2, NULL, 'Follow-up', '2026-02-20 19:52:15', 2, 4, 'Diabetes monitoring', 'medium', 'completed', NULL, '2026-02-20 11:52:15'),
+(3, 3, NULL, 'Consultation', '2026-02-20 19:52:15', 5, 4, 'Hypertension check', 'medium', 'completed', NULL, '2026-02-20 11:52:15'),
+(4, 4, NULL, 'Consultation', '2026-02-20 19:52:15', 2, 4, 'Cough', 'medium', 'completed', NULL, '2026-02-20 11:52:15'),
+(5, 5, NULL, 'Consultation', '2026-02-20 19:52:15', 2, 4, 'Headache', 'medium', 'completed', NULL, '2026-02-20 11:52:15'),
+(6, 6, NULL, 'check_up', '2026-02-20 20:09:59', NULL, 3, 'test1', 'medium', 'for_dispense', NULL, '2026-02-20 12:09:59');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `patient_vitals`
+--
+
+CREATE TABLE `patient_vitals` (
+  `vitals_id` int(11) NOT NULL,
+  `patient_id` int(11) NOT NULL,
+  `visit_id` int(11) DEFAULT NULL,
+  `bp_systolic` int(11) DEFAULT NULL,
+  `bp_diastolic` int(11) DEFAULT NULL,
+  `heart_rate` int(11) DEFAULT NULL,
+  `temperature` decimal(4,1) DEFAULT NULL,
+  `spo2` int(11) DEFAULT NULL,
+  `respiratory_rate` int(11) DEFAULT NULL,
+  `blood_glucose` int(11) DEFAULT NULL,
+  `weight` decimal(6,2) DEFAULT NULL,
+  `nurse_notes` text DEFAULT NULL,
+  `recorded_by` int(11) NOT NULL,
+  `recorded_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `patient_vitals`
+--
+
+INSERT INTO `patient_vitals` (`vitals_id`, `patient_id`, `visit_id`, `bp_systolic`, `bp_diastolic`, `heart_rate`, `temperature`, `spo2`, `respiratory_rate`, `blood_glucose`, `weight`, `nurse_notes`, `recorded_by`, `recorded_at`) VALUES
+(1, 1, 1, 120, 80, 75, 37.5, 98, NULL, NULL, NULL, NULL, 3, '2026-02-20 19:52:15'),
+(2, 2, 2, 130, 85, 80, 36.8, 97, NULL, NULL, NULL, NULL, 3, '2026-02-20 19:52:15'),
+(3, 3, 3, 140, 90, 78, 36.7, 98, NULL, NULL, NULL, NULL, 3, '2026-02-20 19:52:15'),
+(4, 4, 4, 110, 70, 72, 37.2, 99, NULL, NULL, NULL, NULL, 3, '2026-02-20 19:52:15'),
+(5, 5, 5, 115, 75, 74, 36.9, 98, NULL, NULL, NULL, NULL, 3, '2026-02-20 19:52:15'),
+(6, 6, 6, 120, 80, 80, 37.0, 98, 28, 90, 87.00, 'test1', 3, '2026-02-20 20:10:31');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `prescriptions`
+--
+
+CREATE TABLE `prescriptions` (
+  `prescription_id` int(11) NOT NULL,
+  `patient_id` int(11) NOT NULL,
+  `visit_id` int(11) DEFAULT NULL,
+  `doctor_id` int(11) NOT NULL,
+  `created_by` int(11) NOT NULL,
+  `prescription_number` varchar(50) NOT NULL,
+  `allow_substitution` tinyint(1) NOT NULL DEFAULT 1,
+  `special_instructions` text DEFAULT NULL,
+  `status` enum('active','dispensed','cancelled') NOT NULL DEFAULT 'active',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `prescriptions`
+--
+
+INSERT INTO `prescriptions` (`prescription_id`, `patient_id`, `visit_id`, `doctor_id`, `created_by`, `prescription_number`, `allow_substitution`, `special_instructions`, `status`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 2, 2, 'RX-0001', 1, NULL, 'active', '2026-02-20 11:52:15', '2026-02-20 11:52:15'),
+(2, 2, 2, 2, 2, 'RX-0002', 1, NULL, 'active', '2026-02-20 11:52:15', '2026-02-20 11:52:15'),
+(3, 3, 3, 5, 5, 'RX-0003', 1, NULL, 'active', '2026-02-20 11:52:15', '2026-02-20 11:52:15'),
+(4, 4, 4, 2, 2, 'RX-0004', 1, NULL, 'active', '2026-02-20 11:52:15', '2026-02-20 11:52:15'),
+(5, 5, 5, 2, 2, 'RX-0005', 1, NULL, 'active', '2026-02-20 11:52:15', '2026-02-20 11:52:15'),
+(14, 6, 6, 2, 2, 'RX-20260220-215562', 1, '', '', '2026-02-20 13:07:53', '2026-02-20 13:07:53');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `prescription_dispensing`
+--
+
+CREATE TABLE `prescription_dispensing` (
+  `id` int(11) NOT NULL,
+  `prescription_id` int(11) NOT NULL,
+  `item_id` int(11) NOT NULL,
+  `dispensed_qty` int(11) NOT NULL,
+  `notes` text DEFAULT NULL,
+  `dispensed_by` int(11) NOT NULL,
+  `dispensed_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `prescription_items`
+--
+
+CREATE TABLE `prescription_items` (
+  `item_id` int(11) NOT NULL,
+  `prescription_id` int(11) NOT NULL,
+  `medicine_id` int(11) NOT NULL,
+  `dosage_amount` decimal(10,2) NOT NULL,
+  `dosage_unit` enum('mg','mcg','g','ml','units') NOT NULL,
+  `frequency_template` enum('once-daily','twice-daily','three-times','four-times','every-6h','every-8h','every-12h','as-needed','bedtime') NOT NULL,
+  `duration_amount` int(11) NOT NULL,
+  `duration_unit` enum('days','weeks','months') NOT NULL,
+  `route_admin` enum('oral','sublingual','topical','inhalation','injection-im','injection-iv','injection-sc','rectal','ophthalmic','otic') NOT NULL,
+  `item_instructions` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `prescription_items`
+--
+
+INSERT INTO `prescription_items` (`item_id`, `prescription_id`, `medicine_id`, `dosage_amount`, `dosage_unit`, `frequency_template`, `duration_amount`, `duration_unit`, `route_admin`, `item_instructions`, `created_at`) VALUES
+(1, 1, 1, 500.00, 'mg', 'every-6h', 5, 'days', 'oral', NULL, '2026-02-20 11:52:15'),
+(2, 2, 5, 500.00, 'mg', 'twice-daily', 30, 'days', 'oral', NULL, '2026-02-20 11:52:15'),
+(3, 3, 4, 50.00, 'mg', 'once-daily', 30, 'days', 'oral', NULL, '2026-02-20 11:52:15'),
+(4, 4, 1, 500.00, 'mg', 'three-times', 3, 'days', 'oral', NULL, '2026-02-20 11:52:15'),
+(5, 5, 1, 500.00, 'mg', 'every-8h', 2, 'days', 'oral', NULL, '2026-02-20 11:52:15'),
+(8, 14, 1, 500.00, 'mg', 'every-8h', 7, 'days', 'sublingual', 'test', '2026-02-20 13:08:18');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `stock_returns`
+--
+
+CREATE TABLE `stock_returns` (
+  `id` int(11) NOT NULL,
+  `health_center_id` int(11) NOT NULL,
+  `medicine_id` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `reason` varchar(255) NOT NULL,
+  `notes` text DEFAULT NULL,
+  `returned_by` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `stock_returns`
+--
+
+INSERT INTO `stock_returns` (`id`, `health_center_id`, `medicine_id`, `quantity`, `reason`, `notes`, `returned_by`, `created_at`) VALUES
+(1, 3, 4, 2, '1', NULL, 3, '2026-02-21 11:16:11'),
+(2, 3, 4, 2, 'q', NULL, 3, '2026-02-21 11:32:00');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `suppliers`
+--
+
+CREATE TABLE `suppliers` (
+  `id` int(11) NOT NULL,
+  `supplier_name` varchar(255) NOT NULL,
+  `supplier_type` enum('private','donation','government') NOT NULL,
+  `contact_person` varchar(255) DEFAULT NULL,
+  `contact_number` varchar(100) DEFAULT NULL,
+  `is_archived` tinyint(1) DEFAULT 0,
+  `email` varchar(255) DEFAULT NULL,
+  `address` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `suppliers`
+--
+
+INSERT INTO `suppliers` (`id`, `supplier_name`, `supplier_type`, `contact_person`, `contact_number`, `is_archived`, `email`, `address`) VALUES
+(1, 'Unilab', 'private', 'Carlos Dizon', '09181111111', 0, 'sales@unilab.com', 'Makati'),
+(2, 'DOH Central Supply', 'government', 'Liza Ramos', '09182222222', 1, 'doh@gov.ph', 'Manila'),
+(3, 'Red Cross Donation', 'donation', 'Miguel Tan', '09183333333', 0, 'donation@redcross.ph', 'Pasay'),
+(4, 'Mercury Pharma', 'private', 'Jose Lim', '09184444444', 0, 'info@mercury.com', 'Quezon City'),
+(5, 'Global Med Supply', 'private', 'Anna Ong', '09185555555', 0, 'contact@globalmed.com', 'Taguig');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `users`
+--
+
+CREATE TABLE `users` (
+  `user_id` int(11) NOT NULL,
+  `full_name` varchar(100) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL DEFAULT 'cavmed2025',
+  `role` enum('admin','doctor','medical_staff','encoder') NOT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `contact_number` varchar(20) DEFAULT NULL,
+  `position` varchar(100) DEFAULT NULL,
+  `profile_picture` varchar(255) DEFAULT NULL,
+  `status` enum('active','inactive') DEFAULT 'active',
+  `health_center_id` int(11) DEFAULT NULL,
+  `last_login` datetime DEFAULT NULL,
+  `failed_attempts` int(11) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `deleted_at` datetime DEFAULT NULL,
+  `must_change_password` tinyint(1) DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`user_id`, `full_name`, `username`, `password`, `role`, `email`, `contact_number`, `position`, `profile_picture`, `status`, `health_center_id`, `last_login`, `failed_attempts`, `created_at`, `updated_at`, `deleted_at`, `must_change_password`) VALUES
+(1, 'System Admin', 'admin', '$2y$10$gPdblqHwNWH95SUoQidAv.ElMX5Vg.boy0MZnVFkza1Y3ybMJ/ZhS', 'admin', 'admin@cavmed.com', '09171111111', 'Administrator', NULL, 'active', 1, '2026-02-21 18:57:32', 0, '2026-02-20 11:52:14', '2026-02-21 10:57:32', NULL, 0),
+(2, 'Dr. John Reyes', 'doctor', '$2y$10$0p9X7dbBIlZG/w1Tz32XnepIUc8wXxJhFje1DuEsWJKWolWY3tk7a', 'doctor', 'john@cavmed.com', '09172222222', 'General Physician', NULL, 'active', 3, '2026-02-20 21:05:27', 0, '2026-02-20 11:52:14', '2026-02-20 13:05:27', NULL, 0),
+(3, 'Nurse Ana Cruz', 'nurse', '$2y$10$2CjCZJBp6Q5e8od63ly9uuobb5Mtb3/xfr8LQB3Cqk3GwWZLd9o1C', 'medical_staff', 'ana@cavmed.com', '09173333333', 'Staff Nurse', NULL, 'active', 3, '2026-02-21 19:23:07', 0, '2026-02-20 11:52:14', '2026-02-21 11:23:07', NULL, 0),
+(4, 'Encoder Mark Lee', 'encoder', '$2y$10$Bcg3myhOlLAbzPNt229CW.AAmyg9hoEV9XeWvWgafvpSQZhVAz0nW', 'encoder', 'mark@cavmed.com', '09174444444', 'Data Encoder', NULL, 'active', 1, '2026-02-21 19:32:12', 0, '2026-02-20 11:52:14', '2026-02-21 11:32:12', NULL, 0),
+(5, 'Dr. Lea Martinez', 'lmartinez', '$2y$10$pCENdsZ9NVSuPGyO50BbtuhlWuZfz.kieNkJ23ReoEHXWQiiHw4wa', 'doctor', 'lea@cavmed.com', '09175555555', 'Family Doctor', 'uploads/profile/profile_699870eb7a195.jpg', 'active', 5, NULL, 0, '2026-02-20 11:52:14', '2026-02-20 14:35:19', NULL, 1),
+(10, 'Adielle Solutions', 'adielle.solutions@gmail.com', '$2y$10$6jsBL81M31pLNqOhX9Tce.gTghUHRmSO7xO3qejn/7D5Fe/Z7j9Hi', 'admin', 'adielle.solutions@gmail.com', '09123456789', 'Medical Records Encoder', 'uploads/profile/profile_699863037fca0.jpg', 'active', 1, NULL, 0, '2026-02-20 13:34:59', '2026-02-20 14:33:33', '2026-02-20 21:35:07', 1),
+(11, 'Will Smith', 'will.smith', '$2y$10$JNaYLz4BsTlZUn5e1BK40eqaMMtGX6uZwWVX5mLD6xU87o8MmrOEu', 'admin', 'wiill@gmail.com', '09201234567', 'Family Doctor', 'uploads/profile/profile_69987453ed59a.jpg', 'active', 2, NULL, 0, '2026-02-20 14:48:51', '2026-02-21 10:51:21', NULL, 1),
+(12, 'ggs', 'test_user', '$2y$10$3dxpMGnnCjUYGYdknBIgqeMnukL4ehzZU9tLcTOEXhtc0kh80b3ke', 'doctor', 'tst@gmail.com', '09201234567', 'Family Doctor', NULL, 'active', 3, NULL, 0, '2026-02-21 06:14:52', '2026-02-21 10:33:15', NULL, 1),
+(13, 'nurse test', 'nurse2', '$2y$10$Icy7aHWSLWBPjULM6sCTLukjetxVyAmXZe2xga2oM4UXHJGfNso4W', 'medical_staff', 'nurse2@gmail.com', '09123456789', 'Nurse', 'uploads/profile/profile_6999795f47f7e.png', 'active', 2, '2026-02-21 18:09:04', 0, '2026-02-21 09:22:39', '2026-02-21 10:09:04', NULL, 0),
+(14, 'doctor test2', 'doctor2', '$2y$10$SANbEfKwv7DZrxO9A68x9.fVDXYtEwnzYJ80eRHFpzHbmLyNU0C/W', 'doctor', 'doctor2@gmail.com', '0192839018', 'Cardiologist', 'uploads/profile/profile_69998b5d7a524.jpg', 'active', 2, '2026-02-21 18:07:44', 0, '2026-02-21 09:27:28', '2026-02-21 10:40:20', NULL, 0),
+(15, 'Donnie', 'Donnie', '$2y$10$c/1JHSKplx6Y0eyZRX.9kO1aWYE9pH/2KMpqE6NShUjmjuoSmIjem', 'encoder', 'donnie@gmail.com', '0192839018', 'Nurse', 'uploads/profile/profile_6999902ddf820.jpg', 'active', 3, '2026-02-21 19:00:51', 0, '2026-02-21 10:59:57', '2026-02-21 11:00:58', NULL, 0);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_patient_favorites`
+--
+
+CREATE TABLE `user_patient_favorites` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `patient_id` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_patient_recent`
+--
+
+CREATE TABLE `user_patient_recent` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `patient_id` int(11) NOT NULL,
+  `last_viewed_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `audit_logs`
+--
+ALTER TABLE `audit_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_audit_user_id` (`user_id`);
+
+--
+-- Indexes for table `disposal_records`
+--
+ALTER TABLE `disposal_records`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_disposal_medicine` (`medicine_id`),
+  ADD KEY `fk_disposal_created_by` (`created_by`);
+
+--
+-- Indexes for table `distribution`
+--
+ALTER TABLE `distribution`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_distribute_health_center` (`health_center_id`),
+  ADD KEY `fk_distribute_medicine` (`medicine_id`),
+  ADD KEY `fk_distribute_created_by` (`created_by`);
+
+--
+-- Indexes for table `health_centers`
+--
+ALTER TABLE `health_centers`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `health_center_inventory`
+--
+ALTER TABLE `health_center_inventory`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_center_medicine` (`health_center_id`,`medicine_id`),
+  ADD KEY `fk_hci_medicine` (`medicine_id`);
+
+--
+-- Indexes for table `inventory_transactions`
+--
+ALTER TABLE `inventory_transactions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_transaction_medicine` (`medicine_id`),
+  ADD KEY `fk_transaction_performed_by` (`performed_by`);
+
+--
+-- Indexes for table `medical_certificates`
+--
+ALTER TABLE `medical_certificates`
+  ADD PRIMARY KEY (`certificate_id`),
+  ADD UNIQUE KEY `certificate_number` (`certificate_number`),
+  ADD KEY `fk_mc_visit` (`visit_id`),
+  ADD KEY `fk_mc_created_by` (`created_by`),
+  ADD KEY `idx_mc_patient_id` (`patient_id`),
+  ADD KEY `idx_mc_doctor_id` (`doctor_id`),
+  ADD KEY `idx_mc_created_at` (`created_at`);
+
+--
+-- Indexes for table `medicine`
+--
+ALTER TABLE `medicine`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `barcode` (`barcode`),
+  ADD KEY `fk_medicine_supplier` (`supplier_id`),
+  ADD KEY `fk_medicine_created_by` (`created_by`);
+
+--
+-- Indexes for table `mrn_counter`
+--
+ALTER TABLE `mrn_counter`
+  ADD PRIMARY KEY (`year`);
+
+--
+-- Indexes for table `patients`
+--
+ALTER TABLE `patients`
+  ADD PRIMARY KEY (`patient_id`),
+  ADD UNIQUE KEY `mrn` (`mrn`),
+  ADD UNIQUE KEY `mrn_2` (`mrn`),
+  ADD KEY `idx_patients_created_by` (`created_by`),
+  ADD KEY `idx_patients_health_center` (`health_center_id`);
+
+--
+-- Indexes for table `patient_documents`
+--
+ALTER TABLE `patient_documents`
+  ADD PRIMARY KEY (`document_id`),
+  ADD KEY `fk_docs_patient` (`patient_id`),
+  ADD KEY `fk_docs_visit` (`visit_id`),
+  ADD KEY `idx_docs_uploaded_by` (`uploaded_by`),
+  ADD KEY `idx_docs_document_type` (`document_type`),
+  ADD KEY `idx_docs_certificate_id` (`certificate_id`),
+  ADD KEY `idx_docs_prescription_id` (`prescription_id`);
+
+--
+-- Indexes for table `patient_emergency_contacts`
+--
+ALTER TABLE `patient_emergency_contacts`
+  ADD PRIMARY KEY (`contact_id`),
+  ADD KEY `fk_emergency_patient` (`patient_id`),
+  ADD KEY `idx_emergency_created_by` (`created_by`);
+
+--
+-- Indexes for table `patient_insurance`
+--
+ALTER TABLE `patient_insurance`
+  ADD PRIMARY KEY (`insurance_id`),
+  ADD UNIQUE KEY `uq_patient_coverage` (`patient_id`,`coverage_type`),
+  ADD KEY `idx_insurance_verified_by` (`verified_by`);
+
+--
+-- Indexes for table `patient_medical_profile`
+--
+ALTER TABLE `patient_medical_profile`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_profile_patient` (`patient_id`),
+  ADD KEY `idx_profile_updated_by` (`updated_by`);
+
+--
+-- Indexes for table `patient_visits`
+--
+ALTER TABLE `patient_visits`
+  ADD PRIMARY KEY (`visit_id`),
+  ADD KEY `fk_visits_patient` (`patient_id`),
+  ADD KEY `idx_visits_doctor_id` (`doctor_id`),
+  ADD KEY `idx_visits_created_by` (`created_by`),
+  ADD KEY `idx_visits_health_center` (`health_center_id`);
+
+--
+-- Indexes for table `patient_vitals`
+--
+ALTER TABLE `patient_vitals`
+  ADD PRIMARY KEY (`vitals_id`),
+  ADD UNIQUE KEY `uq_patient_vitals_visit` (`visit_id`),
+  ADD KEY `fk_vitals_patient` (`patient_id`),
+  ADD KEY `idx_vitals_recorded_by` (`recorded_by`);
+
+--
+-- Indexes for table `prescriptions`
+--
+ALTER TABLE `prescriptions`
+  ADD PRIMARY KEY (`prescription_id`),
+  ADD UNIQUE KEY `prescription_number` (`prescription_number`),
+  ADD KEY `fk_pres_visit` (`visit_id`),
+  ADD KEY `fk_pres_created_by` (`created_by`),
+  ADD KEY `idx_pres_patient_id` (`patient_id`),
+  ADD KEY `idx_pres_doctor_id` (`doctor_id`),
+  ADD KEY `idx_pres_created_at` (`created_at`);
+
+--
+-- Indexes for table `prescription_dispensing`
+--
+ALTER TABLE `prescription_dispensing`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `prescription_id` (`prescription_id`),
+  ADD KEY `item_id` (`item_id`),
+  ADD KEY `dispensed_by` (`dispensed_by`);
+
+--
+-- Indexes for table `prescription_items`
+--
+ALTER TABLE `prescription_items`
+  ADD PRIMARY KEY (`item_id`),
+  ADD KEY `idx_pres_item_prescription_id` (`prescription_id`),
+  ADD KEY `idx_pres_item_medicine_id` (`medicine_id`);
+
+--
+-- Indexes for table `stock_returns`
+--
+ALTER TABLE `stock_returns`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `health_center_id` (`health_center_id`),
+  ADD KEY `medicine_id` (`medicine_id`),
+  ADD KEY `returned_by` (`returned_by`);
+
+--
+-- Indexes for table `suppliers`
+--
+ALTER TABLE `suppliers`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`user_id`),
+  ADD UNIQUE KEY `username` (`username`),
+  ADD KEY `fk_user_health_center` (`health_center_id`);
+
+--
+-- Indexes for table `user_patient_favorites`
+--
+ALTER TABLE `user_patient_favorites`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_user_patient_fav` (`user_id`,`patient_id`),
+  ADD KEY `fk_fav_patient` (`patient_id`),
+  ADD KEY `idx_fav_user_id` (`user_id`);
+
+--
+-- Indexes for table `user_patient_recent`
+--
+ALTER TABLE `user_patient_recent`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_user_patient_recent` (`user_id`,`patient_id`),
+  ADD KEY `fk_recent_patient` (`patient_id`),
+  ADD KEY `idx_recent_user_id` (`user_id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `audit_logs`
+--
+ALTER TABLE `audit_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `disposal_records`
+--
+ALTER TABLE `disposal_records`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `distribution`
+--
+ALTER TABLE `distribution`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `health_centers`
+--
+ALTER TABLE `health_centers`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT for table `health_center_inventory`
+--
+ALTER TABLE `health_center_inventory`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `inventory_transactions`
+--
+ALTER TABLE `inventory_transactions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+
+--
+-- AUTO_INCREMENT for table `medical_certificates`
+--
+ALTER TABLE `medical_certificates`
+  MODIFY `certificate_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `medicine`
+--
+ALTER TABLE `medicine`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT for table `patients`
+--
+ALTER TABLE `patients`
+  MODIFY `patient_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+
+--
+-- AUTO_INCREMENT for table `patient_documents`
+--
+ALTER TABLE `patient_documents`
+  MODIFY `document_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `patient_emergency_contacts`
+--
+ALTER TABLE `patient_emergency_contacts`
+  MODIFY `contact_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `patient_insurance`
+--
+ALTER TABLE `patient_insurance`
+  MODIFY `insurance_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `patient_medical_profile`
+--
+ALTER TABLE `patient_medical_profile`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `patient_visits`
+--
+ALTER TABLE `patient_visits`
+  MODIFY `visit_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `patient_vitals`
+--
+ALTER TABLE `patient_vitals`
+  MODIFY `vitals_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `prescriptions`
+--
+ALTER TABLE `prescriptions`
+  MODIFY `prescription_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+
+--
+-- AUTO_INCREMENT for table `prescription_dispensing`
+--
+ALTER TABLE `prescription_dispensing`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `prescription_items`
+--
+ALTER TABLE `prescription_items`
+  MODIFY `item_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT for table `stock_returns`
+--
+ALTER TABLE `stock_returns`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `suppliers`
+--
+ALTER TABLE `suppliers`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+
+--
+-- AUTO_INCREMENT for table `user_patient_favorites`
+--
+ALTER TABLE `user_patient_favorites`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `user_patient_recent`
+--
+ALTER TABLE `user_patient_recent`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `disposal_records`
+--
+ALTER TABLE `disposal_records`
+  ADD CONSTRAINT `fk_disposal_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`user_id`),
+  ADD CONSTRAINT `fk_disposal_medicine` FOREIGN KEY (`medicine_id`) REFERENCES `medicine` (`id`);
+
+--
+-- Constraints for table `distribution`
+--
+ALTER TABLE `distribution`
+  ADD CONSTRAINT `fk_distribute_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`user_id`),
+  ADD CONSTRAINT `fk_distribute_health_center` FOREIGN KEY (`health_center_id`) REFERENCES `health_centers` (`id`),
+  ADD CONSTRAINT `fk_distribute_medicine` FOREIGN KEY (`medicine_id`) REFERENCES `medicine` (`id`);
+
+--
+-- Constraints for table `health_center_inventory`
+--
+ALTER TABLE `health_center_inventory`
+  ADD CONSTRAINT `fk_hci_center` FOREIGN KEY (`health_center_id`) REFERENCES `health_centers` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_hci_medicine` FOREIGN KEY (`medicine_id`) REFERENCES `medicine` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `inventory_transactions`
+--
+ALTER TABLE `inventory_transactions`
+  ADD CONSTRAINT `fk_transaction_medicine` FOREIGN KEY (`medicine_id`) REFERENCES `medicine` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_transaction_performed_by` FOREIGN KEY (`performed_by`) REFERENCES `users` (`user_id`);
+
+--
+-- Constraints for table `medical_certificates`
+--
+ALTER TABLE `medical_certificates`
+  ADD CONSTRAINT `fk_mc_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`user_id`),
+  ADD CONSTRAINT `fk_mc_doctor` FOREIGN KEY (`doctor_id`) REFERENCES `users` (`user_id`),
+  ADD CONSTRAINT `fk_mc_patient` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`patient_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_mc_visit` FOREIGN KEY (`visit_id`) REFERENCES `patient_visits` (`visit_id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `medicine`
+--
+ALTER TABLE `medicine`
+  ADD CONSTRAINT `fk_medicine_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`user_id`),
+  ADD CONSTRAINT `fk_medicine_supplier` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`id`);
+
+--
+-- Constraints for table `patients`
+--
+ALTER TABLE `patients`
+  ADD CONSTRAINT `fk_patients_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`user_id`),
+  ADD CONSTRAINT `fk_patients_health_center` FOREIGN KEY (`health_center_id`) REFERENCES `health_centers` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `patient_documents`
+--
+ALTER TABLE `patient_documents`
+  ADD CONSTRAINT `fk_docs_certificate` FOREIGN KEY (`certificate_id`) REFERENCES `medical_certificates` (`certificate_id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_docs_patient` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`patient_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_docs_prescription` FOREIGN KEY (`prescription_id`) REFERENCES `prescriptions` (`prescription_id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_docs_uploaded_by_user` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`user_id`),
+  ADD CONSTRAINT `fk_docs_visit` FOREIGN KEY (`visit_id`) REFERENCES `patient_visits` (`visit_id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `patient_emergency_contacts`
+--
+ALTER TABLE `patient_emergency_contacts`
+  ADD CONSTRAINT `fk_emergency_created_by_user` FOREIGN KEY (`created_by`) REFERENCES `users` (`user_id`),
+  ADD CONSTRAINT `fk_emergency_patient` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`patient_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `patient_insurance`
+--
+ALTER TABLE `patient_insurance`
+  ADD CONSTRAINT `fk_insurance_patient` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`patient_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_insurance_verified_by` FOREIGN KEY (`verified_by`) REFERENCES `users` (`user_id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `patient_medical_profile`
+--
+ALTER TABLE `patient_medical_profile`
+  ADD CONSTRAINT `fk_profile_patient` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`patient_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_profile_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `users` (`user_id`);
+
+--
+-- Constraints for table `patient_visits`
+--
+ALTER TABLE `patient_visits`
+  ADD CONSTRAINT `fk_visits_created_by_user` FOREIGN KEY (`created_by`) REFERENCES `users` (`user_id`),
+  ADD CONSTRAINT `fk_visits_doctor` FOREIGN KEY (`doctor_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_visits_health_center` FOREIGN KEY (`health_center_id`) REFERENCES `health_centers` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_visits_patient` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`patient_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `patient_vitals`
+--
+ALTER TABLE `patient_vitals`
+  ADD CONSTRAINT `fk_vitals_patient` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`patient_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_vitals_recorded_by` FOREIGN KEY (`recorded_by`) REFERENCES `users` (`user_id`),
+  ADD CONSTRAINT `fk_vitals_visit` FOREIGN KEY (`visit_id`) REFERENCES `patient_visits` (`visit_id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `prescriptions`
+--
+ALTER TABLE `prescriptions`
+  ADD CONSTRAINT `fk_pres_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`user_id`),
+  ADD CONSTRAINT `fk_pres_doctor` FOREIGN KEY (`doctor_id`) REFERENCES `users` (`user_id`),
+  ADD CONSTRAINT `fk_pres_patient` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`patient_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_pres_visit` FOREIGN KEY (`visit_id`) REFERENCES `patient_visits` (`visit_id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `prescription_dispensing`
+--
+ALTER TABLE `prescription_dispensing`
+  ADD CONSTRAINT `prescription_dispensing_ibfk_1` FOREIGN KEY (`prescription_id`) REFERENCES `prescriptions` (`prescription_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `prescription_dispensing_ibfk_2` FOREIGN KEY (`item_id`) REFERENCES `prescription_items` (`item_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `prescription_dispensing_ibfk_3` FOREIGN KEY (`dispensed_by`) REFERENCES `users` (`user_id`);
+
+--
+-- Constraints for table `prescription_items`
+--
+ALTER TABLE `prescription_items`
+  ADD CONSTRAINT `fk_pres_item_medicine` FOREIGN KEY (`medicine_id`) REFERENCES `medicine` (`id`),
+  ADD CONSTRAINT `fk_pres_item_prescription` FOREIGN KEY (`prescription_id`) REFERENCES `prescriptions` (`prescription_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `stock_returns`
+--
+ALTER TABLE `stock_returns`
+  ADD CONSTRAINT `stock_returns_ibfk_1` FOREIGN KEY (`health_center_id`) REFERENCES `health_centers` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `stock_returns_ibfk_2` FOREIGN KEY (`medicine_id`) REFERENCES `medicine` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `stock_returns_ibfk_3` FOREIGN KEY (`returned_by`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `users`
+--
+ALTER TABLE `users`
+  ADD CONSTRAINT `fk_user_health_center` FOREIGN KEY (`health_center_id`) REFERENCES `health_centers` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `user_patient_favorites`
+--
+ALTER TABLE `user_patient_favorites`
+  ADD CONSTRAINT `fk_fav_patient` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`patient_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_fav_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `user_patient_recent`
+--
+ALTER TABLE `user_patient_recent`
+  ADD CONSTRAINT `fk_recent_patient` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`patient_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_recent_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

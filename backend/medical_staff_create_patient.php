@@ -1,4 +1,6 @@
 <?php
+error_reporting(0);
+ini_set('display_errors', 0);
 // backend/medical_staff_create_patient.php
 session_start();
 header('Content-Type: application/json');
@@ -108,43 +110,34 @@ if (!$health_center_id) {
     respond(false, "Your account is not assigned to any health center. Please contact admin.");
 }
 
-
+    $conn->begin_transaction();
 // ---------- Generate MRN (simple example) ----------
 // Format: YYYY-000001 (resets per year)
 // You can change this to your preferred MRN format.
 $year = date("Y");
-$mrn = null;
 
-try {
-    // Make sure $conn is your mysqli connection from db_connection.php
-    if (!isset($conn) || !($conn instanceof mysqli)) {
-        respond(false, "Database connection not found. Check db_connection.php.");
-    }
+// Insert or increment atomically
+$stmt = $conn->prepare("
+    INSERT INTO mrn_counter (year, last_number)
+    VALUES (?, 1)
+    ON DUPLICATE KEY UPDATE last_number = last_number + 1
+");
+$stmt->bind_param("i", $year);
+$stmt->execute();
+$stmt->close();
 
-    // Get current max MRN for this year
-    $mrnPrefix = $year . "-";
-    $stmt_mrn = $conn->prepare("SELECT mrn FROM patients WHERE mrn LIKE CONCAT(?, '%') ORDER BY mrn DESC LIMIT 1");
-    if (!$stmt_mrn) respond(false, "MRN query prepare failed: " . $conn->error);
+// Get the updated number
+$stmt2 = $conn->prepare("SELECT last_number FROM mrn_counter WHERE year=?");
+$stmt2->bind_param("i", $year);
+$stmt2->execute();
+$stmt2->bind_result($num);
+$stmt2->fetch();
+$stmt2->close();
 
-    $stmt_mrn->bind_param("s", $mrnPrefix);
-    if (!$stmt_mrn->execute()) respond(false, "MRN query execute failed: " . $stmt_mrn->error);
-
-    $res = $stmt_mrn->get_result();
-    if ($row = $res->fetch_assoc()) {
-        // existing: YYYY-000123
-        $last = $row['mrn'];
-        $parts = explode("-", $last);
-        $num = isset($parts[1]) ? (int)$parts[1] : 0;
-        $num++;
-        $mrn = $year . "-" . str_pad((string)$num, 6, "0", STR_PAD_LEFT);
-    } else {
-        $mrn = $year . "-000001";
-    }
-    $stmt_mrn->close();
-
+$mrn = $year . "-" . str_pad($num, 6, "0", STR_PAD_LEFT);
     // ---------- Insert Patient ----------
     // NOTE: includes status (since your table has it); created_at/updated_at auto.
-    $conn->begin_transaction();
+
 
 // ---------- Insert Patient ----------
 $sql = "INSERT INTO patients (
@@ -223,8 +216,3 @@ respond(true, "Patient registered successfully.", [
     "patient_id" => $new_id,
     "mrn" => $mrn
 ]);
-
-
-} catch (Throwable $e) {
-    respond(false, "Server error: " . $e->getMessage());
-}

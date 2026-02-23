@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', function () {
   
       clearTimeout(searchTimer);
       searchTimer = setTimeout(() => {
-        fetch(`/CAVITE-MED/backend/medical_staff_create_visit.php?query=${encodeURIComponent(q)}`, {
+        fetch(`/HIMS/backend/medical_staff_create_visit.php?query=${encodeURIComponent(q)}`, {
           method: 'GET',
           headers: { 'Accept': 'application/json' }
         })
@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function () {
         status: 'waiting'
       };
   
-      fetch('/CAVITE-MED/backend/medical_staff_create_visit.php', {
+      fetch('/HIMS/backend/medical_staff_create_visit.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

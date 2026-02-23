@@ -46,10 +46,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     window.location.href = "admin_dashboard.php";
                     break;
                 case "doctor":
-                    window.location.href = "doctor_patient_records.html";
+                    window.location.href = "doctor_prescription.php";
                     break;
                 case "medical_staff":
-                    window.location.href = "medical_staff_dashboard.html";
+                    window.location.href = "medical_staff_dashboard.php";
                     break;
                 case "encoder":
                     window.location.href = "encoder_inventory.php";

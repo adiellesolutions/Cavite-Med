@@ -78,12 +78,6 @@ document.addEventListener("click", function (e) {
                 healthCenterSelect.value = user.health_center_id ?? "";
             }
 
-            /* Status */
-            const statusSelect = document.querySelector("select[name='status']");
-            if (statusSelect) {
-                statusSelect.value = user.status ?? "active";
-            }
-
             /* Role */
             roleSelect.value = user.role ?? "";
 
@@ -102,10 +96,38 @@ addUserBtn.addEventListener("click", () => {
     editUserIdInput.value = "";
     roleSelect.value = "";
 
-    // Button text
+    loadHealthCenters(); // 🔥 ADD THIS
+
     document.getElementById("submitUserBtn").textContent = "Create User";
 
     addUserModal.classList.remove("hidden");
     addUserModal.classList.add("flex");
 });
 
+function loadHealthCenters(selectedId = "") {
+
+    const select = document.querySelector("[name='health_center_id']");
+    if (!select) return;
+
+    fetch("../backend/admin_fetch_healthcenters.php")
+        .then(res => res.json())
+        .then(res => {
+
+            select.innerHTML = '<option value="">Select Health Center</option>';
+
+            res.data.forEach(center => {
+                const option = document.createElement("option");
+                option.value = center.id;
+                option.textContent = center.center_name;
+
+                if (selectedId && selectedId == center.id) {
+                    option.selected = true;
+                }
+
+                select.appendChild(option);
+            });
+        })
+        .catch(err => {
+            console.error("Failed to load health centers:", err);
+        });
+}

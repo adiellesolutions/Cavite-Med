@@ -112,25 +112,30 @@ try {
     out(200, ["ok"=>true,"data"=>$rows]);
   }
 
-  // DETAILS
-  if ($action === 'details') {
-    $prescription_id = (int)($_GET['prescription_id'] ?? 0);
-    if ($prescription_id<=0) out(422, ["ok"=>false,"error"=>"prescription_id required"]);
+// DETAILS
+if ($action === 'details') {
 
+    $prescription_id = (int)($_GET['prescription_id'] ?? 0);
+    if ($prescription_id <= 0) {
+        out(422, ["ok"=>false,"error"=>"prescription_id required"]);
+    }
+
+    // -------- META QUERY --------
     $m = $mysqli->prepare("
-      SELECT pr.prescription_id, pr.prescription_number, pr.status, pr.created_at,
-             pr.special_instructions,
-             CONCAT(pt.first_name,' ',pt.last_name) AS patient_name,
-             pt.mrn, pt.gender, pt.date_of_birth,
-             u.full_name AS doctor_name
-      FROM prescriptions pr
-      JOIN patients pt ON pt.patient_id = pr.patient_id
-      JOIN users u ON u.user_id = pr.doctor_id
-      WHERE pr.prescription_id=?
-        AND pt.health_center_id = ?
-      LIMIT 1
+        SELECT pr.prescription_id, pr.prescription_number, pr.status, pr.created_at,
+               pr.special_instructions,
+               CONCAT(pt.first_name,' ',pt.last_name) AS patient_name,
+               pt.mrn, pt.gender,
+               u.full_name AS doctor_name
+        FROM prescriptions pr
+        JOIN patients pt ON pt.patient_id = pr.patient_id
+        JOIN users u ON u.user_id = pr.doctor_id
+        WHERE pr.prescription_id=?
+          AND pt.health_center_id=?
+        LIMIT 1
     ");
-    if (!$m) out(500, ["ok"=>false,"error"=>"Prepare failed: ".$mysqli->error]);
+
+    if (!$m) out(500, ["ok"=>false,"error"=>$mysqli->error]);
 
     $m->bind_param("ii", $prescription_id, $health_center_id);
     $m->execute();
@@ -139,45 +144,69 @@ try {
 
     if (!$meta) out(404, ["ok"=>false,"error"=>"Not found"]);
 
+    // -------- ITEMS QUERY (CENTER STOCK) --------
     $p = $mysqli->prepare("
-      SELECT pi.item_id, pi.medicine_id,
-             m.medicine_name, m.category, m.current_stock,
-             pi.dosage_amount, pi.dosage_unit,
-             pi.frequency_template, pi.duration_amount, pi.duration_unit,
-             pi.route_admin, pi.item_instructions
-      FROM prescription_items pi
-      JOIN medicine m ON m.id = pi.medicine_id
-      WHERE pi.prescription_id=?
-      ORDER BY pi.item_id ASC
+        SELECT 
+            pi.item_id,
+            pi.medicine_id,
+            m.medicine_name,
+            m.category,
+            COALESCE(hci.current_stock,0) AS current_stock,
+            pi.dosage_amount,
+            pi.dosage_unit,
+            pi.frequency_template,
+            pi.duration_amount,
+            pi.duration_unit,
+            pi.route_admin,
+            pi.item_instructions
+        FROM prescription_items pi
+        JOIN medicine m ON m.id = pi.medicine_id
+        LEFT JOIN health_center_inventory hci 
+               ON hci.medicine_id = pi.medicine_id
+               AND hci.health_center_id = ?
+        WHERE pi.prescription_id=?
+        ORDER BY pi.item_id ASC
     ");
-    if (!$p) out(500, ["ok"=>false,"error"=>"Prepare failed: ".$mysqli->error]);
 
-    $p->bind_param("i", $prescription_id);
+    if (!$p) out(500, ["ok"=>false,"error"=>$mysqli->error]);
+
+    $p->bind_param("ii", $health_center_id, $prescription_id);
     $p->execute();
     $res = $p->get_result();
 
     $items = [];
+
     while ($it = $res->fetch_assoc()) {
-      $need = max(1, freqPerDay($it['frequency_template']) * durationDays($it['duration_amount'], $it['duration_unit']));
 
-      $s = $mysqli->prepare("SELECT COALESCE(SUM(dispensed_qty),0) AS dispensed FROM prescription_dispensing WHERE item_id=?");
-      $iid = (int)$it['item_id'];
-      $s->bind_param("i", $iid);
-      $s->execute();
-      $sum = $s->get_result()->fetch_assoc();
-      $s->close();
+        $need = max(
+            1,
+            freqPerDay($it['frequency_template']) *
+            durationDays($it['duration_amount'], $it['duration_unit'])
+        );
 
-      $disp = (int)($sum['dispensed'] ?? 0);
+        $s = $mysqli->prepare("
+            SELECT COALESCE(SUM(dispensed_qty),0) AS dispensed 
+            FROM prescription_dispensing 
+            WHERE item_id=?
+        ");
 
-      $it['qty_prescribed'] = $need;
-      $it['qty_dispensed'] = $disp;
-      $it['qty_remaining'] = max(0, $need - $disp);
+        $iid = (int)$it['item_id'];
+        $s->bind_param("i", $iid);
+        $s->execute();
+        $sum = $s->get_result()->fetch_assoc();
+        $s->close();
 
-      $items[] = $it;
+        $disp = (int)($sum['dispensed'] ?? 0);
+
+        $it['qty_prescribed'] = $need;
+        $it['qty_dispensed'] = $disp;
+        $it['qty_remaining'] = max(0, $need - $disp);
+
+        $items[] = $it;
     }
 
     out(200, ["ok"=>true,"meta"=>$meta,"items"=>$items]);
-  }
+}
 
   // DISPENSE
   if ($action === 'dispense') {
@@ -238,8 +267,9 @@ try {
 
     $remaining = $need - $disp;
     if ($qty > $remaining) out(422, ["ok"=>false,"error"=>"Qty exceeds remaining"]);
-    if ($qty > (int)$it['current_stock']) out(422, ["ok"=>false,"error"=>"Not enough stock"]);
-
+if ($qty > (int)$it['current_stock']) {
+    out(422, ["ok"=>false,"error"=>"Medicine not available in this health center"]);
+}
     $mysqli->begin_transaction();
 
     // record dispense
@@ -251,14 +281,31 @@ try {
     $ins->execute();
 
     // deduct stock
-    $upd = $mysqli->prepare("UPDATE medicine SET current_stock=current_stock-? WHERE id=? AND current_stock>=?");
-    $mid = (int)$it['medicine_id'];
-    $upd->bind_param("iii", $qty, $mid, $qty);
-    $upd->execute();
-    if ($upd->affected_rows <= 0) {
-      $mysqli->rollback();
-      out(409, ["ok"=>false,"error"=>"Stock update failed"]);
-    }
+$upd = $mysqli->prepare("
+  UPDATE health_center_inventory
+  SET current_stock = current_stock - ?
+  WHERE medicine_id = ?
+    AND health_center_id = ?
+    AND current_stock >= ?
+");
+
+$mid = (int)$it['medicine_id'];
+
+$upd = $mysqli->prepare("
+  UPDATE health_center_inventory
+  SET current_stock = current_stock - ?
+  WHERE medicine_id = ?
+    AND health_center_id = ?
+    AND current_stock >= ?
+");
+
+$upd->bind_param("iiii", $qty, $mid, $health_center_id, $qty);
+$upd->execute();
+
+if ($upd->affected_rows <= 0) {
+    $mysqli->rollback();
+    out(409, ["ok"=>false,"error"=>"Stock update failed"]);
+}
 
     // inventory transaction
     $tx = $mysqli->prepare("

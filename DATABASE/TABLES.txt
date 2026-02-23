@@ -643,3 +643,20 @@ CREATE TABLE prescription_dispensing (
   FOREIGN KEY (item_id) REFERENCES prescription_items(item_id) ON DELETE CASCADE,
   FOREIGN KEY (dispensed_by) REFERENCES users(user_id) ON DELETE RESTRICT
 );
+
+
+
+-------------
+ALTER TABLE patient_visits
+ADD COLUMN health_center_id INT NULL AFTER patient_id,
+ADD CONSTRAINT fk_visits_health_center
+    FOREIGN KEY (health_center_id)
+    REFERENCES health_centers(id)
+    ON DELETE SET NULL;
+
+CREATE INDEX idx_visits_health_center
+ON patient_visits(health_center_id);
+
+
+
+ALTER TABLE patients ADD UNIQUE (mrn);

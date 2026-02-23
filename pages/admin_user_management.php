@@ -124,16 +124,6 @@ $profile = !empty($user['profile_picture'])
     <!-- Main Content -->
     <main class="p-6">
 
-        <div class="mb-6">
-            <a href="admin_dashboard.php" class="inline-flex items-center gap-2 btn btn-outline text-sm ">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M15 19l-7-7 7-7"/>
-                    </svg>
-                    Back to Dashboard
-            </a>
-        </div>
-
         <!-- Stats Overview -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div class="card">
@@ -178,47 +168,11 @@ $profile = !empty($user['profile_picture'])
                 <!-- Search and Filters -->
                 <div class="flex flex-wrap items-center gap-4">
 
-                    <!-- Search -->
-                    <div class="relative flex-1 min-w-[300px]">
-                        <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-text-secondary"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
-                        <input
-                            type="text"
-                            name="search"
-                            value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>"
-                            placeholder="Search users by name, email, or username..."
-                            class="input pl-10 w-full">
-                    </div>
 
-                    <!-- Status Filter -->
-                    <select name="status" class="input py-2 text-sm">
-                        <option value="all">All Status</option>
-                        <option value="active"   <?php if(($_GET['status'] ?? '')==='active') echo 'selected'; ?>>Active</option>
-                        <option value="inactive" <?php if(($_GET['status'] ?? '')==='inactive') echo 'selected'; ?>>Inactive</option>
-                    </select>
-
-                    <!-- Role Filter -->
-                    <select name="role" class="input py-2 text-sm">
-                        <option value="all">All Roles</option>
-                        <option value="admin"         <?php if(($_GET['role'] ?? '')==='admin') echo 'selected'; ?>>Administrator</option>
-                        <option value="doctor"        <?php if(($_GET['role'] ?? '')==='doctor') echo 'selected'; ?>>Doctor</option>
-                        <option value="medical_staff" <?php if(($_GET['role'] ?? '')==='medical_staff') echo 'selected'; ?>>Medical Staff</option>
-                        <option value="encoder"       <?php if(($_GET['role'] ?? '')==='encoder') echo 'selected'; ?>>Encoder</option>
-                    </select>
                 </div>
 
                 <!-- Action Button -->
                 <div class="flex items-center gap-2">
-                    <button type="submit" class="btn btn-outline py-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
-                        </svg>
-                        Apply
-                    </button>
                     <button type="button" id="addUserBtn" class="btn btn-primary py-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -407,17 +361,6 @@ $profile = !empty($user['profile_picture'])
                     <!-- Pagination Buttons -->
                     <div class="flex items-center gap-2">
 
-                        <!-- Previous -->
-                        <a href="?page=<?php echo $i; ?>
-                        &search=<?php echo urlencode($_GET['search'] ?? ''); ?>
-                        &status=<?php echo $_GET['status'] ?? 'all'; ?>
-                        &role=<?php echo $_GET['role'] ?? 'all'; ?>">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15 19l-7-7 7-7"/>
-                            </svg>
-                        </a>
-
                         <!-- Page Numbers -->
                         <?php
                         $range = 2; // pages before & after current
@@ -428,17 +371,6 @@ $profile = !empty($user['profile_picture'])
                                 <?php echo $i; ?>
                             </a>
                         <?php endfor; ?>
-
-                        <!-- Next -->
-                        <a href="?page=<?php echo $i; ?>
-                        &search=<?php echo urlencode($_GET['search'] ?? ''); ?>
-                        &status=<?php echo $_GET['status'] ?? 'all'; ?>
-                        &role=<?php echo $_GET['role'] ?? 'all'; ?>">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 5l7 7-7 7"/>
-                            </svg>
-                        </a>
 
                     </div>
                 </div>

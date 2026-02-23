@@ -69,13 +69,12 @@ if ($profilePath) {
             position = ?,
             contact_number = ?,
             health_center_id = ?,
-            status = ?,
             profile_picture = ?
         WHERE user_id = ? AND deleted_at IS NULL
     ");
 
     $stmt->bind_param(
-        "ssssssissi",
+        "ssssssisi",
         $_POST['full_name'],
         $_POST['username'],
         $_POST['email'],
@@ -83,7 +82,6 @@ if ($profilePath) {
         $_POST['position'],
         $_POST['contact_number'],
         $health_center_id,
-        $_POST['status'],
         $profilePath,
         $user_id
     );
@@ -98,13 +96,12 @@ if ($profilePath) {
             role = ?,
             position = ?,
             contact_number = ?,
-            health_center_id = ?,
-            status = ?
+            health_center_id = ?
         WHERE user_id = ? AND deleted_at IS NULL
     ");
 
     $stmt->bind_param(
-        "ssssssisi",
+        "ssssssii",
         $_POST['full_name'],
         $_POST['username'],
         $_POST['email'],
@@ -112,7 +109,6 @@ if ($profilePath) {
         $_POST['position'],
         $_POST['contact_number'],
         $health_center_id,
-        $_POST['status'],
         $user_id
     );
 }

@@ -107,7 +107,7 @@ $items = [];
 while ($row = $res->fetch_assoc()) {
   $row['download_url'] = null;
   if (!empty($row['file_path'])) {
-    $row['download_url'] = "/CAVITE-MED/" . ltrim($row['file_path'], "/");
+    $row['download_url'] = "/HIMS/" . ltrim($row['file_path'], "/");
   }
 
   // nice display name for UI

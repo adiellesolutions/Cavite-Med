@@ -27,11 +27,9 @@ if (!empty($_SESSION['force_change_password'])) {
     <script defer src="../js/encoder_disposal_fetch.js"></script>
     <script defer src="../js/encoder_disposal_modal.js"></script>
     <script defer src="../js/encoder_disposal_medicinedropdown.js"></script>
-    <script defer src="../js/encoder_disposal_add.js"></script>
-    <script defer src="../js/barcode_scanstate.js"></script>
     <script defer src="../js/encoder_disposal_form.js"></script>
     <script defer src="../js/encoder_disposal_filters.js"></script>
-    <script defer src="../js/encoder_disposal_restore.js"></script>
+    <script defer src="../js/barcode_scanstate.js"></script>
 
     
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
@@ -175,40 +173,7 @@ if (!empty($_SESSION['force_change_password'])) {
                         <p class="text-xs text-text-secondary">Within 30 days</p>
                     </div>
                 </div>
-                
-                <!-- Action Required -->
-                <div class="card stats-card hover-card action-required">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-text-secondary">Action Required</p>
-                            <p class="text-2xl font-semibold text-error-600 mt-1" id="actionRequiredCount">23</p>
-                        </div>
-                        <div class="w-12 h-12 rounded-lg bg-error-100 flex items-center justify-center">
-                            <svg class="w-6 h-6 text-error-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="mt-2">
-                        <p class="text-xs text-error-600 font-medium">Pending disposal</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Page Header -->
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-2xl font-semibold text-text-primary"></h2>
-                    <p class="text-text-secondary"></p>
-                </div>
-                <div class="flex items-center gap-3">
-                    <button type="button" id="printReportBtn" class="btn btn-outline no-print">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
-                        </svg>
-                        <span>Print Report</span>
-                    </button>
-                </div>
+            
             </div>
 
             <!-- Main Content Grid -->

@@ -34,7 +34,7 @@ if (!empty($_SESSION['force_change_password'])) {
     <script src="../js/encoder_distribution_healthcenterfetch.js"></script>
     <script src="../js/encoder_distribution_healthcenteraddmodal.js"></script>
     <script src="../js/encoder_distribution_healthcenterarchive.js"></script>
-    <script src="../js/barcode_scanstate.js"></script>
+    <script src="../js/distribution_barcode_scanstate.js"></script>
 
     <style>
         .modal-overlay {

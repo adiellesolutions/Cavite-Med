@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once __DIR__ . "/../backend/get_assigned_health_center.php";
 
 // ✅ require login
 if (!isset($_SESSION['user_id'])) {
@@ -43,29 +44,15 @@ if (!empty($_SESSION['force_change_password'])) {
                     </svg>
                     <div>
                         <h1 class="text-xl font-semibold text-text-primary">CAVMED Portal</h1>
-                        <p class="text-xs text-text-secondary">e-Prescription</p>
-                    </div>
+<p class="text-xs text-text-secondary">
+    <?php echo htmlspecialchars($assigned_health_center_name ?: 'Health Center'); ?>
+</p>                      </div>
                 </a>
             </div>
 
             <!-- Search Bar - Persistent -->
             <div class="flex-1 max-w-2xl mx-8">
-                <div class="relative">
-                    <input type="text" id="globalMedicationSearch" 
-                           placeholder="Search medications by name, generic, brand, or therapeutic class..."
-                           class="input pl-10 pr-10 w-full"
-                           autocomplete="off">
-                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <svg class="w-5 h-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
-                    </div>
-                    <button type="button" id="clearGlobalSearch" class="hidden absolute inset-y-0 right-0 flex items-center pr-3 text-text-tertiary hover:text-text-primary">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
-                </div>
+               
                 <!-- Autocomplete Dropdown -->
                 <div id="globalSearchResults" class="hidden absolute mt-2 w-full max-w-2xl bg-surface border border-border rounded-base shadow-lg max-h-96 overflow-y-auto z-dropdown">
                     <!-- Results populated by JavaScript -->
@@ -89,7 +76,7 @@ if (!empty($_SESSION['force_change_password'])) {
 
                 <!-- Profile Picture -->
                 <img
-                    src="/CAVITE-MED/<?php echo $_SESSION['profile_picture'] ?: 'uploads/profile/default.png'; ?>"
+                    src="/HIMS/<?php echo $_SESSION['profile_picture'] ?: 'uploads/profile/default.png'; ?>"
                     alt="User profile picture"
                     class="w-10 h-10 rounded-full object-cover border-2 border-primary"
                     onerror="this.src='/HIMS/uploads/profile/default.png'; this.onerror=null;">
@@ -144,12 +131,6 @@ if (!empty($_SESSION['force_change_password'])) {
                     <p class="text-text-secondary mt-1">Create and manage digital prescriptions with clinical decision support</p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button type="button" id="viewHistoryBtn" class="btn btn-outline">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <span>History</span>
-                    </button>
                    
                 </div>
             </div>
@@ -263,15 +244,30 @@ if (!empty($_SESSION['force_change_password'])) {
                         
                         <form id="prescriptionForm" class="space-y-4">
                             <!-- Medication Selection -->
-                            <div>
-                                <label for="medicationSelect" class="block text-sm font-medium text-text-primary mb-2">
-                                    Medication *
-                                </label>
-                                <select id="medicationSelect" required class="input">
-  <option value="">Select medication...</option>
-</select>
+                           <div>
+  <label for="medicationSearch" class="block text-sm font-medium text-text-primary mb-2">
+    Medication *
+  </label>
 
-                            </div>
+  <div class="relative">
+    <input
+      type="text"
+      id="medicationSearch"
+      required
+      autocomplete="off"
+      placeholder="Search medicine..."
+      class="input w-full"
+    />
+
+    <!-- dropdown results -->
+    <div
+  id="medicineResults"
+  class="mt-1 bg-white border border-border rounded-base shadow-lg max-h-60 overflow-y-auto hidden"
+></div>
+    <!-- hidden selected id -->
+    <input type="hidden" id="selectedMedicineId" required />
+  </div>
+</div>
 
                             <!-- Dosage Calculator -->
                             <div class="grid grid-cols-2 gap-4">

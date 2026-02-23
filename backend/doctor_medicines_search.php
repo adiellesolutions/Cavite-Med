@@ -11,14 +11,19 @@ if (!isset($_SESSION['user_id'])) {
 require_once __DIR__ . "/db/cavitemed_db.php";
 
 $q = trim($_GET['q'] ?? '');
-$limit = 30;
+
+if (strlen($q) < 2) {
+  echo json_encode(["ok" => true, "medicines" => []]);
+  exit;
+}
+
+$limit = 20;
 
 $sql = "
   SELECT id, barcode, medicine_name, category, unit_of_measure, current_stock, status
   FROM medicine
   WHERE is_archived = 0
     AND (
-      ? = '' OR
       medicine_name LIKE CONCAT('%', ?, '%') OR
       category LIKE CONCAT('%', ?, '%') OR
       barcode LIKE CONCAT('%', ?, '%')
@@ -28,7 +33,7 @@ $sql = "
 ";
 
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("ssss", $q, $q, $q, $q);
+$stmt->bind_param("sss", $q, $q, $q);
 $stmt->execute();
 $res = $stmt->get_result();
 

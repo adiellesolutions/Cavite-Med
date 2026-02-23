@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once __DIR__ . "/../backend/get_assigned_health_center.php";
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'medical_staff') {
     header("Location: system_login_portal.html");
@@ -79,6 +80,9 @@ $end   = min($offset + $limit, $totalRecords);
                 </svg>
                 <div>
                     <h1 class="text-xl font-semibold text-text-primary">CAVMED Portal</h1>
+                    <p class="text-xs text-text-secondary">
+    <?php echo htmlspecialchars($assigned_health_center_name ?: 'Health Center'); ?>
+</p>  
                 </div>
             </div>
 

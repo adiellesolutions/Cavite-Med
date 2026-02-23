@@ -104,7 +104,7 @@
   
       const itemsHtml = items.map(it => {
         const max = Number(it.qty_remaining);
-        const disabled = max <= 0 ? "disabled" : "";
+const disabled = (max <= 0 || Number(it.current_stock) <= 0) ? "disabled" : "";
         return `
           <div class="bg-white rounded-base border border-border p-4">
             <div class="flex items-start justify-between mb-2">
@@ -113,8 +113,10 @@
                 <p class="text-sm text-text-secondary">${esc(it.category || "")}</p>
               </div>
               <span class="badge ${Number(it.current_stock)>0 ? "badge-success" : "badge-error"}">
-                ${Number(it.current_stock)>0 ? "In Stock" : "Out of Stock"}
-              </span>
+  ${Number(it.current_stock)>0 
+      ? `In Stock (${it.current_stock})`
+      : "Medicine Not Available in this Health Center"}
+</span>
             </div>
   
             <div class="grid grid-cols-2 gap-4 text-sm">

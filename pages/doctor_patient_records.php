@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once __DIR__ . "/../backend/get_assigned_health_center.php";
 
 // ✅ require login
 if (!isset($_SESSION['user_id'])) {
@@ -45,8 +46,9 @@ if (!empty($_SESSION['force_change_password'])) {
                 </svg>
                 <div>
                     <h1 class="text-xl font-semibold text-text-primary">CAVMED Portal</h1>
-                    <p class="text-xs text-text-secondary">Patient Records</p>
-                </div>
+<p class="text-xs text-text-secondary">
+    <?php echo htmlspecialchars($assigned_health_center_name ?: 'Health Center'); ?>
+</p>                  </div>
             </div>
 
                <!-- Advanced Search Bar -->
@@ -99,7 +101,7 @@ if (!empty($_SESSION['force_change_password'])) {
 
                         <!-- Profile Picture -->
                         <img
-                            src="/CAVITE-MED/<?php echo $_SESSION['profile_picture'] ?: 'uploads/profile/default.png'; ?>"
+                            src="/HIMS/<?php echo $_SESSION['profile_picture'] ?: 'uploads/profile/default.png'; ?>"
                             alt="User profile picture"
                             class="w-10 h-10 rounded-full object-cover border-2 border-primary"
                             onerror="this.src='/HIMS/uploads/profile/default.png'; this.onerror=null;">
