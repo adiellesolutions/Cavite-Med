@@ -8,26 +8,22 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-$health_center_id = $_SESSION['health_center_id'] ?? 0;
-
 $sql = "
     SELECT 
         r.quantity,
         r.reason,
         r.created_at,
         m.medicine_name,
-        u.full_name AS returned_by
+        u.full_name AS returned_by,
+        h.center_name AS health_center_name
     FROM stock_returns r
     JOIN medicine m ON r.medicine_id = m.id
     JOIN users u ON r.returned_by = u.user_id
-    WHERE r.health_center_id = ?
+    JOIN health_centers h ON r.health_center_id = h.id
     ORDER BY r.created_at DESC
 ";
 
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $health_center_id);
-$stmt->execute();
-$result = $stmt->get_result();
+$result = $conn->query($sql);
 
 $returns = [];
 

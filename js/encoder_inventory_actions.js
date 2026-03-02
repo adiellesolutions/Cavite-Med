@@ -11,6 +11,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!modal || !form) return;
 
+    form.addEventListener("submit", function () {
+
+        const submitBtn = form.querySelector("button[type='submit']");
+
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Saving...";
+        }
+
+    });
+
     // =========================
     // HARD RESET (EXIT EDIT MODE)
     // =========================

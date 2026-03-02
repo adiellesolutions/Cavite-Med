@@ -734,6 +734,7 @@ if (!empty($_SESSION['force_change_password'])) {
                 <table class="w-full border-collapse">
                     <thead class="bg-gray-100 text-sm">
                         <tr>
+                            <th class="p-2 text-left">Health Center</th>
                             <th class="p-2 text-left">Medicine</th>
                             <th class="p-2 text-left">Quantity</th>
                             <th class="p-2 text-left">Reason</th>
@@ -907,6 +908,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 data.returns.forEach(item => {
                     tableBody.innerHTML += `
                         <tr class="border-b">
+                            <td class="p-2">${item.health_center_name}</td>
                             <td class="p-2">${item.medicine_name}</td>
                             <td class="p-2">${item.quantity}</td>
                             <td class="p-2">${item.reason}</td>

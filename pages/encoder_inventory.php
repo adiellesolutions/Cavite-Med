@@ -32,8 +32,7 @@ $end   = min($offset + $limit, $totalRecords);
     <link rel="stylesheet" href="../css/main.css">
     <link rel="stylesheet" href="../css/encoder_inventory.css">
 
-  <script type="module" async src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Fcavmedporta6876back.builtwithrocket.new&_be=https%3A%2F%2Fapplication.rocket.new&_v=0.1.10"></script>
-  <script type="module" defer src="https://static.rocket.new/rocket-shot.js?v=0.0.1"></script>
+ 
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
   <script defer src="../js/encoder_inventory_modal.js"></script>
   <script defer src="../js/encoder_inventory_search.js"></script>
@@ -892,6 +891,15 @@ $end   = min($offset + $limit, $totalRecords);
                     <input type="text" name="batch_number"
                         class="input w-full" required>
                 </div>
+                
+                <!-- Notes -->
+                <div>
+                    <label class="block text-sm font-medium text-text-secondary mb-1">
+                        Notes
+                    </label>
+                    <textarea name="notes"
+                            class="input w-full h-20"></textarea>
+                </div>
                     
                 <!-- Batch + Manufacturing -->
                 <div class="grid grid-cols-2 gap-3">
@@ -935,6 +943,8 @@ $end   = min($offset + $limit, $totalRecords);
                     </div>
                 </div>
 
+
+
                 <div class="grid grid-cols-2 gap-3">
 
                     <!-- Supplier (DB DROPDOWN) -->
@@ -961,15 +971,6 @@ $end   = min($offset + $limit, $totalRecords);
                         <input type="text" name="barcode" class="input w-full" required>
                     </div>
 
-                </div>
-
-                <!-- Notes -->
-                <div>
-                    <label class="block text-sm font-medium text-text-secondary mb-1">
-                        Notes
-                    </label>
-                    <textarea name="notes"
-                            class="input w-full h-20"></textarea>
                 </div>
 
                 <!-- Actions -->
@@ -1209,7 +1210,6 @@ $end   = min($offset + $limit, $totalRecords);
         </div>
     </footer>
 
-<script id="dhws-dataInjector" src="../public/dhws-data-injector.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     JsBarcode(".barcode").init();

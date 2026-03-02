@@ -21,8 +21,7 @@ if (!empty($_SESSION['force_change_password'])) {
     <meta name="description" content="Nurse Prescription Management - View and manage medication dispensing">
     <title>Nurse Prescription Management - CAVMED Portal</title>
     <link rel="stylesheet" href="../css/main.css">
-  <script type="module" async src="https://static.rocket.new/rocket-web.js?_cfg=https%3A%2F%2Fcavmedporta6876back.builtwithrocket.new&_be=https%3A%2F%2Fapplication.rocket.new&_v=0.1.10"></script>
-  <script type="module" defer src="https://static.rocket.new/rocket-shot.js?v=0.0.1"></script>
+
 </head>
 <body class="bg-background min-h-screen flex flex-col">
     <!-- Header Section -->
@@ -115,6 +114,14 @@ if (!empty($_SESSION['force_change_password'])) {
                     <span>Inventory List</span>
                 </a>
 
+
+                 <a href="../backend/system_logout.php" class="nav-item whitespace-nowrap ml-auto">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                    Logout
+                </a>
             </div>
         </div>
     </nav>

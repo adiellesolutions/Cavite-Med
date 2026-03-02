@@ -50,7 +50,7 @@
   
     // -------- LIST ----------
     async function loadList() {
-      const q = search.value.trim();
+const q = search ? search.value.trim() : "";
       const st = filterStatus.value;
   
       const data = await fetchJSON(`${api}?action=list&status=${encodeURIComponent(st)}&q=${encodeURIComponent(q)}`);
@@ -266,17 +266,21 @@ const disabled = (max <= 0 || Number(it.current_stock) <= 0) ? "disabled" : "";
     }
   
     // events
-    search.addEventListener("input", () => {
-      clearBtn.classList.toggle("hidden", search.value.length === 0);
-      clearTimeout(search._t);
-      search._t = setTimeout(loadList, 250);
-    });
+if (search) {
+  search.addEventListener("input", () => {
+    clearBtn?.classList.toggle("hidden", search.value.length === 0);
+    clearTimeout(search._t);
+    search._t = setTimeout(loadList, 250);
+  });
+}
   
-    clearBtn.addEventListener("click", () => {
-      search.value = "";
-      clearBtn.classList.add("hidden");
-      loadList();
-    });
+  if (clearBtn) {
+  clearBtn.addEventListener("click", () => {
+    search.value = "";
+    clearBtn.classList.add("hidden");
+    loadList();
+  });
+}
   
     filterStatus.addEventListener("change", loadList);
     refreshBtn.addEventListener("click", () => { loadList(); loadRecent(); });
